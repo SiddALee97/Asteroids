@@ -1,5 +1,5 @@
 import sys
-
+from shot import Shot
 from logger import log_event
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
@@ -13,9 +13,11 @@ from constants import PLAYER_RADIUS
 def main():
     x = SCREEN_WIDTH / 2
     y = SCREEN_HEIGHT / 2
+    shots = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
+    Shot.containers = (shots, updatable, drawable)
     AsteroidField.containers = (updatable)
     Asteroid.containers = (updatable, drawable, asteroids)
     Player.containers = (updatable, drawable)
