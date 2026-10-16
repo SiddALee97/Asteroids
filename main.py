@@ -1,3 +1,4 @@
+from score import ScoreKeeper
 import sys
 from shot import Shot
 from logger import log_event
@@ -24,16 +25,18 @@ def main():
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
 
-    # specifying which groups the class belongs to
+    # specifying containers the class belongs to
     Shot.containers = (shots, updatable, drawable)
     AsteroidField.containers = (updatable)
     Asteroid.containers = (updatable, drawable, asteroids)
     Player.containers = (updatable, drawable)
+    ScoreKeeper.containers = (drawable)
 
     # initializing an instance of the objects
     field = AsteroidField()
     player = Player(x, y, PLAYER_RADIUS)
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    score_keeper = ScoreKeeper()
 
     # prints startup message
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
@@ -76,9 +79,10 @@ def main():
                         asteroids.empty()
                         shots.empty()
 
-                        # 2. Respawn brand new player and asteroid field
+                        # 2. Respawn brand new player, asteroid field, and score keeper
                         player = Player(x, y, PLAYER_RADIUS)
                         field = AsteroidField()
+                        score_keeper = ScoreKeeper()
 
                         # 3. Resume the game loop
                         game_state = "PLAYING"
@@ -101,7 +105,6 @@ def main():
                 for obj in asteroids:
                     if player.collides_with(obj):
                         log_event("player_hit")
-                        print("Game over!")
                         # changes the game state
                         game_state = "GAME_OVER"
 
@@ -111,12 +114,16 @@ def main():
                             log_event("asteroid_shot")
                             shot.kill()
                             obj.split()
+                            score_keeper.add_points(10)
 
             elif game_state == "GAME_OVER":
                 # draw game over overlay text
                 menu_text = font.render("MAYDAY! MAYDAY! MAYDAY! - Press 'R' to Restart", True, "white")
-                text_rect = menu_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+                text_rect = menu_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20))
+                score_text = font.render(f"Final Score: {score_keeper.score}", True, "white")
+                score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, text_rect.bottom + 30))
                 screen.blit(menu_text, text_rect)
+                screen.blit(score_text, score_rect)
 
             elif game_state == "PAUSED":
                 # draw transparent overlay for Pause Menu
