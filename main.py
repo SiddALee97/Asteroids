@@ -1,3 +1,4 @@
+from explosion import Explosion
 from score import ScoreKeeper
 import sys
 from shot import Shot
@@ -31,6 +32,7 @@ def main():
     Asteroid.containers = (updatable, drawable, asteroids)
     Player.containers = (updatable, drawable)
     ScoreKeeper.containers = (drawable)
+    Explosion.containers = (drawable, updatable)
 
     # initializing an instance of the objects
     field = AsteroidField()
@@ -95,16 +97,24 @@ def main():
                 obj.draw(screen)
 
 
+            # moved outside the if block so particles can move
+            updatable.update(dt)
+
+
             # Conditionally run game logic or popup menu
             if game_state == "PLAYING":
                 # Normal gameplay loop
 
-                updatable.update(dt)
+
                 player.cdt -= dt
 
                 for obj in asteroids:
                     if player.collides_with(obj):
                         log_event("player_hit")
+                        # create and explosion where player is
+                        Explosion(player.position)
+                        # make player ship disappear
+                        player.kill()
                         # changes the game state
                         game_state = "GAME_OVER"
 

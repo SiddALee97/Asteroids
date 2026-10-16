@@ -10,6 +10,7 @@ class Player(CircleShape):
         super().__init__(x, y, radius)
         self.rotation = 0
         self.cdt = 0
+        
 
 
     def triangle(self) -> list[pygame.Vector2]:
