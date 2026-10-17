@@ -1,3 +1,5 @@
+import random
+from upgrades import Upgrade
 from explosion import Explosion
 from score import ScoreKeeper
 import sys
@@ -23,6 +25,7 @@ def main():
     # creating the groups
     shots = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
+    upgrades = pygame.sprite.Group()
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
 
@@ -33,6 +36,7 @@ def main():
     Player.containers = (updatable, drawable)
     ScoreKeeper.containers = (drawable)
     Explosion.containers = (drawable, updatable)
+    Upgrade.containers = (upgrades, drawable, updatable)
 
     # initializing an instance of the objects
     field = AsteroidField()
@@ -80,6 +84,7 @@ def main():
                         drawable.empty()
                         asteroids.empty()
                         shots.empty()
+                        upgrades.empty()
 
                         # 2. Respawn brand new player, asteroid field, and score keeper
                         player = Player(x, y, PLAYER_RADIUS)
@@ -118,13 +123,27 @@ def main():
                         # changes the game state
                         game_state = "GAME_OVER"
 
-                for obj in asteroids:
-                    for shot in shots:
-                        if shot.collides_with(obj):
-                            log_event("asteroid_shot")
-                            shot.kill()
-                            obj.split()
-                            score_keeper.add_points(10)
+                # checks upgrade collisin and applies
+                if game_state == "PLAYING":
+                    for upgrade in upgrades:
+                        if player.collides_with(upgrade):
+                            log_event(f"upgrade_collected_{upgrade.kind}")
+                            upgrade.apply_to_player(player)
+                            upgrade.kill()
+
+                if game_state == "PLAYING":
+                    for obj in asteroids:
+                        for shot in shots:
+                            if shot.collides_with(obj):
+                                log_event("asteroid_shot")
+                                shot.kill()
+
+                                # inserting chance to spawn upgrade
+                                if random.random() < 0.20:
+                                    Upgrade(obj.position.x, obj.position.y)
+
+                                obj.split()
+                                score_keeper.add_points(10)
 
             elif game_state == "GAME_OVER":
                 # draw game over overlay text

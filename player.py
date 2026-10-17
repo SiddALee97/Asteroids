@@ -10,7 +10,13 @@ class Player(CircleShape):
         super().__init__(x, y, radius)
         self.rotation = 0
         self.cdt = 0
-        
+
+        # added mutables for upgrades
+        self.speed = PLAYER_SPEED
+        self.turn_speed = PLAYER_TURN_SPEED
+        self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
+        self.shoot_speed = PLAYER_SHOOT_SPEED
+        self.radius = PLAYER_RADIUS
 
 
     def triangle(self) -> list[pygame.Vector2]:
@@ -25,7 +31,7 @@ class Player(CircleShape):
         pygame.draw.polygon(screen, "white", self.triangle(), LINE_WIDTH)
 
     def rotate(self, dt: float):
-        self.rotation += PLAYER_TURN_SPEED * dt
+        self.rotation += self.turn_speed * dt
 
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
@@ -42,19 +48,19 @@ class Player(CircleShape):
             if self.cdt > 0:
                 pass
             else:
-                self.cdt = PLAYER_SHOOT_COOLDOWN_SECONDS
+                self.cdt = self.shoot_cooldown
                 self.shoot()
 
     def move(self, dt: float):
         unit_vector = pygame.Vector2(0, 1)
         rotated_vector = unit_vector.rotate(self.rotation)
-        rotated_with_speed_vector = rotated_vector * PLAYER_SPEED * dt
+        rotated_with_speed_vector = rotated_vector * self.speed * dt
         self.position += rotated_with_speed_vector
 
     def shoot(self):
         shot = Shot(self.position.x, self.position.y)
         shot.velocity = pygame.Vector2(0,1).rotate(self.rotation)
-        shot.velocity *= PLAYER_SHOOT_SPEED
+        shot.velocity *= self.shoot_speed
         
             #Overrides CircleShape to check Traingle 
     def collides_with(self, other: CircleShape) -> bool:
