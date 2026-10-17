@@ -56,4 +56,115 @@ class Player(CircleShape):
         shot.velocity = pygame.Vector2(0,1).rotate(self.rotation)
         shot.velocity *= PLAYER_SHOOT_SPEED
         
+            #Overrides CircleShape to check Traingle 
+    def collides_with(self, other: CircleShape) -> bool:
+        vertices = self.triangle()
+        circle_center = other.position
+        circle_radius = other.radius
+
+        inside = True
+        for i in range(3):
+            p1 = vertices[i]
+            p2 = vertices[(i + 1) % 3]  # '% or modulo' use to loop to the first point. very cool
+
+            # vector along edge
+            edge = p2 - p1
+
+            # vector from vertex to asteroids center
+            to_circle = circle_center - p1
+
+            # logic to check if center of asteroid is inside player 'cross product'
+            cross_product = edge.x * to_circle.y - edge.y * to_circle.x
+            if cross_product < 0:
+                inside = False
+                break
+        if inside:
+            return True
+
+
+        for i in range(3):
+            p1 = vertices[1]
+            p2 = vertices[(i + 1) % 3]
+            edge = p2 - p1
+            to_circle = circle_center - p1
+
+            # dot projection for calculating closest point along a line segment that is infinte
+
+            edge_length_sq = edge.length_squared()
+
+            # to avoide crashing
+            if edge_length_sq == 0:
+                continue
+
+            # t is the percentage along the line segment (must be between 0.0 and 1.0)
+            t = max(0.0, min(1.0, to_circle.dot(edge) / edge_length_sq))
+            closest_point = p1 + edge * t
+
+            # distance from asteroid center to closest point
+            distance_to_edge = pygame.Vector2.distance_to(circle_center, closest_point)
+
+            # use that distance with radius to calculate collision
+            if distance_to_edge <= circle_radius:
+                return True
+
+        return False
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
