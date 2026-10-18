@@ -2,7 +2,7 @@ from constants import *
 from shot import Shot
 from circleshape import CircleShape
 import pygame
-
+import math
 
 
 class Player(CircleShape):
@@ -17,6 +17,10 @@ class Player(CircleShape):
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.shoot_speed = PLAYER_SHOOT_SPEED
         self.radius = PLAYER_RADIUS
+
+        # adding base velocity and friction coefficient for momentum calcs
+        self.velocity = pygame.Vector2(0, 0)
+        self.friction = 0.98 # loses 2% speed per second
 
 
     def triangle(self) -> list[pygame.Vector2]:
@@ -44,6 +48,14 @@ class Player(CircleShape):
             self.move(dt)
         if keys[pygame.K_s]:
             self.move(-dt)
+
+        # new momentum code
+        # 1. apply friction over time (import math to use math.pow (ensures friction scales evenly regardless of frame rate))
+        self.velocity *= math.pow(self.friction, dt * 60) # instead of just multiplying by friction we use math.pow to tie the reduction to the frame rate so it is independent of computer speed
+
+        # 2. update your position based on new velocity
+        self.position += self.velocity * dt
+
         if keys[pygame.K_SPACE]:
             if self.cdt > 0:
                 pass
@@ -52,10 +64,13 @@ class Player(CircleShape):
                 self.shoot()
 
     def move(self, dt: float):
+        # instead of moving position, we add "thrust" to velocity
         unit_vector = pygame.Vector2(0, 1)
         rotated_vector = unit_vector.rotate(self.rotation)
-        rotated_with_speed_vector = rotated_vector * self.speed * dt
-        self.position += rotated_with_speed_vector
+        
+        # accelerate
+        self.velocity += rotated_vector * self.speed * dt
+
 
     def shoot(self):
         shot = Shot(self.position.x, self.position.y)
