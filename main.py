@@ -1,3 +1,4 @@
+from cargodrone import CargoDrone
 import random
 from upgrades import Upgrade
 from explosion import Explosion
@@ -12,6 +13,8 @@ from player import Player
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH
 from logger import log_state
 from constants import PLAYER_RADIUS
+from constants import DRONE_SPAWN_COOLDOWN
+
 
 
 def main():
@@ -26,6 +29,7 @@ def main():
     shots = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     upgrades = pygame.sprite.Group()
+    cargo_drones = pygame.sprite.Group()
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
 
@@ -37,6 +41,7 @@ def main():
     ScoreKeeper.containers = (drawable)
     Explosion.containers = (drawable, updatable)
     Upgrade.containers = (upgrades, drawable, updatable)
+    CargoDrone.containers = (drawable, updatable, cargo_drones)
 
     # initializing an instance of the objects
     field = AsteroidField()
@@ -56,7 +61,8 @@ def main():
     # Game State (possible: "PLAYING", "GAME_OVER", "PAUSED"
     game_state = "PLAYING"
 
-
+    # drone initial timer
+    drone_spawn_timer = 5.0
 
     while True:
             log_state()
@@ -112,6 +118,25 @@ def main():
 
 
                 player.cdt -= dt
+
+                # new drone timer
+                drone_spawn_timer -= dt
+                if drone_spawn_timer <= 0:
+                    # random spawn
+                    spawn_x = random.choice([0, SCREEN_WIDTH])
+                    spawn_y = random.randint(0, SCREEN_HEIGHT)
+                    CargoDrone(spawn_x, spawn_y, radius = 25)
+
+                    # reset timer
+                    drone_spawn_timer = DRONE_SPAWN_COOLDOWN
+
+                # checks drone collision
+                for drone in cargo_drones:
+                    for shot in shots:
+                        if shot.collides_with(drone):
+                            log_event("cargo_drone_hit")
+                            shot.kill()
+                            drone.take_damage(1)
 
                 for obj in asteroids:
                     if player.collides_with(obj):
