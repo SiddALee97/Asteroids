@@ -108,14 +108,15 @@ def main():
                 obj.draw(screen)
 
 
-            # moved outside the if block so particles can move
-            updatable.update(dt)
+            
 
 
             # Conditionally run game logic or popup menu
             if game_state == "PLAYING":
                 # Normal gameplay loop
 
+                # addinf updating back inside loop since pause didn't work
+                updatable.update(dt)
 
                 player.cdt -= dt
 
@@ -148,7 +149,7 @@ def main():
                         # changes the game state
                         game_state = "GAME_OVER"
 
-                # checks upgrade collisin and applies
+                # checks upgrade collision and applies
                 if game_state == "PLAYING":
                     for upgrade in upgrades:
                         if player.collides_with(upgrade):
@@ -165,12 +166,15 @@ def main():
 
                                 # inserting chance to spawn upgrade
                                 if random.random() < 0.20:
-                                    Upgrade(obj.position.x, obj.position.y)
+                                    Upgrade(obj.position.x, obj.position.y, Upgrade.STANDARD_POOL)
 
                                 obj.split()
                                 score_keeper.add_points(10)
 
             elif game_state == "GAME_OVER":
+                # adding updating in this loops so explosion particles keep moving when player dies
+                updatable.update(dt)
+
                 # draw game over overlay text
                 menu_text = font.render("MAYDAY! MAYDAY! MAYDAY! - Press 'R' to Restart", True, "white")
                 text_rect = menu_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20))

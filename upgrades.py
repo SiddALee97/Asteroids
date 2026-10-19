@@ -3,9 +3,20 @@ import random
 from circleshape import CircleShape
 
 class Upgrade(CircleShape):
-    def __init__(self, x: float, y: float):
+
+    # adding groups so we can spawn certain tiers of upgrades when we want
+    STANDARD_POOL = ["THRUSTERS", "BLASTERS", "SHRINK"]
+    CARGO_POOL = ["MULTISHOT", "BURST", "LASER"]
+
+    # adding the upgrade pool to args for init and setting to None 
+    def __init__(self, x: float, y: float, upgrade_pool):
         super().__init__(x, y, radius = 12)
-        self.kind = random.choice(["THRUSTERS", "BLASTERS", "SHRINK"])  # random choice what kind of upgrade
+
+        # if no pool is chosen just use standard pool
+        if upgrade_pool is None:
+            upgrade_pool = STANDARD_POOL
+
+        self.kind = random.choice(upgrade_pool)  # random choice what kind of upgrade
         self.velocity = pygame.Vector2(0, 1).rotate(random.uniform(0, 360)) * 40
 
     def apply_to_player(self, player):
@@ -25,7 +36,7 @@ class Upgrade(CircleShape):
     def draw(self, screen: pygame.Surface) -> None:
         # Assign colors
         colors = {
-            "Thrusters": "green",
+            "THRUSTERS": "green",
             "BLASTERS": "red",
             "SHRINK": "blue"
         }
