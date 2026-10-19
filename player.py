@@ -65,7 +65,7 @@ class Player(CircleShape):
                 self.shoot()
 
         # going to try screen wrapping for player too (copy pasting from cargo drone)
-        from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+        
         if self.position.x < -self.radius:
             self.position.x = SCREEN_WIDTH + self.radius
         elif self.position.x > SCREEN_WIDTH + self.radius:

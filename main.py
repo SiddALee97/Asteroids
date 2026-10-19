@@ -190,7 +190,7 @@ def main():
                 updatable.update(dt)
 
                 title_font = pygame.font.Font(None, 80)
-                title_text = title_font.render("ASS ROIDS", True, "white")
+                title_text = title_font.render("ASS*ROIDS", True, "white")
                 title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, center_y - 100))
                 screen.blit(title_text, title_rect)
 
