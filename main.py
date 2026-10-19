@@ -81,7 +81,7 @@ def main():
 
     # Pause Menu buttons config:
     pause_m = Button(center_x, center_y + 50, btn_width, btn_height, "Main Menu", font, "darkgray", "cyan")
-
+    pause_buttons = [pause_m]
 
 
     while True:
@@ -270,8 +270,8 @@ def main():
                 screen.blit(score_text, score_rect)
 
                 # add buttons to GAME OVER
-                game_over_r.draw(screen)
-                game_over_m.draw(screen)
+                for button in game_over_buttons:
+                    button.draw(screen)
 
             elif game_state == "PAUSED":
                 # draw transparent overlay for Pause Menu
@@ -280,7 +280,8 @@ def main():
                 screen.blit(pause_text, text_rect)
 
                 # add buttons to PAUSED
-                pause_m.draw(screen)
+                for button in pause_buttons:
+                    button.draw(screen)
 
 
 
