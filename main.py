@@ -1,3 +1,4 @@
+from button import Button
 from cargodrone import CargoDrone
 import random
 from upgrades import Upgrade
@@ -43,11 +44,10 @@ def main():
     Upgrade.containers = (upgrades, drawable, updatable)
     CargoDrone.containers = (drawable, updatable, cargo_drones)
 
-    # initializing an instance of the objects
+    # initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
     field = AsteroidField()
-    player = Player(x, y, PLAYER_RADIUS)
+
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    score_keeper = ScoreKeeper()
 
     # prints startup message
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
@@ -58,11 +58,31 @@ def main():
     clock = pygame.time.Clock()
     dt = 0.0
 
-    # Game State (possible: "PLAYING", "GAME_OVER", "PAUSED"
-    game_state = "PLAYING"
+    # Game State (possible: "PLAYING", "GAME_OVER", "PAUSED", "MENU"
+    game_state = "MENU"
 
     # drone initial timer
     drone_spawn_timer = 5.0
+
+    # Future proofing the UI setup for buttons
+    btn_width, btn_height = 240, 50
+    center_x = (SCREEN_WIDTH // 2) - (btn_width // 2)
+    center_y = SCREEN_HEIGHT // 2
+
+    # Main Menu buttons config
+    play_button = Button(center_x, center_y, btn_width, btn_height, "Commence", font, "darkgray", "cyan")
+    quit_button = Button(center_x, center_y + 70, btn_width, btn_height, "Quit", font, "darkgray", "cyan")
+    menu_buttons = [play_button, quit_button]
+
+    # Game Over buttons config
+    game_over_r = Button(center_x, center_y + 60, btn_width, btn_height, "Restart", font, "darkgray", "cyan")
+    game_over_m = Button(center_x, center_y + 130, btn_width, btn_height, "Main Menu", font, "darkgray", "cyan")
+    game_over_buttons = [game_over_r, game_over_m]
+
+    # Pause Menu buttons config:
+    pause_m = Button(center_x, center_y + 50, btn_width, btn_height, "Main Menu", font, "darkgray", "cyan")
+
+
 
     while True:
             log_state()
@@ -71,33 +91,91 @@ def main():
                 if event.type == pygame.QUIT:
                         return
 
-                # Global inputs
-                if event.type == pygame.KEYDOWN:
+                # boot menu first
+                if game_state == "MENU":
+                    if play_button.is_clicked(event):
+                        # clear the background first
+                        updatable.empty()
+                        drawable.empty()
+                        asteroids.empty()
+                        shots.empty()
+                        upgrades.empty()
+                        cargo_drones.empty()
 
-                    # check for pause
+                        # create objects for game
+                        drone_spawn_timer = DRONE_SPAWN_COOLDOWN
+                        field = AsteroidField()
+                        player = Player(x, y, PLAYER_RADIUS)
+                        score_keeper = ScoreKeeper()
+                        game_state = "PLAYING"
+                        break
+
+                    elif quit_button.is_clicked(event):
+                        pygame.quit()
+                        sys.exit()
+
+                elif game_state == "GAME_OVER":
+                    if game_over_r.is_clicked(event):
+                        updatable.empty()
+                        drawable.empty()
+                        asteroids.empty()
+                        shots.empty()
+                        upgrades.empty()
+                        cargo_drones.empty()
+
+                        drone_spawn_timer = DRONE_SPAWN_COOLDOWN
+                        player = Player(x, y, PLAYER_RADIUS)
+                        field = AsteroidField()
+                        score_keeper = ScoreKeeper()
+                        game_state = "PLAYING"
+                        break
+
+                    elif game_over_m.is_clicked(event):
+                        updatable.empty()
+                        drawable.empty()
+                        asteroids.empty()
+                        shots.empty()
+                        upgrades.empty()
+                        cargo_drones.empty()
+
+                        field = AsteroidField()
+                        game_state = "MENU"
+                        break
+
+                elif game_state == "PAUSED":
+                    if pause_m.is_clicked(event):
+                        updatable.empty()
+                        drawable.empty()
+                        asteroids.empty()
+                        shots.empty()
+                        upgrades.empty()
+                        cargo_drones.empty()
+
+                        field = AsteroidField()
+                        game_state = "MENU"
+                        break
+
+                # keyboard events
+                if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         if game_state == "PLAYING":
                             game_state = "PAUSED"
                         elif game_state == "PAUSED":
                             game_state = "PLAYING"
 
-
-
-                    # check for restart input
-                    if game_state == "GAME_OVER" and event.key == pygame.K_r:
-                        # 1. clear everything currently on screen
+                    # keep r hotkey for restart on game over
+                    elif game_state == "GAME_OVER" and event.key == pygame.K_r:
                         updatable.empty()
                         drawable.empty()
                         asteroids.empty()
                         shots.empty()
                         upgrades.empty()
+                        cargo_drones.empty()
 
-                        # 2. Respawn brand new player, asteroid field, and score keeper
+                        drone_spawn_timer = DRONE_SPAWN_COOLDOWN
                         player = Player(x, y, PLAYER_RADIUS)
                         field = AsteroidField()
                         score_keeper = ScoreKeeper()
-
-                        # 3. Resume the game loop
                         game_state = "PLAYING"
 
 
@@ -107,9 +185,17 @@ def main():
             for obj in drawable:
                 obj.draw(screen)
 
+            # render different states and new menus
+            if game_state == "MENU":
+                updatable.update(dt)
 
-            
+                title_font = pygame.font.Font(None, 80)
+                title_text = title_font.render("ASS ROIDS", True, "white")
+                title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, center_y - 100))
+                screen.blit(title_text, title_rect)
 
+                for button in menu_buttons:
+                    button.draw(screen)
 
             # Conditionally run game logic or popup menu
             if game_state == "PLAYING":
@@ -183,11 +269,18 @@ def main():
                 screen.blit(menu_text, text_rect)
                 screen.blit(score_text, score_rect)
 
+                # add buttons to GAME OVER
+                game_over_r.draw(screen)
+                game_over_m.draw(screen)
+
             elif game_state == "PAUSED":
                 # draw transparent overlay for Pause Menu
                 pause_text = font.render("PAUSED - Press ESC to Resume", True, "yellow")
                 text_rect = pause_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
                 screen.blit(pause_text, text_rect)
+
+                # add buttons to PAUSED
+                pause_m.draw(screen)
 
 
 
