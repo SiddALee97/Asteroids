@@ -56,12 +56,26 @@ class Player(CircleShape):
         # 2. update your position based on new velocity
         self.position += self.velocity * dt
 
+
         if keys[pygame.K_SPACE]:
             if self.cdt > 0:
                 pass
             else:
                 self.cdt = self.shoot_cooldown
                 self.shoot()
+
+        # going to try screen wrapping for player too (copy pasting from cargo drone)
+        from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+        if self.position.x < -self.radius:
+            self.position.x = SCREEN_WIDTH + self.radius
+        elif self.position.x > SCREEN_WIDTH + self.radius:
+            self.position.x = -self.radius
+
+        if self.position.y < -self.radius:
+            self.position.y = SCREEN_HEIGHT + self.radius
+        elif self.position.y > SCREEN_HEIGHT + self.radius:
+            self.position.y = -self.radius
+
 
     def move(self, dt: float):
         # instead of moving position, we add "thrust" to velocity

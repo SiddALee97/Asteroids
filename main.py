@@ -115,7 +115,7 @@ def main():
             if game_state == "PLAYING":
                 # Normal gameplay loop
 
-                # addinf updating back inside loop since pause didn't work
+                # adding updating back inside loop since pause didn't work
                 updatable.update(dt)
 
                 player.cdt -= dt
