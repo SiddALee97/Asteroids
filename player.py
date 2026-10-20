@@ -18,6 +18,7 @@ class Player(CircleShape):
         self.shoot_speed = PLAYER_SHOOT_SPEED
         self.radius = PLAYER_RADIUS
         self.weapon = "DEFAULT"
+        self.weapon_level = 0
 
         # adding base velocity and friction coefficient for momentum calcs
         self.velocity = pygame.Vector2(0, 0)

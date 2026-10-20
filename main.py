@@ -204,6 +204,8 @@ def main():
                             log_event("cargo_drone_hit")
                             shot.kill()
                             drone.take_damage(1)
+                            if not drone.alive():
+                                break
 
                 for obj in asteroids:
                     if player.collides_with(obj):
@@ -221,6 +223,7 @@ def main():
                         if player.collides_with(upgrade):
                             log_event(f"upgrade_collected_{upgrade.kind}")
                             upgrade.apply_to_player(player)
+                            print(player.weapon, player.weapon_level)
                             upgrade.kill()
 
                 if game_state == "PLAYING":
