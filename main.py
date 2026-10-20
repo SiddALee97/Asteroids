@@ -36,13 +36,22 @@ def main():
 
     # specifying containers the class belongs to
     Shot.containers = (shots, updatable, drawable)
-    AsteroidField.containers = (updatable)
+    AsteroidField.containers = (updatable,)
     Asteroid.containers = (updatable, drawable, asteroids)
     Player.containers = (updatable, drawable)
-    ScoreKeeper.containers = (drawable)
+    ScoreKeeper.containers = (drawable,)
     Explosion.containers = (drawable, updatable)
     Upgrade.containers = (upgrades, drawable, updatable)
     CargoDrone.containers = (drawable, updatable, cargo_drones)
+
+    # making some helper functions to clean up some code in main ( clear board and reset board )
+    def clear_map():
+        for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots):
+            group.empty()
+
+    def new_game():
+        clear_map()
+        return AsteroidField(), Player(x, y, PLAYER_RADIUS), ScoreKeeper()
 
     # initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
     field = AsteroidField()
@@ -94,19 +103,11 @@ def main():
                 # boot menu first
                 if game_state == "MENU":
                     if play_button.is_clicked(event):
-                        # clear the background first
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # use helper to create new game
+                        field, player, score_keeper = new_game()
 
-                        # create objects for game
+                        # reset timer and change game state
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        field = AsteroidField()
-                        player = Player(x, y, PLAYER_RADIUS)
-                        score_keeper = ScoreKeeper()
                         game_state = "PLAYING"
                         break
 
@@ -116,27 +117,16 @@ def main():
 
                 elif game_state == "GAME_OVER":
                     if game_over_r.is_clicked(event):
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # use helper to start new game
+                        field, player, score_keeper = new_game()
 
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        player = Player(x, y, PLAYER_RADIUS)
-                        field = AsteroidField()
-                        score_keeper = ScoreKeeper()
                         game_state = "PLAYING"
                         break
 
                     elif game_over_m.is_clicked(event):
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # use helper to clear map
+                        clear_map()
 
                         field = AsteroidField()
                         game_state = "MENU"
@@ -144,12 +134,8 @@ def main():
 
                 elif game_state == "PAUSED":
                     if pause_m.is_clicked(event):
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # helper to clear map
+                        clear_map()
 
                         field = AsteroidField()
                         game_state = "MENU"
@@ -165,17 +151,10 @@ def main():
 
                     # keep r hotkey for restart on game over
                     elif game_state == "GAME_OVER" and event.key == pygame.K_r:
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # use helper to start new game
+                        field, player, score_keeper = new_game()
 
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        player = Player(x, y, PLAYER_RADIUS)
-                        field = AsteroidField()
-                        score_keeper = ScoreKeeper()
                         game_state = "PLAYING"
 
 

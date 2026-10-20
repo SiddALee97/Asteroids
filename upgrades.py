@@ -9,7 +9,7 @@ class Upgrade(CircleShape):
     CARGO_POOL = ["MULTISHOT", "BURST", "LASER"]
 
     # adding the upgrade pool to args for init and setting to None 
-    def __init__(self, x: float, y: float, upgrade_pool):
+    def __init__(self, x: float, y: float, upgrade_pool=None):
         super().__init__(x, y, radius = 12)
 
         # if no pool is chosen just use standard pool
@@ -18,6 +18,7 @@ class Upgrade(CircleShape):
 
         self.kind = random.choice(upgrade_pool)  # random choice what kind of upgrade
         self.velocity = pygame.Vector2(0, 1).rotate(random.uniform(0, 360)) * 40
+        
 
     def apply_to_player(self, player):
 
