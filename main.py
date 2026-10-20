@@ -180,6 +180,7 @@ def main():
             if game_state == "PLAYING":
                 # Normal gameplay loop
 
+
                 # adding updating back inside loop since pause didn't work
                 updatable.update(dt)
 

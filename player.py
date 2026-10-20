@@ -17,6 +17,7 @@ class Player(CircleShape):
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.shoot_speed = PLAYER_SHOOT_SPEED
         self.radius = PLAYER_RADIUS
+        self.weapon = "DEFAULT"
 
         # adding base velocity and friction coefficient for momentum calcs
         self.velocity = pygame.Vector2(0, 0)
@@ -87,10 +88,14 @@ class Player(CircleShape):
 
 
     def shoot(self):
+        # refactoring shoot so we can change the weapon type
+        self.fire_bullet(self.rotation)
+
+        # adding fire_bullet
+    def fire_bullet(self, angle: float):
         shot = Shot(self.position.x, self.position.y)
-        shot.velocity = pygame.Vector2(0,1).rotate(self.rotation)
-        shot.velocity *= self.shoot_speed
-        
+        shot.velocity = pygame.Vector2(0, 1).rotate(angle) * self.shoot_speed
+
             #Overrides CircleShape to check Traingle 
     def collides_with(self, other: CircleShape) -> bool:
         vertices = self.triangle()
@@ -118,7 +123,7 @@ class Player(CircleShape):
 
 
         for i in range(3):
-            p1 = vertices[1]
+            p1 = vertices[i]
             p2 = vertices[(i + 1) % 3]
             edge = p2 - p1
             to_circle = circle_center - p1
