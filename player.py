@@ -90,7 +90,20 @@ class Player(CircleShape):
 
     def shoot(self):
         # refactoring shoot so we can change the weapon type
-        self.fire_bullet(self.rotation)
+        if self.weapon == "MULTISHOT":
+            self.fire_parallel(self.weapon_level + 1)
+        else:
+            self.fire_bullet(self.rotation)
+
+        # adding logic for multishot
+    def fire_parallel(self, count: int, spacing: float = 12):
+        direction = pygame.Vector2(0, 1).rotate(self.rotation)
+        side = direction.rotate(90) # makes bullets line up with width of player
+        for i in range(count):
+            offset = (i - (count - 1) /2) * spacing # spaces shots evenly and centers the group on player
+            pos = self.position + side * offset
+            shot = Shot(pos.x, pos.y)
+            shot.velocity = direction * self.shoot_speed
 
         # adding fire_bullet
     def fire_bullet(self, angle: float):

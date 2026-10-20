@@ -16,7 +16,12 @@ from logger import log_state
 from constants import PLAYER_RADIUS
 from constants import DRONE_SPAWN_COOLDOWN
 
-
+# helper for future weapons that dont use shots
+def destroy_asteroid(obj, score_keeper):
+    if random.random() < 0.20:
+        Upgrade(obj.position.x, obj.position.y, Upgrade.STANDARD_POOL)
+    obj.split()
+    score_keeper.add_points(10)
 
 def main():
     x = SCREEN_WIDTH / 2
@@ -223,7 +228,6 @@ def main():
                         if player.collides_with(upgrade):
                             log_event(f"upgrade_collected_{upgrade.kind}")
                             upgrade.apply_to_player(player)
-                            print(player.weapon, player.weapon_level)
                             upgrade.kill()
 
                 if game_state == "PLAYING":
@@ -232,13 +236,9 @@ def main():
                             if shot.collides_with(obj):
                                 log_event("asteroid_shot")
                                 shot.kill()
-
-                                # inserting chance to spawn upgrade
-                                if random.random() < 0.20:
-                                    Upgrade(obj.position.x, obj.position.y, Upgrade.STANDARD_POOL)
-
-                                obj.split()
-                                score_keeper.add_points(10)
+                                destroy_asteroid(obj, score_keeper)
+                                # need to add break so duplicates dont spawn
+                                break
 
             elif game_state == "GAME_OVER":
                 # adding updating in this loops so explosion particles keep moving when player dies
