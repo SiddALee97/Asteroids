@@ -215,6 +215,7 @@ def main():
                             if not drone.alive():
                                 break
 
+                # checks player death
                 for obj in asteroids:
                     if player.collides_with(obj):
                         log_event("player_hit")
@@ -232,8 +233,11 @@ def main():
                             log_event(f"upgrade_collected_{upgrade.kind}")
                             upgrade.apply_to_player(player)
                             upgrade.kill()
+                            break
+
 
                 if game_state == "PLAYING":
+                    # checks shot on asteroid
                     for obj in asteroids:
                         for shot in shots:
                             if shot.collides_with(obj):
@@ -242,6 +246,23 @@ def main():
                                 destroy_asteroid(obj, score_keeper)
                                 # need to add break so duplicates dont spawn
                                 break
+
+                    # check shockwave
+                    for wave in shockwaves:
+                        for obj in asteroids:
+                            if obj not in wave.already_hit and wave.collides_with(obj):
+                                wave.already_hit.add(obj)
+                                before = set(asteroids)
+                                destroy_asteroid(obj, score_keeper)
+                                wave.already_hit |= (set(asteroids) - before)
+                        for drone in cargo_drones:
+                            if drone not in wave.already_hit and wave.collides_with(drone):
+                                wave.already_hit.add(drone)
+                                drone.take_damage(1)
+
+
+
+
 
             elif game_state == "GAME_OVER":
                 # adding updating in this loops so explosion particles keep moving when player dies
