@@ -1,3 +1,5 @@
+from camera import camera
+from world import world
 import pygame
 import random
 from circleshape import CircleShape
@@ -58,13 +60,27 @@ class Upgrade(CircleShape):
         # using a diamond shape (there really should be a func for these shapes)
         p = self.position
         r = self.radius
-        points = [
+        corners = [
             pygame.Vector2(p.x, p.y - r),
             pygame.Vector2(p.x + r, p.y),
             pygame.Vector2(p.x, p.y + r),
             pygame.Vector2(p.x - r, p.y)
         ]
-        pygame.draw.polygon(screen, color, points, 2)
+        points = [camera.world_to_screen(c) for c in corners]  # world -> screen
+        pygame.draw.polygon(screen, color, points, camera.line(2))
 
     def update(self, dt: float):
         self.position += self.velocity * dt
+
+        # cleanup: delete once they drift away
+        # margin is generous so they dont dissapear to early
+        m = 50
+        if not (-m < self.position.x < world.width + m
+                and -m < self.position.y < world.height + m):
+            self.kill()
+
+
+
+
+
+

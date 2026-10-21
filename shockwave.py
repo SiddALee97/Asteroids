@@ -1,3 +1,4 @@
+from camera import camera
 import pygame
 from circleshape import CircleShape
 
@@ -14,6 +15,10 @@ class Shockwave(CircleShape):
             self.kill()
 
     def draw(self, screen):
-        pygame.draw.circle(screen, "yellow", self.position, self.radius, 2)
-
+        pygame.draw.circle(
+            screen, "yellow",
+            camera.world_to_screen(self.position),   # where
+            self.radius * camera.zoom,               # how big
+            camera.line(2),                          # line thickness
+        )
 

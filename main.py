@@ -1,3 +1,5 @@
+from camera import camera
+from world import world
 from shockwave import Shockwave
 from button import Button
 from cargodrone import CargoDrone
@@ -25,8 +27,6 @@ def destroy_asteroid(obj, score_keeper):
     score_keeper.add_points(10)
 
 def main():
-    x = SCREEN_WIDTH / 2
-    y = SCREEN_HEIGHT / 2
 
     # initializing pygame early in order to draw menu
     pygame.init()
@@ -56,10 +56,14 @@ def main():
     def clear_map():
         for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots, shockwaves,):
             group.empty()
+        # every new game and every return to the menu starts from the normal
+        # one-screen world, so a boss arena can never leak into the next run
+        world.resize(1)
+        camera.fit_world(instant=True)
 
     def new_game():
         clear_map()
-        return AsteroidField(), Player(x, y, PLAYER_RADIUS), ScoreKeeper()
+        return AsteroidField(), Player(world.width / 2, world.height / 2, PLAYER_RADIUS), ScoreKeeper()
 
     # initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
     field = AsteroidField()
@@ -149,6 +153,7 @@ def main():
                         game_state = "MENU"
                         break
 
+
                 # keyboard events
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
@@ -165,7 +170,15 @@ def main():
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
                         game_state = "PLAYING"
 
+                    elif event.key == pygame.K_b and game_state == "PLAYING":   # DEBUG: remove later
+                        world.resize(2)
+                        camera.fit_world(speed=0.8)
+                    elif event.key == pygame.K_n and game_state == "PLAYING":   # DEBUG: back to normal
+                        world.resize(1)
+                        camera.fit_world(speed=1.5)
 
+
+            camera.update(dt)  # runs in every state so zooms keep easing during pause and cutscenes
             screen.fill("black")
 
             # Draw everything in the background first to ensure objects stay visible and frozen
@@ -194,13 +207,14 @@ def main():
 
                 player.cdt -= dt
 
-                # new drone timer
+                # Drone Spawn
+
                 drone_spawn_timer -= dt
                 if drone_spawn_timer <= 0:
                     # random spawn and capped number
                     if len(cargo_drones) < 1:
-                        spawn_x = random.choice([0, SCREEN_WIDTH])
-                        spawn_y = random.randint(0, SCREEN_HEIGHT)
+                        spawn_x = random.choice([0, world.width])
+                        spawn_y = random.randint(0, world.height)
                         CargoDrone(spawn_x, spawn_y, radius = 25)
 
                     # reset timer

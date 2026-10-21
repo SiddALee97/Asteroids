@@ -1,6 +1,6 @@
 import random
 from collections.abc import Callable
-
+from world import world
 import pygame
 from asteroid import Asteroid
 from constants import *
@@ -14,22 +14,22 @@ class AsteroidField(pygame.sprite.Sprite):
     edges: list[Edge] = [
         (
             pygame.Vector2(1, 0),
-            lambda y: pygame.Vector2(-ASTEROID_MAX_RADIUS, y * SCREEN_HEIGHT),
+            lambda y: pygame.Vector2(-ASTEROID_MAX_RADIUS, y * world.height),
         ),
         (
             pygame.Vector2(-1, 0),
             lambda y: pygame.Vector2(
-                SCREEN_WIDTH + ASTEROID_MAX_RADIUS, y * SCREEN_HEIGHT
+                world.width + ASTEROID_MAX_RADIUS, y * world.height
             ),
         ),
         (
             pygame.Vector2(0, 1),
-            lambda x: pygame.Vector2(x * SCREEN_WIDTH, -ASTEROID_MAX_RADIUS),
+            lambda x: pygame.Vector2(x * world.width, -ASTEROID_MAX_RADIUS),
         ),
         (
             pygame.Vector2(0, -1),
             lambda x: pygame.Vector2(
-                x * SCREEN_WIDTH, SCREEN_HEIGHT + ASTEROID_MAX_RADIUS
+                x * world.width, world.height + ASTEROID_MAX_RADIUS
             ),
         ),
     ]

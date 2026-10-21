@@ -1,3 +1,5 @@
+from camera import camera
+from world import world
 import pygame
 import random
 
@@ -32,7 +34,8 @@ class Explosion(pygame.sprite.Sprite):
     def draw(self, screen):
         # fiery neon color
         color = (255, random.randint(120, 220), 0)
+        r = max(1, round(3 * camera.zoom))           # particle size scales with zoom
 
         for p in self.particles:
-            # draw tiny 3px circles for the debris shards
-            pygame.draw.circle(screen, color, (int(p["pos"].x), int(p["pos"].y)), 3)
+            s = camera.world_to_screen(p["pos"])     # each particle has its own world position
+            pygame.draw.circle(screen, color, (int(s.x), int(s.y)), r)

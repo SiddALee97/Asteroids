@@ -1,3 +1,5 @@
+from camera import camera
+from world import world
 import pygame
 from circleshape import CircleShape
 from constants import *
@@ -10,10 +12,26 @@ class Asteroid(CircleShape):
         super().__init__(x, y, radius)
 
     def draw(self, screen):
-        pygame.draw.circle(screen, "white", self.position, self.radius, LINE_WIDTH)
+        # skip drawing when completely off-screen
+        if not camera.visible(self.position, self.radius):
+            return
+        pygame.draw.circle(
+            screen, "white",
+            camera.world_to_screen(self.position),   # where
+            self.radius * camera.zoom,                # how big
+            camera.line(LINE_WIDTH),                  # line thickness
+        )
+
 
     def update(self, dt):
         self.position += self.velocity * dt
+        # cleanup: delete asteroids that drift far outside the world.
+        # the margin must be bigger than the spawn offset (ASTEROID_MAX_RADIUS),
+        # or asteroids would be deleted the moment they spawn.
+        m = ASTEROID_MAX_RADIUS * 2
+        if not (-m < self.position.x < world.width + m
+                and -m < self.position.y < world.height + m):
+            self.kill()
 
     def split(self):
         if not self.alive():
