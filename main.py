@@ -1,3 +1,4 @@
+from debug import debug
 from camera import camera
 from world import world
 from shockwave import Shockwave
@@ -82,6 +83,8 @@ def main():
     # Game State (possible: "PLAYING", "GAME_OVER", "PAUSED", "MENU"
     game_state = "MENU"
 
+    player = None
+
     # drone initial timer
     drone_spawn_timer = 5.0
 
@@ -156,6 +159,7 @@ def main():
 
                 # keyboard events
                 if event.type == pygame.KEYDOWN:
+                    debug.handle_key(event, player, game_state)  # debug injection
                     if event.key == pygame.K_ESCAPE:
                         if game_state == "PLAYING":
                             game_state = "PAUSED"
@@ -170,12 +174,6 @@ def main():
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
                         game_state = "PLAYING"
 
-                    elif event.key == pygame.K_b and game_state == "PLAYING":   # DEBUG: remove later
-                        world.resize(2)
-                        camera.fit_world(speed=0.8)
-                    elif event.key == pygame.K_n and game_state == "PLAYING":   # DEBUG: back to normal
-                        world.resize(1)
-                        camera.fit_world(speed=1.5)
 
 
             camera.update(dt)  # runs in every state so zooms keep easing during pause and cutscenes
@@ -199,8 +197,12 @@ def main():
 
             # Conditionally run game logic or popup menu
             if game_state == "PLAYING":
-                # Normal gameplay loop
 
+#-----------------------Normal gameplay loop----------------------------
+
+                # handle debug toggles for spawns
+                if debug.no_spawns:
+                    field.spawn_timer = 0
 
                 # adding updating back inside loop since pause didn't work
                 updatable.update(dt)
@@ -232,7 +234,7 @@ def main():
 
                 # checks player death
                 for obj in asteroids:
-                    if player.collides_with(obj):
+                    if player.collides_with(obj) and not debug.god_mode:        # checks god mode toggle
                         log_event("player_hit")
                         # create and explosion where player is
                         Explosion(player.position)
@@ -306,6 +308,10 @@ def main():
                     button.draw(screen)
 
 
+            debug.draw(screen, player,
+                       {"asteroids": asteroids, "drones": cargo_drones,
+                        "shots": shots, "upgrades": upgrades},
+                        clock)
 
             pygame.display.flip()
             dt=clock.tick(60)/1000

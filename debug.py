@@ -1,0 +1,117 @@
+import pygame
+from camera import camera
+from world import world
+from cargodrone import CargoDrone
+from upgrades import Upgrade
+from constants import SCREEN_WIDTH, MAX_WEAPON_LEVEL
+
+# Master switch: change to False to disable debug feature
+DEBUG = True
+
+# Weapon names as listed in Player.shoot()
+WEAPONS = ["DEFAULT", "MULTISHOT", "SHOCKWAVE", "LASER"]
+
+
+class Debug:
+    def __init__(self):
+        self.visible = False        # toggle the overlay
+        self.god_mode = False       # invincibility
+        self.no_spawns = False      # stops asteroid spawning
+        self.font = None            # pygame.init() must run first
+
+    # handle inputs
+    def handle_key(self, event, player, game_state):
+        if not DEBUG:
+            return
+        if event.key == pygame.K_F1:
+            self.visible = not self.visible
+            return
+        # hotkeys only work when overlay is on (besides f1 obviously)
+        if not self.visible or game_state != "PLAYING" or player is None:
+            return
+
+        k = event.key
+        # F2 spawns cargo drone near player
+        if k == pygame.K_F2:
+            CargoDrone(player.position.x + 200, player.position.y, radius=25)
+
+        # F3 cycle weapon type
+        elif k == pygame.K_F3:
+            i = (WEAPONS.index(player.weapon) + 1) % len(WEAPONS)
+            player.weapon = WEAPONS[i]
+            player.weapon_level = 0 if player.weapon == "DEFAULT" else 1
+
+        # F4 weapon level up
+        elif k == pygame.K_F4:
+            if player.weapon != "DEFAULT":
+                player.weapon_level = min(player.weapon_level + 1, MAX_WEAPON_LEVEL)
+
+        # F5 weapon level down
+        elif k == pygame.K_F5:
+            if player.weapon != "DEFAULT":
+                player.weapon_level = max(player.weapon_level - 1, 1)
+
+        # F6 toggle god mode
+        elif k == pygame.K_F6:
+            self.god_mode = not self.god_mode
+
+        # F7 toggle asteroid spawing
+        elif k == pygame.K_F7:
+            self.no_spawns = not self.no_spawns
+
+        # F8 toggle zoom (boss arena)
+        elif k == pygame.K_F8:
+            if world.width == SCREEN_WIDTH:
+                world.resize(2)
+                camera.fit_world(speed=0.8)
+                # move player to the new center so they aren't in the corner
+                player.position = pygame.Vector2(world.width / 2, world.height / 2)
+                player.velocity = pygame.Vector2(0, 0)
+            else:
+                world.resize(1)
+                camera.fit_world(speed=1.5)
+
+        # F9 drop a standard upgrade
+        elif k == pygame.K_F9:
+            Upgrade(player.position.x + 120, player.position.y, Upgrade.STANDARD_POOL)
+
+        # ------------- HUD -------------
+    def draw(self, screen, player, groups, clock):
+        # Call last in the frame. Draws fixed px positions ignores camera
+        if not DEBUG or not self.visible:
+            return
+        if self.font is None:
+            self.font = pygame.font.Font(None, 22)
+
+        lines = [f"FPS {clock.get_fps():.0f}"]
+        if player is not None:
+            lines += [
+                f"weapon: {player.weapon} lvl: {player.weapon_level}",
+                f"speed: {player.speed:.0f} turn: {player.turn_speed:.0f}",
+                f"cooldown: {player.shoot_cooldown:.2f} shot speed: {player.shoot_speed:.0f}",
+                f"radius {player.radius:.1f}",
+            ]
+        lines += [
+            f"world: {world.width:.0f}x{world.height:.0f} zoom: {camera.zoom:.2f}",
+            "asteroids: {} drones: {} shots: {} upgrades {}".format(
+                len(groups["asteroids"]), len(groups["drones"]),
+                len(groups["shots"]), len(groups["upgrades"])),
+            f"god mode: {'ON' if self.god_mode else 'OFF'}   "
+            f"spawns: {'PAUSED' if self.no_spawns else 'ON'}",
+            "",
+            "F1: debug  F2: drone  F3: weapon  F4/F5: weapon lvl +/-",
+            "F6: god mode  F7: spawns  F8: zoom  F9: upgrade",
+        ]
+
+        # position it on the top right of screen
+        y = 10
+        for text in lines:
+            surf = self.font.render(text, True, "lime")
+            screen.blit(surf, (SCREEN_WIDTH - surf.get_width() - 10, y))
+            y += surf.get_height() + 2
+
+
+# Shared instance
+debug = Debug()
+
+
