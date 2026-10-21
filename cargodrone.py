@@ -66,5 +66,5 @@ class CargoDrone(CircleShape):
             self.break_open()
 
     def break_open(self):
-        Upgrade(self.position.x, self.position.y, Upgrade.STANDARD_POOL)
+        Upgrade(self.position.x, self.position.y, Upgrade.CARGO_POOL)
         self.kill()

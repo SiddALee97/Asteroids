@@ -1,3 +1,4 @@
+from shockwave import Shockwave
 from button import Button
 from cargodrone import CargoDrone
 import random
@@ -16,7 +17,12 @@ from logger import log_state
 from constants import PLAYER_RADIUS
 from constants import DRONE_SPAWN_COOLDOWN
 
-
+# helper for future weapons that dont use shots
+def destroy_asteroid(obj, score_keeper):
+    if random.random() < 0.20:
+        Upgrade(obj.position.x, obj.position.y, Upgrade.STANDARD_POOL)
+    obj.split()
+    score_keeper.add_points(10)
 
 def main():
     x = SCREEN_WIDTH / 2
@@ -27,6 +33,7 @@ def main():
     font = pygame.font.Font(None, 48)
 
     # creating the groups
+    shockwaves = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     upgrades = pygame.sprite.Group()
@@ -35,14 +42,24 @@ def main():
     drawable = pygame.sprite.Group()
 
     # specifying containers the class belongs to
+    Shockwave.containers = (shockwaves, updatable, drawable)
     Shot.containers = (shots, updatable, drawable)
-    AsteroidField.containers = (updatable)
+    AsteroidField.containers = (updatable,)
     Asteroid.containers = (updatable, drawable, asteroids)
     Player.containers = (updatable, drawable)
-    ScoreKeeper.containers = (drawable)
+    ScoreKeeper.containers = (drawable,)
     Explosion.containers = (drawable, updatable)
     Upgrade.containers = (upgrades, drawable, updatable)
     CargoDrone.containers = (drawable, updatable, cargo_drones)
+
+    # making some helper functions to clean up some code in main ( clear board and reset board )
+    def clear_map():
+        for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots, shockwaves,):
+            group.empty()
+
+    def new_game():
+        clear_map()
+        return AsteroidField(), Player(x, y, PLAYER_RADIUS), ScoreKeeper()
 
     # initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
     field = AsteroidField()
@@ -94,19 +111,11 @@ def main():
                 # boot menu first
                 if game_state == "MENU":
                     if play_button.is_clicked(event):
-                        # clear the background first
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # use helper to create new game
+                        field, player, score_keeper = new_game()
 
-                        # create objects for game
+                        # reset timer and change game state
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        field = AsteroidField()
-                        player = Player(x, y, PLAYER_RADIUS)
-                        score_keeper = ScoreKeeper()
                         game_state = "PLAYING"
                         break
 
@@ -116,27 +125,16 @@ def main():
 
                 elif game_state == "GAME_OVER":
                     if game_over_r.is_clicked(event):
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # use helper to start new game
+                        field, player, score_keeper = new_game()
 
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        player = Player(x, y, PLAYER_RADIUS)
-                        field = AsteroidField()
-                        score_keeper = ScoreKeeper()
                         game_state = "PLAYING"
                         break
 
                     elif game_over_m.is_clicked(event):
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # use helper to clear map
+                        clear_map()
 
                         field = AsteroidField()
                         game_state = "MENU"
@@ -144,12 +142,8 @@ def main():
 
                 elif game_state == "PAUSED":
                     if pause_m.is_clicked(event):
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # helper to clear map
+                        clear_map()
 
                         field = AsteroidField()
                         game_state = "MENU"
@@ -165,17 +159,10 @@ def main():
 
                     # keep r hotkey for restart on game over
                     elif game_state == "GAME_OVER" and event.key == pygame.K_r:
-                        updatable.empty()
-                        drawable.empty()
-                        asteroids.empty()
-                        shots.empty()
-                        upgrades.empty()
-                        cargo_drones.empty()
+                        # use helper to start new game
+                        field, player, score_keeper = new_game()
 
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        player = Player(x, y, PLAYER_RADIUS)
-                        field = AsteroidField()
-                        score_keeper = ScoreKeeper()
                         game_state = "PLAYING"
 
 
@@ -190,7 +177,7 @@ def main():
                 updatable.update(dt)
 
                 title_font = pygame.font.Font(None, 80)
-                title_text = title_font.render("ASS ROIDS", True, "white")
+                title_text = title_font.render("ASS*ROIDS", True, "white")
                 title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, center_y - 100))
                 screen.blit(title_text, title_rect)
 
@@ -200,6 +187,7 @@ def main():
             # Conditionally run game logic or popup menu
             if game_state == "PLAYING":
                 # Normal gameplay loop
+
 
                 # adding updating back inside loop since pause didn't work
                 updatable.update(dt)
@@ -224,6 +212,8 @@ def main():
                             log_event("cargo_drone_hit")
                             shot.kill()
                             drone.take_damage(1)
+                            if not drone.alive():
+                                break
 
                 for obj in asteroids:
                     if player.collides_with(obj):
@@ -249,13 +239,9 @@ def main():
                             if shot.collides_with(obj):
                                 log_event("asteroid_shot")
                                 shot.kill()
-
-                                # inserting chance to spawn upgrade
-                                if random.random() < 0.20:
-                                    Upgrade(obj.position.x, obj.position.y, Upgrade.STANDARD_POOL)
-
-                                obj.split()
-                                score_keeper.add_points(10)
+                                destroy_asteroid(obj, score_keeper)
+                                # need to add break so duplicates dont spawn
+                                break
 
             elif game_state == "GAME_OVER":
                 # adding updating in this loops so explosion particles keep moving when player dies
