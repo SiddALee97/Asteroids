@@ -1,3 +1,4 @@
+from shockwave import Shockwave
 from constants import *
 from shot import Shot
 from circleshape import CircleShape
@@ -17,8 +18,8 @@ class Player(CircleShape):
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.shoot_speed = PLAYER_SHOOT_SPEED
         self.radius = PLAYER_RADIUS
-        self.weapon = "DEFAULT"
-        self.weapon_level = 0
+        self.weapon = "SHOCKWAVE"
+        self.weapon_level = 1
 
         # adding base velocity and friction coefficient for momentum calcs
         self.velocity = pygame.Vector2(0, 0)
@@ -59,11 +60,8 @@ class Player(CircleShape):
         self.position += self.velocity * dt
 
 
-        if keys[pygame.K_SPACE]:
-            if self.cdt > 0:
-                pass
-            else:
-                self.cdt = self.shoot_cooldown
+        if keys[pygame.K_SPACE] and self.cdt <= 0:
+                self.cdt = self.current_cooldown()
                 self.shoot()
 
         # going to try screen wrapping for player too (copy pasting from cargo drone)
@@ -92,8 +90,21 @@ class Player(CircleShape):
         # refactoring shoot so we can change the weapon type
         if self.weapon == "MULTISHOT":
             self.fire_parallel(self.weapon_level + 1)
+        elif self.weapon == "SHOCKWAVE":
+            self.fire_shockwave()
         else:
             self.fire_bullet(self.rotation)
+
+        # adding logic for shockwave
+    def fire_shockwave(self):
+        max_radius = 150 + 50 * (self.weapon_level - 1)
+        Shockwave(self.position.x, self.position.y, max_radius)
+
+    def current_cooldown(self) -> float:
+        cd = self.shoot_cooldown
+        if self.weapon == "SHOCKWAVE":
+            cd *= 4.0
+        return max(0.08, cd)
 
         # adding logic for multishot
     def fire_parallel(self, count: int, spacing: float = 12):

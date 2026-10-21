@@ -1,3 +1,4 @@
+from shockwave import Shockwave
 from button import Button
 from cargodrone import CargoDrone
 import random
@@ -32,6 +33,7 @@ def main():
     font = pygame.font.Font(None, 48)
 
     # creating the groups
+    shockwaves = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     upgrades = pygame.sprite.Group()
@@ -40,6 +42,7 @@ def main():
     drawable = pygame.sprite.Group()
 
     # specifying containers the class belongs to
+    Shockwave.containers = (shockwaves, updatable, drawable)
     Shot.containers = (shots, updatable, drawable)
     AsteroidField.containers = (updatable,)
     Asteroid.containers = (updatable, drawable, asteroids)
@@ -51,7 +54,7 @@ def main():
 
     # making some helper functions to clean up some code in main ( clear board and reset board )
     def clear_map():
-        for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots):
+        for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots, shockwaves,):
             group.empty()
 
     def new_game():
