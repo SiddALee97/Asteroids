@@ -1,3 +1,5 @@
+from camera import camera
+from world import world
 from shockwave import Shockwave
 from constants import *
 from shot import Shot
@@ -64,17 +66,8 @@ class Player(CircleShape):
                 self.cdt = self.current_cooldown()
                 self.shoot()
 
-        # going to try screen wrapping for player too (copy pasting from cargo drone)
-        
-        if self.position.x < -self.radius:
-            self.position.x = SCREEN_WIDTH + self.radius
-        elif self.position.x > SCREEN_WIDTH + self.radius:
-            self.position.x = -self.radius
-
-        if self.position.y < -self.radius:
-            self.position.y = SCREEN_HEIGHT + self.radius
-        elif self.position.y > SCREEN_HEIGHT + self.radius:
-            self.position.y = -self.radius
+        # no more screen wrapping! time for soft border!
+        world.pull_inside(self, dt, margin=60, strength=15)
 
 
     def move(self, dt: float):

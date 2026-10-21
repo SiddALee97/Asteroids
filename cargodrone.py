@@ -1,3 +1,5 @@
+from camera import camera
+from world import world
 import pygame
 import random
 from circleshape import CircleShape
@@ -48,17 +50,8 @@ class CargoDrone(CircleShape):
     def update(self, dt: float):
         self.position += self.velocity * dt
 
-        # trying screen wrapping for only cargo drone (copy pasted)
-        from constants import SCREEN_WIDTH, SCREEN_HEIGHT
-        if self.position.x < -self.radius:
-            self.position.x = SCREEN_WIDTH + self.radius
-        elif self.position.x > SCREEN_WIDTH + self.radius:
-            self.position.x = -self.radius
-            
-        if self.position.y < -self.radius:
-            self.position.y = SCREEN_HEIGHT + self.radius
-        elif self.position.y > SCREEN_HEIGHT + self.radius:
-            self.position.y = -self.radius
+        # no more screen wrapping! time for gravity!
+        world.pull_inside(self, dt, margin=150, strength=3)
 
     def take_damage(self, amount: int = 1):
         self.health -= amount

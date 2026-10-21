@@ -197,10 +197,11 @@ def main():
                 # new drone timer
                 drone_spawn_timer -= dt
                 if drone_spawn_timer <= 0:
-                    # random spawn
-                    spawn_x = random.choice([0, SCREEN_WIDTH])
-                    spawn_y = random.randint(0, SCREEN_HEIGHT)
-                    CargoDrone(spawn_x, spawn_y, radius = 25)
+                    # random spawn and capped number
+                    if len(cargo_drones) < 1:
+                        spawn_x = random.choice([0, SCREEN_WIDTH])
+                        spawn_y = random.randint(0, SCREEN_HEIGHT)
+                        CargoDrone(spawn_x, spawn_y, radius = 25)
 
                     # reset timer
                     drone_spawn_timer = DRONE_SPAWN_COOLDOWN
