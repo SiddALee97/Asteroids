@@ -10,9 +10,9 @@ class Camera:
     (where they get drawn). Game logic never touches the camera; only draw()
     methods do.
 
-        The two numbers that define a view:
-    zoom   1.0 = normal, 0.5 = everything half size (see 2x as much)
-    center the world point shown in the middle of the window
+    The two numbers that define a view:
+      zoom   1.0 = normal, 0.5 = everything half size (see 2x as much)
+      center the world point shown in the middle of the window
     """
 
     def __init__(self):

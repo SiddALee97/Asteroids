@@ -37,7 +37,11 @@ class Player(CircleShape):
         return [a, b, c]
 
     def draw(self, screen: pygame.Surface) -> None:
-        pygame.draw.polygon(screen, "white", self.triangle(), LINE_WIDTH)
+        # triangle will stay in world space because collides with () uses it
+        # convert to screen space at last moment before drawing
+
+        pts = [camera.world_to_screen(p) for p in self.triangle()]
+        pygame.draw.polygon(screen, "white", pts, camera.line(LINE_WIDTH))
 
     def rotate(self, dt: float):
         self.rotation += self.turn_speed * dt
