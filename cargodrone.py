@@ -19,21 +19,17 @@ class CargoDrone(CircleShape):
         self.health = 3
 
     def draw(self, screen):
-        # make it look different ( lets try an oval )
-        # give it the dimensions
-        width_radius = self.radius * 1.65
-        height_radius = self.radius * 0.9
+        # skip drawing if off screen
+        if not camera.visible(self.position, self.radius * 1.65):
+            return
 
-        # find top left bounding rectangle point
-        top_left_x = self.position.x - width_radius
-        top_left_y = self.position.y - height_radius
-
-        # getting the measurements for the rect hitbox
-        rect_width = width_radius * 2
-        rect_height = height_radius * 2
+        z = camera.zoom
+        w = self.radius * 1.65 * z  # half-width on screen
+        h = self.radius * 0.9 * z  # half-height on screen
+        c = camera.world_to_screen(self.position)
 
         # creat rect
-        oval_rect = pygame.Rect(top_left_x, top_left_y, rect_width, rect_height)
+        oval_rect = pygame.Rect(c.x - w, c.y - h, w * 2, h * 2)
 
         # visual effects for hits
         color = "cyan"
@@ -45,7 +41,7 @@ class CargoDrone(CircleShape):
 
 
         # draw oval ( will still have rect hitbox )
-        pygame.draw.ellipse(screen, color, oval_rect, LINE_WIDTH)
+        pygame.draw.ellipse(screen, color, oval_rect, camera.line(LINE_WIDTH))
 
     def update(self, dt: float):
         self.position += self.velocity * dt
