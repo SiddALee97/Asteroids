@@ -18,8 +18,8 @@ class Player(CircleShape):
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.shoot_speed = PLAYER_SHOOT_SPEED
         self.radius = PLAYER_RADIUS
-        self.weapon = "SHOCKWAVE"
-        self.weapon_level = 1
+        self.weapon = "DEFAULT"
+        self.weapon_level = 0
 
         # adding base velocity and friction coefficient for momentum calcs
         self.velocity = pygame.Vector2(0, 0)
