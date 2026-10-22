@@ -6,11 +6,14 @@ from constants import SHOT_RADIUS, LINE_WIDTH, LASER_TRAIL_LENGTH
 
 
 class Shot(CircleShape):
-    def __init__(self, x, y, damage = 1, pierce = False):
+    def __init__(self, x, y, damage = 1, pierce = False, trail_length = LASER_TRAIL_LENGTH):
         super().__init__(x, y, SHOT_RADIUS)
         self.damage = damage
         self.pierce = pierce
         self.already_hit = set()
+        self.travelled = 0.0   # distance flown since spawn (limits the trail and may be used later)
+        self.trail_length = trail_length
+
 
     def can_hit(self, target):
         # stops piercing objects from multi hitting
@@ -24,13 +27,15 @@ class Shot(CircleShape):
 
     def draw(self, screen):
         # skip drawing when completely off-screen
-        if not camera.visible(self.position, self.radius + LASER_TRAIL_LENGTH):
+        if not camera.visible(self.position, self.radius + self.trail_length):
             return
+
         head = camera.world_to_screen(self.position)
         if self.pierce and self.velocity.length() > 0:
-            # laser is just the streak behind the shot's position
+            # trail cant be longer than disance travelled so far so it grows out the nose instead
+            trail = min(self.trail_length, self.travelled)
             tail = camera.world_to_screen(
-                self.position - self.velocity.normalize() * LASER_TRAIL_LENGTH)
+                self.position - self.velocity.normalize() * trail)
             pygame.draw.line(screen, "purple", head, tail, camera.line(3))
         else:
             pygame.draw.circle(
@@ -41,6 +46,7 @@ class Shot(CircleShape):
 
     def update(self, dt):
         self.position += self.velocity * dt
+        self.travelled += self.velocity.length() * dt
 
         # kill shots that leave the play area (follows boss-arena resizes)
         if (self.position.x < -self.radius or self.position.x > world.width + self.radius

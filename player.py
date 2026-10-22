@@ -113,7 +113,10 @@ class Player(CircleShape):
         speed_mult = min(1 + LASER_SPEED_PER_LEVEL * (level - 1), LASER_MAX_SPEED_MULT)
         direction = pygame.Vector2(0, 1).rotate(self.rotation)
 
-        shot = Shot(self.position.x, self.position.y, damage = damage, pierce = True)
+        # shoot from the tip instead
+        trail = LASER_TRAIL_LENGTH + LASER_TRAIL_PER_LEVEL * (level - 1)
+        nose = self.position + direction * self.radius
+        shot = Shot(nose.x, nose.y, damage = damage, pierce = True)
         shot.velocity = direction * self.shoot_speed * speed_mult
 
         # adding logic for multishot
