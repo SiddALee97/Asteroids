@@ -22,7 +22,7 @@ from logger import log_state
 def destroy_asteroid(obj, score_keeper):
 
     # only big boys can spawn upgrades
-    is_big = obj.radius >= ASTEROID_MIN_RADIUS * ASTEROID_KINDS
+    is_big = obj.radius >= ASTEROID_MAX_RADIUS
     if is_big and random.random() < UPGRADE_DROP_CHANCE:
         Upgrade(obj.position.x, obj.position.y, Upgrade.STANDARD_POOL)
     obj.split()
@@ -59,7 +59,6 @@ def main():
         for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots, shockwaves,):
             group.empty()
         # every new game and every return to the menu starts from the normal
-        # one-screen world, so a boss arena can never leak into the next run
         world.reset_base()
         camera.fit_world(instant=True)
 
@@ -225,10 +224,10 @@ def main():
                 # checks drone collision
                 for drone in cargo_drones:
                     for shot in shots:
-                        if shot.collides_with(drone):
+                        if shot.can_hit(drone) and shot.collides_with(drone):
                             log_event("cargo_drone_hit")
-                            shot.kill()
-                            drone.take_damage(1)
+                            shot.register_hit(drone)
+                            drone.take_damage(shot.damage)
                             if not drone.alive():
                                 break
 
@@ -242,6 +241,7 @@ def main():
                         player.kill()
                         # changes the game state
                         game_state = "GAME_OVER"
+                        break
 
                 # checks upgrade collision and applies
                 if game_state == "PLAYING":
@@ -257,10 +257,13 @@ def main():
                     # checks shot on asteroid
                     for obj in asteroids:
                         for shot in shots:
-                            if shot.collides_with(obj):
+                            if shot.can_hit(obj) and shot.collides_with(obj):
                                 log_event("asteroid_shot")
-                                shot.kill()
+                                shot.register_hit(obj)
+                                before = set(asteroids)
                                 destroy_asteroid(obj, score_keeper)
+                                # ignore fragments
+                                shot.already_hit |= (set(asteroids) - before)
                                 # need to add break so duplicates dont spawn
                                 break
 

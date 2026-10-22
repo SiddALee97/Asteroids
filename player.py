@@ -108,7 +108,13 @@ class Player(CircleShape):
 
         # adding laser logic
     def fire_laser(self):
-        self.fire_bullet(self.rotation)
+        level = self.weapon_levels["LASER"]
+        damage = LASER_BASE_DAMAGE + LASER_DAMAGE_PER_LEVEL * (level - 1)
+        speed_mult = min(1 + LASER_SPEED_PER_LEVEL * (level - 1), LASER_MAX_SPEED_MULT)
+        direction = pygame.Vector2(0, 1).rotate(self.rotation)
+
+        shot = Shot(self.position.x, self.position.y, damage = damage, pierce = True)
+        shot.velocity = direction * self.shoot_speed * speed_mult
 
         # adding logic for multishot
     def fire_parallel(self, count: int, spacing: float = 12):
