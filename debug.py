@@ -9,7 +9,7 @@ from constants import SCREEN_WIDTH, MAX_WEAPON_LEVEL
 DEBUG = True
 
 # Weapon names as listed in Player.shoot()
-WEAPONS = ["DEFAULT", "MULTISHOT", "SHOCKWAVE", "LASER"]
+WEAPONS = ["MULTISHOT", "SHOCKWAVE", "LASER"]
 
 
 class Debug:
@@ -18,6 +18,7 @@ class Debug:
         self.god_mode = False       # invincibility
         self.no_spawns = False      # stops asteroid spawning
         self.font = None            # pygame.init() must run first
+        self.selected = 0
 
     # handle inputs
     def handle_key(self, event, player, game_state):
@@ -35,21 +36,19 @@ class Debug:
         if k == pygame.K_F2:
             CargoDrone(player.position.x + 200, player.position.y, radius=25)
 
-        # F3 cycle weapon type
+        # F3 select weapon type
         elif k == pygame.K_F3:
-            i = (WEAPONS.index(player.weapon) + 1) % len(WEAPONS)
-            player.weapon = WEAPONS[i]
-            player.weapon_level = 0 if player.weapon == "DEFAULT" else 1
+            self.selected = (self.selected + 1) % len(WEAPONS)
 
         # F4 weapon level up
         elif k == pygame.K_F4:
-            if player.weapon != "DEFAULT":
-                player.weapon_level = min(player.weapon_level + 1, MAX_WEAPON_LEVEL)
+            name = WEAPONS[self.selected]
+            player.weapon_levels[name] = min(player.weapon_levels[name] + 1, MAX_WEAPON_LEVEL)
 
         # F5 weapon level down
         elif k == pygame.K_F5:
-            if player.weapon != "DEFAULT":
-                player.weapon_level = max(player.weapon_level - 1, 1)
+            name = WEAPONS[self.selected]
+            player.weapon_levels[name] = max(player.weapon_levels[name] - 1, 0)
 
         # F6 toggle god mode
         elif k == pygame.K_F6:
@@ -61,15 +60,15 @@ class Debug:
 
         # F8 toggle zoom (boss arena)
         elif k == pygame.K_F8:
-            if world.width == SCREEN_WIDTH:
-                world.resize(2)
+            if not world.is_boss:
+                world.enter_boss()
                 camera.fit_world(speed=0.8)
-                # move player to the new center so they aren't in the corner
-                player.position = pygame.Vector2(world.width / 2, world.height / 2)
-                player.velocity = pygame.Vector2(0, 0)
             else:
-                world.resize(1)
+                world.reset_base()
                 camera.fit_world(speed=1.5)
+            # re-center player
+            player.position = pygame.Vector2(world.width / 2, world.height / 2)
+            player.velocity = pygame.Vector2(0, 0)
 
         # F9 drop a standard upgrade
         elif k == pygame.K_F9:
@@ -86,7 +85,9 @@ class Debug:
         lines = [f"FPS {clock.get_fps():.0f}"]
         if player is not None:
             lines += [
-                f"weapon: {player.weapon} lvl: {player.weapon_level}",
+                "levels: " + " ".join(
+                    f"{'>' if WEAPONS[self.selected] == n else ''}{n} {player.weapon_levels[n]}"
+                    for n in WEAPONS),
                 f"speed: {player.speed:.0f} turn: {player.turn_speed:.0f}",
                 f"cooldown: {player.shoot_cooldown:.2f} shot speed: {player.shoot_speed:.0f}",
                 f"radius {player.radius:.1f}",
@@ -99,7 +100,7 @@ class Debug:
             f"god mode: {'ON' if self.god_mode else 'OFF'}   "
             f"spawns: {'PAUSED' if self.no_spawns else 'ON'}",
             "",
-            "F1: debug  F2: drone  F3: weapon  F4/F5: weapon lvl +/-",
+            "F1: debug  F2: drone  F3: pick weapon  F4/F5: its lvl +/-",
             "F6: god mode  F7: spawns  F8: zoom  F9: upgrade",
         ]
 

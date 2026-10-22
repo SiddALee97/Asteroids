@@ -20,8 +20,8 @@ class Player(CircleShape):
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.shoot_speed = PLAYER_SHOOT_SPEED
         self.radius = PLAYER_RADIUS
-        self.weapon = "DEFAULT"
-        self.weapon_level = 0
+        self.weapon_levels = {"MULTISHOT": 0, "SHOCKWAVE": 0, "LASER": 0}
+        self.weapon_cooldowns = {"SHOCKWAVE": 0.0, "LASER": 0.0}
 
         # adding base velocity and friction coefficient for momentum calcs
         self.velocity = pygame.Vector2(0, 0)
@@ -49,6 +49,11 @@ class Player(CircleShape):
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
 
+        # tick every cd here so main.py() doesn't need player.cdt -= dt
+        self.cdt -= dt
+        for name in self.weapon_cooldowns:
+            self.weapon_cooldowns[name] = max(0.0, self.weapon_cooldowns[name] - dt)
+
         if keys[pygame.K_a]:
             self.rotate(-dt)
         if keys[pygame.K_d]:
@@ -67,8 +72,14 @@ class Player(CircleShape):
 
 
         if keys[pygame.K_SPACE] and self.cdt <= 0:
-                self.cdt = self.current_cooldown()
-                self.shoot()
+                self.cdt = max(0.08, self.shoot_cooldown)
+                self.fire_parallel(self.weapon_levels["MULTISHOT"] + 1)
+
+        # time to add some more weapon buttons!
+        if keys[pygame.K_q]:
+            self.try_fire("SHOCKWAVE", self.fire_shockwave, SHOCKWAVE_COOLDOWN_MULT)
+        if keys[pygame.K_e]:
+            self.try_fire("LASER", self.fire_laser, LASER_COOLDOWN_MULT)
 
         # no more screen wrapping! time for soft border!
         world.pull_inside(self, dt, margin=60, strength=15)
@@ -78,30 +89,26 @@ class Player(CircleShape):
         # instead of moving position, we add "thrust" to velocity
         unit_vector = pygame.Vector2(0, 1)
         rotated_vector = unit_vector.rotate(self.rotation)
-        
+
         # accelerate
         self.velocity += rotated_vector * self.speed * dt
 
+    def try_fire(self, name, fire_func, cooldown_mult):
+        # lvl 0 or still cooling down do nothing
+        if self.weapon_levels[name] <= 0 or self.weapon_cooldowns[name] > 0:
+            return
+        self.weapon_cooldowns[name] = max(0.08, self.shoot_cooldown * cooldown_mult)
+        fire_func()
 
-    def shoot(self):
-        # refactoring shoot so we can change the weapon type
-        if self.weapon == "MULTISHOT":
-            self.fire_parallel(self.weapon_level + 1)
-        elif self.weapon == "SHOCKWAVE":
-            self.fire_shockwave()
-        else:
-            self.fire_bullet(self.rotation)
-
-        # adding logic for shockwave
+        # refactoring logic for shockwave
     def fire_shockwave(self):
-        max_radius = 150 + 50 * (self.weapon_level - 1)
+        level = self.weapon_levels["SHOCKWAVE"]
+        max_radius = 150 + 50 * (level - 1)
         Shockwave(self.position.x, self.position.y, max_radius)
 
-    def current_cooldown(self) -> float:
-        cd = self.shoot_cooldown
-        if self.weapon == "SHOCKWAVE":
-            cd *= 4.0
-        return max(0.08, cd)
+        # adding laser logic
+    def fire_laser(self):
+        self.fire_bullet(self.rotation)
 
         # adding logic for multishot
     def fire_parallel(self, count: int, spacing: float = 12):

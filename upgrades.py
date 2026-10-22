@@ -38,12 +38,8 @@ class Upgrade(CircleShape):
 
         # adding tier2 upgrades
         if self.kind in Upgrade.CARGO_POOL:
-            if player.weapon == self.kind:
-                player.weapon_level = min(player.weapon_level + 1, MAX_WEAPON_LEVEL)
-            else:
-                player.weapon = self.kind
-                player.weapon_level = 1
-
+            player.weapon_levels[self.kind] = min(
+                player.weapon_levels[self.kind] + 1, MAX_WEAPON_LEVEL)
 
     def draw(self, screen: pygame.Surface) -> None:
         # Assign colors

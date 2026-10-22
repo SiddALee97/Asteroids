@@ -1,18 +1,32 @@
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_BASE_SCALE, BOSS_WORLD_SCALE
 import pygame
 
 
 class World:
     def __init__(self):
-        # start at exactly one screen size so it feels normal
-        self.width = SCREEN_WIDTH
-        self.height = SCREEN_HEIGHT
+        # Using world base scale to set the normal window
+        self.width = SCREEN_WIDTH * WORLD_BASE_SCALE
+        self.height = SCREEN_HEIGHT * WORLD_BASE_SCALE
+        self.is_boss = False
+
+    @property
+    def scale(self):
+        # how many windows wide the world is at a moment
+        return self.width / SCREEN_WIDTH
 
     def resize(self, scale):
         # resizing only changes the rules of the play area not the camera,
         # need to call camera helper to frame new size
         self.width = SCREEN_WIDTH * scale
         self.height = SCREEN_HEIGHT * scale
+
+    def reset_base(self):
+        self.resize(WORLD_BASE_SCALE)
+        self.is_boss = False
+
+    def enter_boss(self):
+        self.resize(BOSS_WORLD_SCALE)
+        self.is_boss = True
 
     def pull_inside(self, obj, dt, margin, strength):
         # soft border ( gravity sort of )

@@ -1,3 +1,4 @@
+from constants import *
 from debug import debug
 from camera import camera
 from world import world
@@ -15,14 +16,14 @@ from asteroid import Asteroid
 from asteroidfield import AsteroidField
 import pygame
 from player import Player
-from constants import SCREEN_HEIGHT, SCREEN_WIDTH
 from logger import log_state
-from constants import PLAYER_RADIUS
-from constants import DRONE_SPAWN_COOLDOWN
 
 # helper for future weapons that dont use shots
 def destroy_asteroid(obj, score_keeper):
-    if random.random() < 0.20:
+
+    # only big boys can spawn upgrades
+    is_big = obj.radius >= ASTEROID_MIN_RADIUS * ASTEROID_KINDS
+    if is_big and random.random() < UPGRADE_DROP_CHANCE:
         Upgrade(obj.position.x, obj.position.y, Upgrade.STANDARD_POOL)
     obj.split()
     score_keeper.add_points(10)
@@ -59,7 +60,7 @@ def main():
             group.empty()
         # every new game and every return to the menu starts from the normal
         # one-screen world, so a boss arena can never leak into the next run
-        world.resize(1)
+        world.reset_base()
         camera.fit_world(instant=True)
 
     def new_game():
@@ -68,7 +69,7 @@ def main():
 
     # initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
     field = AsteroidField()
-
+    camera.fit_world(instant=True)
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     # prints startup message
@@ -207,7 +208,6 @@ def main():
                 # adding updating back inside loop since pause didn't work
                 updatable.update(dt)
 
-                player.cdt -= dt
 
                 # Drone Spawn
 
@@ -216,7 +216,7 @@ def main():
                     # random spawn and capped number
                     if len(cargo_drones) < 1:
                         spawn_x = random.choice([0, world.width])
-                        spawn_y = random.randint(0, world.height)
+                        spawn_y = random.uniform(0, world.height)
                         CargoDrone(spawn_x, spawn_y, radius = 25)
 
                     # reset timer
