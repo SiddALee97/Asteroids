@@ -1,3 +1,4 @@
+import viewport
 import pygame
 
 class Button:
@@ -15,7 +16,7 @@ class Button:
 
     def draw(self, screen):
         # check if mouse is hovering over button
-        mouse_pos = pygame.mouse.get_pos()
+        mouse_pos = viewport.mouse_pos()
         if self.rect.collidepoint(mouse_pos):
             color = self.hover_color
         else:

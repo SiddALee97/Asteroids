@@ -1,3 +1,4 @@
+import viewport
 from constants import *
 from debug import debug
 from camera import camera
@@ -69,7 +70,8 @@ def main():
     # initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
     field = AsteroidField()
     camera.fit_world(instant=True)
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
+    screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     # prints startup message
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
@@ -79,6 +81,8 @@ def main():
     # creates time keeper
     clock = pygame.time.Clock()
     dt = 0.0
+    fullscreen = False
+    window_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
     # Game State (possible: "PLAYING", "GAME_OVER", "PAUSED", "MENU"
     game_state = "MENU"
@@ -91,7 +95,7 @@ def main():
     # Future proofing the UI setup for buttons
     btn_width, btn_height = 240, 50
     center_x = (SCREEN_WIDTH // 2) - (btn_width // 2)
-    center_y = SCREEN_HEIGHT // 2
+    center_y = PLAY_HEIGHT // 2
 
     # Main Menu buttons config
     play_button = Button(center_x, center_y, btn_width, btn_height, "Commence", font, "darkgray", "cyan")
@@ -112,6 +116,8 @@ def main():
             log_state()
 
             for event in pygame.event.get():
+                if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
+                    event = pygame.event.Event(event.type, {**event.dict, "pos": viewport.to_game(event.pos)})
                 if event.type == pygame.QUIT:
                         return
 
@@ -159,6 +165,15 @@ def main():
 
                 # keyboard events
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_F11:
+                        if not fullscreen:
+                            window_size = pygame.display.get_surface().get_size()
+                            pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                            fullscreen = True
+                        else:
+                            pygame.display.set_mode(window_size, pygame.RESIZABLE)
+                            fullscreen = False
+                        continue
                     debug.handle_key(event, player, game_state)  # debug injection
                     if event.key == pygame.K_ESCAPE:
                         if game_state == "PLAYING":
@@ -179,9 +194,16 @@ def main():
             camera.update(dt)  # runs in every state so zooms keep easing during pause and cutscenes
             screen.fill("black")
 
-            # Draw everything in the background first to ensure objects stay visible and frozen
+# -------------------Draw everything in the background first to ensure objects stay visible and frozen
+
+            # make world objects draw inside play field
+            screen.set_clip(pygame.Rect(0, 0, PLAY_WIDTH, PLAY_HEIGHT))
             for obj in drawable:
                 obj.draw(screen)
+            screen.set_clip(None)
+
+            # temp divider for testing will remove later
+            pygame.draw.line(screen, "cyan", (0, PLAY_HEIGHT), (PLAY_WIDTH, PLAY_HEIGHT), 2)
 
             # render different states and new menus
             if game_state == "MENU":
@@ -290,7 +312,7 @@ def main():
 
                 # draw game over overlay text
                 menu_text = font.render("MAYDAY! MAYDAY! MAYDAY! - Press 'R' to Restart", True, "white")
-                text_rect = menu_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20))
+                text_rect = menu_text.get_rect(center=(SCREEN_WIDTH // 2, PLAY_HEIGHT // 2 - 20))
                 score_text = font.render(f"Final Score: {score_keeper.score}", True, "white")
                 score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, text_rect.bottom + 30))
                 screen.blit(menu_text, text_rect)
@@ -303,7 +325,7 @@ def main():
             elif game_state == "PAUSED":
                 # draw transparent overlay for Pause Menu
                 pause_text = font.render("PAUSED - Press ESC to Resume", True, "yellow")
-                text_rect = pause_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+                text_rect = pause_text.get_rect(center=(SCREEN_WIDTH // 2, PLAY_HEIGHT // 2))
                 screen.blit(pause_text, text_rect)
 
                 # add buttons to PAUSED
@@ -316,9 +338,11 @@ def main():
                         "shots": shots, "upgrades": upgrades},
                         clock)
 
+
+            viewport.present(screen)
             pygame.display.flip()
             dt=clock.tick(60)/1000
-            
+
 
 
 
