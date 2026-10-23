@@ -1,3 +1,4 @@
+from hit import HitKind, Hit
 from camera import camera
 from world import world
 import pygame
@@ -6,13 +7,18 @@ from constants import SHOT_RADIUS, LINE_WIDTH, LASER_TRAIL_LENGTH
 
 
 class Shot(CircleShape):
-    def __init__(self, x, y, damage = 1, pierce = False, trail_length = LASER_TRAIL_LENGTH):
+    def __init__(self, x, y, damage = 1, pierce = False, trail_length = LASER_TRAIL_LENGTH, kind = HitKind.SHOT, breakage = 1):
         super().__init__(x, y, SHOT_RADIUS)
         self.damage = damage
         self.pierce = pierce
         self.already_hit = set()
         self.travelled = 0.0   # distance flown since spawn (limits the trail and may be used later)
         self.trail_length = trail_length
+        self.kind = kind
+        self.breakage = breakage 
+
+    def make_hit(self):
+        return Hit(kind = self.kind, damage = self.damage, force = 0, breakage = self.breakage)
 
 
     def can_hit(self, target):

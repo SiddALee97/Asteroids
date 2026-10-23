@@ -1,3 +1,4 @@
+from hit import HitKind
 from camera import camera
 from world import world
 from shockwave import Shockwave
@@ -108,10 +109,14 @@ class Player(CircleShape):
 
         # adding laser logic
     def fire_laser(self):
+        kind = HitKind.LASER
+        trail_length = trail
         level = self.weapon_levels["LASER"]
+        breakage = LASER_GENERATIONS[level]
         damage = LASER_BASE_DAMAGE + LASER_DAMAGE_PER_LEVEL * (level - 1)
         speed_mult = min(1 + LASER_SPEED_PER_LEVEL * (level - 1), LASER_MAX_SPEED_MULT)
         direction = pygame.Vector2(0, 1).rotate(self.rotation)
+        shot = Shot(nose.x, nose.y, damage = damage, pierce = True, kind = kind, breakage = breakage)
 
         # shoot from the tip instead
         trail = LASER_TRAIL_LENGTH + LASER_TRAIL_PER_LEVEL * (level - 1)
