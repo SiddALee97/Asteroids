@@ -1,6 +1,6 @@
 import math
 import pygame
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from constants import PLAY_WIDTH, PLAY_HEIGHT
 from world import world
 
 
@@ -18,13 +18,13 @@ class Camera:
     def __init__(self):
 
         # middle of the window in px
-        self.half = pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        self.half = pygame.Vector2(PLAY_WIDTH / 2, PLAY_HEIGHT / 2)
 
         # Current view
         self.zoom = 1.0
         self.center = pygame.Vector2(self.half)
 
-        # where you view is going
+        # where your view is going
         self.target_zoom = 1.0
         self.target_center = pygame.Vector2(self.half)
 
@@ -41,7 +41,7 @@ class Camera:
         gives zoom 1.0 and center = screen middle (the identity view).
         """
 
-        self.target_zoom = min(SCREEN_WIDTH / world.width, SCREEN_HEIGHT / world.height)
+        self.target_zoom = min(PLAY_WIDTH / world.width, PLAY_HEIGHT / world.height)
         self.target_center = pygame.Vector2(world.width / 2, world.height / 2)
         if speed:
             self.speed = speed # remembered but gets reset if passed a new one
@@ -69,7 +69,7 @@ class Camera:
         # False if object is off screen so we dont have to draw it
         s = self.world_to_screen(pos)
         r = radius * self.zoom
-        return -r < s.x < SCREEN_WIDTH + r and -r < s.y < SCREEN_HEIGHT + r
+        return -r < s.x < PLAY_WIDTH + r and -r < s.y < PLAY_HEIGHT + r
 
     def line(self, width):
 

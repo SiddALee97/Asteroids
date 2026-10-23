@@ -24,3 +24,6 @@ LASER_SPEED_PER_LEVEL = 0.45
 LASER_MAX_SPEED_MULT = 3.0  # cap so cant skip over small targets: 2.5 
 LASER_TRAIL_LENGTH = 45  # length of drawn streak in world units
 LASER_TRAIL_PER_LEVEL = 15
+HUD_HEIGHT = 120
+PLAY_WIDTH = SCREEN_WIDTH
+PLAY_HEIGHT = SCREEN_HEIGHT - HUD_HEIGHT   # 600
