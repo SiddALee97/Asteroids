@@ -2,7 +2,7 @@ from hit import HitKind
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import *
+from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT
 from shot import Shot
 from circleshape import CircleShape
 import pygame
@@ -106,14 +106,16 @@ class Player(CircleShape):
     def fire_shockwave(self):
         level = self.weapon_levels["SHOCKWAVE"]
         max_radius = 150 + 50 * (level - 1)
+        force = SHOCKWAVE_FORCE[level]
         breakage = SHOCKWAVE_SPLITS[level]
         damage = SHOCKWAVE_DAMAGE[level]
-        Shockwave(self.position.x, self.position.y, max_radius, damage = damage, breakage = breakage)
+        Shockwave(self.position.x, self.position.y, max_radius, damage = damage, breakage = breakage, force = force)
 
         # adding laser logic
     def fire_laser(self):
         kind = HitKind.LASER
         level = self.weapon_levels["LASER"]
+        force = LASER_FORCE[level]
         breakage = LASER_GENERATIONS[level]
         damage = LASER_BASE_DAMAGE + LASER_DAMAGE_PER_LEVEL * (level - 1)
         speed_mult = min(1 + LASER_SPEED_PER_LEVEL * (level - 1), LASER_MAX_SPEED_MULT)
@@ -122,7 +124,7 @@ class Player(CircleShape):
         # shoot from the tip instead
         trail = LASER_TRAIL_LENGTH + LASER_TRAIL_PER_LEVEL * (level - 1)
         nose = self.position + direction * self.radius
-        shot = Shot(nose.x, nose.y, damage = damage, pierce = True, kind = kind, breakage = breakage, trail_length = trail)
+        shot = Shot(nose.x, nose.y, damage = damage, pierce = True, kind = kind, breakage = breakage, trail_length = trail, force = force)
         shot.velocity = direction * self.shoot_speed * speed_mult
 
         # adding logic for multishot

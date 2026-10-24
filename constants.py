@@ -24,8 +24,10 @@ ASTEROID_SIZES = (20, 40, 60)
 ASTEROID_SPAWN_TIERS = 3
 ASTEROID_MIN_RADIUS = 20
 ASTEROID_KINDS = 3
-ASTEROID_SPAWN_RATE_SECONDS = 0.8
+ASTEROID_SPAWN_RATE_SECONDS = 1.2    # in seconds so higher is slower
 ASTEROID_MAX_RADIUS = ASTEROID_MIN_RADIUS * ASTEROID_KINDS
+ASTEROID_MAX_SPEED = 400
+ASTEROID_MASS_EXPONENT = 1 
 
 
 
@@ -38,6 +40,7 @@ UPGRADE_DROP_CHANCE = 0.25
 #----------------------- WEAPON CONSTANTS -----------------------#
 
 MAX_WEAPON_LEVEL = 5
+FORCE_SCALE = 20
 
 #----------------------- LASER CONSTANTS -----------------------#
 LASER_GENERATIONS = (0, 1, 1, 2, 2, 3)
@@ -48,14 +51,14 @@ LASER_SPEED_PER_LEVEL = 0.45
 LASER_MAX_SPEED_MULT = 3.0  # cap so cant skip over small targets: 2.5
 LASER_TRAIL_LENGTH = 45  # length of drawn streak in world units
 LASER_TRAIL_PER_LEVEL = 15
-LASER_FORCE = 1 # force applied to asteroids when hit by laser
+LASER_FORCE = (0, 100, 100, 100, 150, 175)  # force applied to asteroids when hit by laser
 
 #----------------------- SHOCKWAVE CONSTANTS -----------------------#
 SHOCKWAVE_SPLITS = (0, 1, 2, 3, 4, 5)
 SHOCKWAVE_COOLDOWN_MULT = 4.0
 SHOCKWAVE_DAMAGE = (0, 1, 1, 2, 2, 3)
-SHOCKWAVE_FORCE = 2 # force applied to asteroids when hit by shockwave
-
+SHOCKWAVE_FORCE = (0, 300, 350, 400, 450, 500) # force applied to asteroids when hit by shockwave
+FORCE_FALLOFF_FLOOR = 0.25 
 
 
 

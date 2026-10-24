@@ -58,7 +58,7 @@ class Asteroid(CircleShape):
             new_2.velocity = new_vector2 * 1.2
 
 
-    def fragment(self, tiers):
+    def fragment(self, tiers, hit, strength):
         new_tier = self.tier - tiers
         new_spawns = []
         if tiers <= 0:
@@ -70,6 +70,7 @@ class Asteroid(CircleShape):
                 random_angle = random.uniform(-50, 50)
                 fragment = Asteroid(x, y, new_tier)
                 fragment.velocity = self.velocity.rotate(random_angle) * 1.2
+                fragment.apply_force(hit, strength)
                 new_spawns.append(fragment)
         return new_spawns
 
@@ -78,7 +79,8 @@ class Asteroid(CircleShape):
         if self.health > 0:
             return HitResult(HitOutcome.CHIPPED)
         self.kill()
-        fragments = self.fragment(hit.breakage)
+        strength = hit.force_at(self.position)
+        fragments = self.fragment(hit.breakage, hit, strength)
         return HitResult(HitOutcome.DESTROYED, points = ASTEROID_SCORES[self.tier], spawned = fragments)
 
     def take_laser(self, hit):
@@ -88,8 +90,10 @@ class Asteroid(CircleShape):
             return HitResult(HitOutcome.DESTROYED, points = ASTEROID_SCORES[self.tier])
         if new_tier >= 0:
             new_points = ASTEROID_SCORES[self.tier] - ASTEROID_SCORES[new_tier]
+            strength = hit.force_at(self.position)
             self.tier = new_tier
             self.radius = ASTEROID_SIZES[new_tier]
+            self.apply_force(hit, strength)
             self.health = min(self.health, ASTEROID_HEALTHS[new_tier])
             return HitResult(HitOutcome.SHRUNK, points = new_points)
 
@@ -97,7 +101,8 @@ class Asteroid(CircleShape):
         new_tier = max(0, self.tier - hit.breakage)
         tiers = self.tier - new_tier
         self.kill()
-        fragments = self.fragment(tiers)
+        strength = hit.force_at(self.position)
+        fragments = self.fragment(tiers, hit, strength)
         return HitResult(HitOutcome.DESTROYED, points = ASTEROID_SCORES[self.tier], spawned = fragments)
 
 
@@ -117,18 +122,23 @@ class Asteroid(CircleShape):
         return HitResult(HitOutcome.NOTHING)
 
 
-    def apply_force(self, hit, from_point):
+    def apply_force(self, hit, strength):
         # apply force to asteroid's velocity
         if not self.alive():
             return
-        
-        if hit.kind is HitKind.LASER:
-            pass
-
-        if hit.kind is HitKind.BLAST:
-            force = SHOCKWAVE_FORCE
-        else:
+        if hit.direction is None and hit.origin is None:
             return
+        if hit.direction is not None:
+            direction = hit.direction
+        else:
+            direction = self.position - hit.origin
+        mass = self.radius ** ASTEROID_MASS_EXPONENT
+        if direction.length_squared() == 0:
+            return
+        self.velocity += direction.normalize() * strength * FORCE_SCALE / mass
+        self.velocity = self.velocity.clamp_magnitude(0, ASTEROID_MAX_SPEED)
+       
+
 
 
 

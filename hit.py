@@ -1,6 +1,7 @@
 import pygame
 from enum import Enum, auto
 from dataclasses import dataclass, field
+from constants import FORCE_FALLOFF_FLOOR
 
 class HitOutcome(Enum):
     NOTHING = auto()    # hit doesn't register
@@ -30,9 +31,10 @@ class Hit():
     reach: float | None = None
 
     def force_at(self, position):
-        if self.reach is None:
+        if self.reach is None or self.origin is None:
             return self.force
         distance = pygame.Vector2.distance_to(self.origin, position)
-        distance = min(distance / self.reach, 1)
-        
-        return max((self.force * (1 - distance)), FORCE_FLOOR)
+        fraction = min(distance / self.reach, 1)
+        scale = max(1 - fraction, FORCE_FALLOFF_FLOOR)
+        return self.force * scale
+    

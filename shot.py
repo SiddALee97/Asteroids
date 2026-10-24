@@ -7,7 +7,7 @@ from constants import SHOT_RADIUS, LINE_WIDTH, LASER_TRAIL_LENGTH
 
 
 class Shot(CircleShape):
-    def __init__(self, x, y, damage = 1, pierce = False, trail_length = LASER_TRAIL_LENGTH, kind = HitKind.SHOT, breakage = 1):
+    def __init__(self, x, y, damage = 1, pierce = False, trail_length = LASER_TRAIL_LENGTH, kind = HitKind.SHOT, breakage = 1, force = 0):
         super().__init__(x, y, SHOT_RADIUS)
         self.damage = damage
         self.pierce = pierce
@@ -16,9 +16,14 @@ class Shot(CircleShape):
         self.trail_length = trail_length
         self.kind = kind
         self.breakage = breakage 
+        self.force = force
 
     def make_hit(self):
-        return Hit(kind = self.kind, damage = self.damage, force = 0, breakage = self.breakage)
+        direction = None
+        if self.kind == HitKind.LASER:
+            if self.velocity.length() > 0:
+                direction = self.velocity.normalize()
+        return Hit(kind = self.kind, damage = self.damage, force = self.force, breakage = self.breakage, direction = direction, origin = self.position.copy(), reach = self.radius)
 
 
     def can_hit(self, target):
