@@ -255,10 +255,11 @@ def main():
                     for shot in shots:
                         if shot.can_hit(drone) and shot.collides_with(drone):
                             log_event("cargo_drone_hit")
-                            shot.register_hit(drone)
-                            drone.take_damage(shot.damage)
-                            if not drone.alive():
-                                break
+                            result = resolve_hit(shot, drone)
+                            score_keeper.add_points(result.points)
+                            break
+                            
+                        
 
                 # checks player death
                 for obj in asteroids:
@@ -302,8 +303,9 @@ def main():
                                 wave.already_hit.add(obj)
                         for drone in cargo_drones:
                             if drone not in wave.already_hit and wave.collides_with(drone):
-                                wave.already_hit.add(drone)
-                                drone.take_damage(1)
+                                result = resolve_hit(wave, drone)
+                                score_keeper.add_points(result.points)
+
 
 
 

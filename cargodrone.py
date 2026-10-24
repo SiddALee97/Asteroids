@@ -4,7 +4,8 @@ import pygame
 import random
 from circleshape import CircleShape
 from upgrades import Upgrade
-from constants import LINE_WIDTH
+from constants import LINE_WIDTH, DRONE_SCORE
+from hit import HitResult, HitOutcome
 
 class CargoDrone(CircleShape):
     def __init__(self, x: float, y: float, radius: float):
@@ -49,10 +50,14 @@ class CargoDrone(CircleShape):
         # no more screen wrapping! time for gravity!
         world.pull_inside(self, dt, margin=150, strength=3)
 
-    def take_damage(self, amount: int = 1):
-        self.health -= amount
-        if self.health <= 0:
-            self.break_open()
+    def take_hit(self, hit):
+        if not self.alive():
+            return HitResult(HitOutcome.NOTHING)
+        self.health -= hit.damage
+        if self.health > 0:
+            return HitResult(HitOutcome.CHIPPED, points = 0)
+        self.break_open()
+        return HitResult(HitOutcome.DESTROYED, points = DRONE_SCORE)
 
     def break_open(self):
         Upgrade(self.position.x, self.position.y, Upgrade.CARGO_POOL)
