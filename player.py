@@ -50,9 +50,6 @@ class Player(CircleShape):
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
 
-        # testing ghosting keys 
-        if keys[pygame.K_SPACE] and keys[pygame.K_e]:
-            print("SPACE + E pressed")
 
         # tick every cd here so main.py() doesn't need player.cdt -= dt
         self.cdt -= dt

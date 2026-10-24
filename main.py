@@ -21,14 +21,6 @@ from player import Player
 from logger import log_state
 
 # helper for future weapons that dont use shots
-def destroy_asteroid(obj, score_keeper):
-
-    # only big boys can spawn upgrades
-    is_big = obj.radius >= ASTEROID_MAX_RADIUS
-    if is_big and random.random() < UPGRADE_DROP_CHANCE:
-        Upgrade(obj.position.x, obj.position.y, Upgrade.STANDARD_POOL)
-    obj.split()
-    score_keeper.add_points(10)
 
 def resolve_hit(source, target):
     hit = source.make_hit()
