@@ -1,3 +1,4 @@
+from hit import Hit, HitKind, HitOutcome, HitResult
 import viewport
 from constants import *
 from debug import debug
@@ -29,6 +30,20 @@ def destroy_asteroid(obj, score_keeper):
     obj.split()
     score_keeper.add_points(10)
 
+def resolve_hit(source, target):
+    hit = source.make_hit()
+    result = target.take_hit(hit)
+    if result.outcome == HitOutcome.NOTHING:
+        return result
+    source.register_hit(target)
+    source.already_hit.update(result.spawned)
+    if result.outcome == HitOutcome.DESTROYED:
+        if (isinstance(target, Asteroid)
+                and target.tier == ASTEROID_SPAWN_TIERS - 1
+                and random.random() < UPGRADE_DROP_CHANCE):
+            Upgrade(target.position.x, target.position.y, Upgrade.STANDARD_POOL)
+    return result
+
 def main():
 
     # initializing pygame early in order to draw menu
@@ -55,7 +70,7 @@ def main():
     Upgrade.containers = (upgrades, drawable, updatable)
     CargoDrone.containers = (drawable, updatable, cargo_drones)
 
-    # making some helper functions to clean up some code in main ( clear board and reset board )
+    # making some helper functions to clean up some code in main 
     def clear_map():
         for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots, shockwaves,):
             group.empty()
@@ -281,22 +296,18 @@ def main():
                         for shot in shots:
                             if shot.can_hit(obj) and shot.collides_with(obj):
                                 log_event("asteroid_shot")
-                                shot.register_hit(obj)
-                                before = set(asteroids)
-                                destroy_asteroid(obj, score_keeper)
-                                # ignore fragments
-                                shot.already_hit |= (set(asteroids) - before)
-                                # need to add break so duplicates dont spawn
+                                result = resolve_hit(shot, obj)
+                                score_keeper.add_points(result.points)
                                 break
+
 
                     # check shockwave
                     for wave in shockwaves:
-                        for obj in asteroids:
+                        for obj in list(asteroids):
                             if obj not in wave.already_hit and wave.collides_with(obj):
+                                result = resolve_hit(wave, obj)
+                                score_keeper.add_points(result.points)
                                 wave.already_hit.add(obj)
-                                before = set(asteroids)
-                                destroy_asteroid(obj, score_keeper)
-                                wave.already_hit |= (set(asteroids) - before)
                         for drone in cargo_drones:
                             if drone not in wave.already_hit and wave.collides_with(drone):
                                 wave.already_hit.add(drone)

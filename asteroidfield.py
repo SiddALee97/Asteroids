@@ -14,7 +14,7 @@ class AsteroidField(pygame.sprite.Sprite):
     edges: list[Edge] = [
         (
             pygame.Vector2(1, 0),
-            lambda y: pygame.Vector2(-ASTEROID_MAX_RADIUS, y * world.height),
+            lambda y: pygame.Vector2(-ASTEROID_MAX_RADIUS, y * world.height),  # ASTERoid_MAX_RADIUS works now but will need to be adjusted when we add bigger asteroids
         ),
         (
             pygame.Vector2(-1, 0),
@@ -39,9 +39,9 @@ class AsteroidField(pygame.sprite.Sprite):
         self.spawn_timer = 0.0
 
     def spawn(
-        self, radius: float, position: pygame.Vector2, velocity: pygame.Vector2
+        self, tier: int, position: pygame.Vector2, velocity: pygame.Vector2
     ) -> None:
-        asteroid = Asteroid(position.x, position.y, radius)
+        asteroid = Asteroid(position.x, position.y, tier)
         asteroid.velocity = velocity
 
     def update(self, dt: float) -> None:
@@ -55,5 +55,5 @@ class AsteroidField(pygame.sprite.Sprite):
             velocity = edge[0] * speed
             velocity = velocity.rotate(random.randint(-30, 30))
             position = edge[1](random.uniform(0, 1))
-            kind = random.randint(1, ASTEROID_KINDS)
-            self.spawn(ASTEROID_MIN_RADIUS * kind, position, velocity)
+            tier = random.randint(0, ASTEROID_SPAWN_TIERS - 1)
+            self.spawn(tier, position, velocity)

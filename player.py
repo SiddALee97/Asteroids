@@ -50,6 +50,10 @@ class Player(CircleShape):
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
 
+        # testing ghosting keys 
+        if keys[pygame.K_SPACE] and keys[pygame.K_e]:
+            print("SPACE + E pressed")
+
         # tick every cd here so main.py() doesn't need player.cdt -= dt
         self.cdt -= dt
         for name in self.weapon_cooldowns:
@@ -105,23 +109,23 @@ class Player(CircleShape):
     def fire_shockwave(self):
         level = self.weapon_levels["SHOCKWAVE"]
         max_radius = 150 + 50 * (level - 1)
-        Shockwave(self.position.x, self.position.y, max_radius)
+        breakage = SHOCKWAVE_SPLITS[level]
+        damage = SHOCKWAVE_DAMAGE[level]
+        Shockwave(self.position.x, self.position.y, max_radius, damage = damage, breakage = breakage)
 
         # adding laser logic
     def fire_laser(self):
         kind = HitKind.LASER
-        trail_length = trail
         level = self.weapon_levels["LASER"]
         breakage = LASER_GENERATIONS[level]
         damage = LASER_BASE_DAMAGE + LASER_DAMAGE_PER_LEVEL * (level - 1)
         speed_mult = min(1 + LASER_SPEED_PER_LEVEL * (level - 1), LASER_MAX_SPEED_MULT)
         direction = pygame.Vector2(0, 1).rotate(self.rotation)
-        shot = Shot(nose.x, nose.y, damage = damage, pierce = True, kind = kind, breakage = breakage)
 
         # shoot from the tip instead
         trail = LASER_TRAIL_LENGTH + LASER_TRAIL_PER_LEVEL * (level - 1)
         nose = self.position + direction * self.radius
-        shot = Shot(nose.x, nose.y, damage = damage, pierce = True)
+        shot = Shot(nose.x, nose.y, damage = damage, pierce = True, kind = kind, breakage = breakage, trail_length = trail)
         shot.velocity = direction * self.shoot_speed * speed_mult
 
         # adding logic for multishot
