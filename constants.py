@@ -1,13 +1,23 @@
+
+#----------------------- WORLD CONSTANTS -----------------------#
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
+WORLD_BASE_SCALE = 1.5
+BOSS_WORLD_SCALE = 3.5
+HUD_HEIGHT = 120
+PLAY_WIDTH = SCREEN_WIDTH
+PLAY_HEIGHT = SCREEN_HEIGHT - HUD_HEIGHT   # 600
 LINE_WIDTH = 2
 
+#----------------------- PLAYER CONSTANTS -----------------------#
 PLAYER_RADIUS = 20
 PLAYER_TURN_SPEED = 300
 PLAYER_SPEED = 200
 PLAYER_SHOOT_SPEED = 500
 PLAYER_SHOOT_COOLDOWN_SECONDS = 0.3
+SHOT_RADIUS = 5
 
+#----------------------- ASTEROID CONSTANTS -----------------------#
 ASTEROID_SCORES = (5, 10, 15)
 ASTEROID_HEALTHS = (1, 2, 3) # scores sizes and healths have to be the same tuple length
 ASTEROID_SIZES = (20, 40, 60)
@@ -17,22 +27,19 @@ ASTEROID_KINDS = 3
 ASTEROID_SPAWN_RATE_SECONDS = 0.8
 ASTEROID_MAX_RADIUS = ASTEROID_MIN_RADIUS * ASTEROID_KINDS
 
-SHOT_RADIUS = 5
 
+
+#----------------------- CARGO DRONE CONSTANTS -----------------------#
 DRONE_SPAWN_COOLDOWN = 20
 DRONE_SCORE = 5
 
 UPGRADE_DROP_CHANCE = 0.25
 
-WORLD_BASE_SCALE = 1.5
-BOSS_WORLD_SCALE = 3.5
-
-HUD_HEIGHT = 120
-PLAY_WIDTH = SCREEN_WIDTH
-PLAY_HEIGHT = SCREEN_HEIGHT - HUD_HEIGHT   # 600
+#----------------------- WEAPON CONSTANTS -----------------------#
 
 MAX_WEAPON_LEVEL = 5
 
+#----------------------- LASER CONSTANTS -----------------------#
 LASER_GENERATIONS = (0, 1, 1, 2, 2, 3)
 LASER_COOLDOWN_MULT = 2.0
 LASER_BASE_DAMAGE = 2
@@ -41,11 +48,13 @@ LASER_SPEED_PER_LEVEL = 0.45
 LASER_MAX_SPEED_MULT = 3.0  # cap so cant skip over small targets: 2.5
 LASER_TRAIL_LENGTH = 45  # length of drawn streak in world units
 LASER_TRAIL_PER_LEVEL = 15
+LASER_FORCE = 1 # force applied to asteroids when hit by laser
 
+#----------------------- SHOCKWAVE CONSTANTS -----------------------#
 SHOCKWAVE_SPLITS = (0, 1, 2, 3, 4, 5)
 SHOCKWAVE_COOLDOWN_MULT = 4.0
 SHOCKWAVE_DAMAGE = (0, 1, 1, 2, 2, 3)
-
+SHOCKWAVE_FORCE = 2 # force applied to asteroids when hit by shockwave
 
 
 

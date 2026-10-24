@@ -27,3 +27,12 @@ class Hit():
     breakage: int     # how many tiers of breakage
     direction: pygame.Vector2 | None = None
     origin: pygame.Vector2 | None = None
+    reach: float | None = None
+
+    def force_at(self, position):
+        if self.reach is None:
+            return self.force
+        distance = pygame.Vector2.distance_to(self.origin, position)
+        distance = min(distance / self.reach, 1)
+        
+        return max((self.force * (1 - distance)), FORCE_FLOOR)

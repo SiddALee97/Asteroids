@@ -117,6 +117,18 @@ class Asteroid(CircleShape):
         return HitResult(HitOutcome.NOTHING)
 
 
+    def apply_force(self, hit, from_point):
+        # apply force to asteroid's velocity
+        if not self.alive():
+            return
+        
+        if hit.kind is HitKind.LASER:
+            pass
+
+        if hit.kind is HitKind.BLAST:
+            force = SHOCKWAVE_FORCE
+        else:
+            return
 
 
 
