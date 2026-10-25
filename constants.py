@@ -31,7 +31,7 @@ ASTEROID_MASS_EXPONENT = 1
 
 
 
-#----------------------- CARGO DRONE CONSTANTS -----------------------#
+#----------------------- CARGO DRONE / UPGRADE CONSTANTS -----------------------#
 DRONE_SPAWN_COOLDOWN = 20
 DRONE_SCORE = 5
 

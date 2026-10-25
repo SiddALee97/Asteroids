@@ -26,7 +26,7 @@ class Upgrade(CircleShape):
     def apply_to_player(self, player):
 
         if self.kind == "THRUSTERS":
-            player.speed *= 1.5
+            player.speed *= 1.1
             player.turn_speed *= 1.15
 
         if self.kind == "BLASTERS":
@@ -34,7 +34,7 @@ class Upgrade(CircleShape):
             player.shoot_cooldown *= 0.9
 
         if self.kind == "SHRINK":
-            player.radius *= 0.80
+            player.radius *= 0.90
 
         # adding tier2 upgrades
         if self.kind in Upgrade.CARGO_POOL:
