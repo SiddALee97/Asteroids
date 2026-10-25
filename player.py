@@ -105,7 +105,7 @@ class Player(CircleShape):
         # time to add some more weapon buttons!
         if keys[pygame.K_q]:
             self.try_fire("SHOCKWAVE", self.fire_shockwave, SHOCKWAVE_COOLDOWN_MULT)
-        if keys[pygame.K_e]:
+        if keys[pygame.K_e] or pygame.mouse.get_pressed()[0]:  # left mouse button (a held commence click could fire on frame 1 if the laser is unlocked)
             self.try_fire("LASER", self.fire_laser, LASER_COOLDOWN_MULT)
 
         # no more screen wrapping! time for soft border!

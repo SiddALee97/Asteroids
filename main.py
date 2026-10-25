@@ -22,6 +22,7 @@ from logger import log_state
 
 # helper for future weapons that dont use shots
 
+
 def resolve_hit(source, target):
     hit = source.make_hit()
     result = target.take_hit(hit)
@@ -36,6 +37,13 @@ def resolve_hit(source, target):
             Upgrade(target.position.x, target.position.y, Upgrade.STANDARD_POOL)
     return result
 
+def draw_reticle(screen, pos):
+    if pos[1] >= PLAY_HEIGHT:
+        return
+    center = (int(pos[0]), int(pos[1]))
+    pygame.draw.circle(screen, "white", center, 8, 1)
+
+    
 def main():
 
     # initializing pygame early in order to draw menu
@@ -91,10 +99,10 @@ def main():
     fullscreen = False
     window_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
+    player = None
+
     # Game State (possible: "PLAYING", "GAME_OVER", "PAUSED", "MENU"
     game_state = "MENU"
-
-    player = None
 
     # drone initial timer
     drone_spawn_timer = 5.0
@@ -121,6 +129,7 @@ def main():
 
     while True:
             log_state()
+
 
             for event in pygame.event.get():
                 if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
@@ -200,6 +209,9 @@ def main():
 
             camera.update(dt)  # runs in every state so zooms keep easing during pause and cutscenes
             screen.fill("black")
+
+            mx, my = viewport.mouse_pos() # hidden in game but bugged on WSL check on native windows
+            pygame.mouse.set_visible(game_state != "PLAYING" or my >= PLAY_HEIGHT)
 
 # -------------------Draw everything in the background first to ensure objects stay visible and frozen
 
@@ -344,6 +356,8 @@ def main():
                         clock)
 
 
+            if game_state == "PLAYING":
+                draw_reticle(screen, viewport.mouse_pos())
             viewport.present(screen)
             pygame.display.flip()
             dt=clock.tick(60)/1000
