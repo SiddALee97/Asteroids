@@ -54,6 +54,7 @@ LASER_TRAIL_PER_LEVEL = 15
 LASER_FORCE = (0, 100, 100, 100, 150, 175)  # force applied to asteroids when hit by laser
 TURRET_LENGTH = 30
 TURRET_WIDTH = 6
+TURRET_TURN_SPEED = 420
 
 #----------------------- SHOCKWAVE CONSTANTS -----------------------#
 SHOCKWAVE_SPLITS = (0, 1, 2, 3, 4, 5)

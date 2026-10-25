@@ -2,7 +2,7 @@ from hit import HitKind
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH
+from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED
 from shot import Shot
 from circleshape import CircleShape
 import pygame
@@ -62,12 +62,16 @@ class Player(CircleShape):
     def rotate(self, dt: float):
         self.rotation += self.turn_speed * dt
 
-    def update_aim(self):
+    def update_aim(self, dt):
         # mouse aiming code
         offset = camera.screen_to_world(viewport.mouse_pos()) - self.position
         if offset.length_squared() == 0:
             return self.aim
-        self.aim = offset.normalize()
+        target = offset.normalize()
+        angle = self.aim.angle_to(target)      # signed angle, can be -360..360
+        angle = (angle + 180) % 360 - 180      # wrap into -180..180
+        step = max(-TURRET_TURN_SPEED * dt, min(TURRET_TURN_SPEED * dt, angle))
+        self.aim = self.aim.rotate(step)
         return 
 
     def update(self, dt: float) -> None:
@@ -96,7 +100,7 @@ class Player(CircleShape):
         self.position += self.velocity * dt
 
         # 3. update aim based on mouse position
-        self.update_aim()
+        self.update_aim(dt)
 
         if keys[pygame.K_SPACE] and self.cdt <= 0:
                 self.cdt = max(0.08, self.shoot_cooldown)
