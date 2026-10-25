@@ -64,6 +64,10 @@ class Camera:
 
         return (pygame.Vector2(pos) - self.center) * self.zoom + self.half
 
+    def screen_to_world(self, pos):
+
+        return (pygame.Vector2(pos) - self.half) / self.zoom + self.center
+
     def visible(self, pos, radius):
 
         # False if object is off screen so we dont have to draw it

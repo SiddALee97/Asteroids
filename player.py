@@ -2,12 +2,12 @@ from hit import HitKind
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT
+from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH
 from shot import Shot
 from circleshape import CircleShape
 import pygame
 import math
-
+import viewport
 
 class Player(CircleShape):
     def __init__(self, x: float, y: float, radius: float):
@@ -28,6 +28,9 @@ class Player(CircleShape):
         self.velocity = pygame.Vector2(0, 0)
         self.friction = 0.98 # loses 2% speed per second
 
+        # adding mouse tracker for aiming
+        self.aim = pygame.Vector2(0, 1)
+
 
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -37,15 +40,35 @@ class Player(CircleShape):
         c = self.position - forward * self.radius + right
         return [a, b, c]
 
+    def draw_turret(self, screen):
+        if self.weapon_levels["LASER"] > 0:
+            front = self.position - self.aim * TURRET_LENGTH * 0.25
+            back = self.position + self.aim * TURRET_LENGTH * 0.75
+            side = self.aim.rotate(90) * TURRET_WIDTH / 2
+            tip = self.aim * TURRET_LENGTH * 0.75
+            pts = [back + side, front + side, front - side, back - side]
+            pts = [camera.world_to_screen(p) for p in pts]
+            pygame.draw.polygon(screen, "white", pts, camera.line(LINE_WIDTH))
+
+
     def draw(self, screen: pygame.Surface) -> None:
         # triangle will stay in world space because collides with () uses it
         # convert to screen space at last moment before drawing
 
         pts = [camera.world_to_screen(p) for p in self.triangle()]
         pygame.draw.polygon(screen, "white", pts, camera.line(LINE_WIDTH))
+        self.draw_turret(screen)
 
     def rotate(self, dt: float):
         self.rotation += self.turn_speed * dt
+
+    def update_aim(self):
+        # mouse aiming code
+        offset = camera.screen_to_world(viewport.mouse_pos()) - self.position
+        if offset.length_squared() == 0:
+            return self.aim
+        self.aim = offset.normalize()
+        return 
 
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
@@ -72,6 +95,8 @@ class Player(CircleShape):
         # 2. update your position based on new velocity
         self.position += self.velocity * dt
 
+        # 3. update aim based on mouse position
+        self.update_aim()
 
         if keys[pygame.K_SPACE] and self.cdt <= 0:
                 self.cdt = max(0.08, self.shoot_cooldown)
@@ -119,11 +144,11 @@ class Player(CircleShape):
         breakage = LASER_GENERATIONS[level]
         damage = LASER_BASE_DAMAGE + LASER_DAMAGE_PER_LEVEL * (level - 1)
         speed_mult = min(1 + LASER_SPEED_PER_LEVEL * (level - 1), LASER_MAX_SPEED_MULT)
-        direction = pygame.Vector2(0, 1).rotate(self.rotation)
+        direction = self.aim
 
         # shoot from the tip instead
         trail = LASER_TRAIL_LENGTH + LASER_TRAIL_PER_LEVEL * (level - 1)
-        nose = self.position + direction * self.radius
+        nose = self.position + self.aim * TURRET_LENGTH * 0.75
         shot = Shot(nose.x, nose.y, damage = damage, pierce = True, kind = kind, breakage = breakage, trail_length = trail, force = force)
         shot.velocity = direction * self.shoot_speed * speed_mult
 

@@ -1,8 +1,10 @@
 import pygame
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
+
 scale = 1.0
 offset = (0, 0)
+
 
 def present(game_surface):
     """Scale the game surface into the window, keeping 16:9 with black bars if needed."""
