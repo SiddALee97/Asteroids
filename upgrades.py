@@ -44,9 +44,9 @@ class Upgrade(CircleShape):
     def draw(self, screen: pygame.Surface) -> None:
         # Assign colors
         colors = {
-            "THRUSTERS": "green",
+            "THRUSTERS": "blue",
             "BLASTERS": "red",
-            "SHRINK": "blue",
+            "SHRINK": "green",
             "MULTISHOT": "orange",
             "SHOCKWAVE": "yellow",
             "LASER": "purple"
