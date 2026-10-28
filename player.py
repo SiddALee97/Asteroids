@@ -16,6 +16,7 @@ class Player(CircleShape):
         self.cdt = 0
 
         # added mutables for upgrades
+        self.image = pygame.image.load("assets/ship.png").convert_alpha()
         self.speed = PLAYER_SPEED
         self.turn_speed = PLAYER_TURN_SPEED
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
@@ -58,6 +59,13 @@ class Player(CircleShape):
         pts = [camera.world_to_screen(p) for p in self.triangle()]
         pygame.draw.polygon(screen, "white", pts, camera.line(LINE_WIDTH))
         self.draw_turret(screen)
+
+        # testing sprite 
+
+        pos = camera.world_to_screen(self.position)
+        rotated = pygame.transform.rotate(self.image, -self.rotation + 180)
+        rect = rotated.get_rect(center=pos)
+        screen.blit(rotated, rect)
 
     def rotate(self, dt: float):
         self.rotation += self.turn_speed * dt
