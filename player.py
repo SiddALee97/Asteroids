@@ -2,7 +2,7 @@ from hit import HitKind
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED
+from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE
 from shot import Shot
 from circleshape import CircleShape
 import pygame
@@ -16,7 +16,7 @@ class Player(CircleShape):
         self.cdt = 0
 
         # added mutables for upgrades
-        self.image = pygame.image.load("assets/ship.png").convert_alpha()
+        self.image = pygame.image.load("assets/ship2.png").convert_alpha()
         self.speed = PLAYER_SPEED
         self.turn_speed = PLAYER_TURN_SPEED
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
@@ -35,10 +35,10 @@ class Player(CircleShape):
 
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
-        right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius / 1.5
-        a = self.position + forward * self.radius
-        b = self.position - forward * self.radius - right
-        c = self.position - forward * self.radius + right
+        right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius * PLAYER_HITBOX_SCALE * 1.3 / 1.5
+        a = self.position + forward * self.radius * PLAYER_HITBOX_SCALE
+        b = self.position - forward * self.radius * PLAYER_HITBOX_SCALE - right
+        c = self.position - forward * self.radius * PLAYER_HITBOX_SCALE + right
         return [a, b, c]
 
     def draw_turret(self, screen):
@@ -57,15 +57,19 @@ class Player(CircleShape):
         # convert to screen space at last moment before drawing
 
         pts = [camera.world_to_screen(p) for p in self.triangle()]
-        pygame.draw.polygon(screen, "white", pts, camera.line(LINE_WIDTH))
-        self.draw_turret(screen)
+        
 
         # testing sprite 
 
         pos = camera.world_to_screen(self.position)
-        rotated = pygame.transform.rotate(self.image, -self.rotation + 180)
+        size_w = int(max(self.image.get_width() * SHIP_SPRITE_SCALE * camera.zoom, 1))
+        size_h = int(max(self.image.get_height() * SHIP_SPRITE_SCALE * camera.zoom, 1))
+        scaled = pygame.transform.scale(self.image, (size_w, size_h))
+        rotated = pygame.transform.rotate(scaled, -self.rotation + 180)
         rect = rotated.get_rect(center=pos)
+
         screen.blit(rotated, rect)
+        self.draw_turret(screen)
 
     def rotate(self, dt: float):
         self.rotation += self.turn_speed * dt

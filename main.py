@@ -221,6 +221,16 @@ def main():
                 obj.draw(screen)
             screen.set_clip(None)
 
+            # draw hitboxes (debug)
+            if debug.show_hitboxes:
+                debug.draw_hitboxes(screen, player, (
+                    (asteroids, "red"),
+                    (shockwaves, "orange"),
+                    (cargo_drones, "cyan"),
+                    (shots, "orange"),
+                    (upgrades, "green")
+                ))
+
             # temp divider for testing will remove later
             pygame.draw.line(screen, "cyan", (0, PLAY_HEIGHT), (PLAY_WIDTH, PLAY_HEIGHT), 2)
 

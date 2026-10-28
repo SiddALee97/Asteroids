@@ -17,7 +17,7 @@ def present(game_surface):
         return
     offset = ((ww - w) // 2, (wh - h) // 2)
     window.fill("black")
-    window.blit(pygame.transform.smoothscale(game_surface, (w, h)), offset)
+    window.blit(pygame.transform.scale(game_surface, (w, h)), offset)
 
 def to_game(pos):
     """Window pixel -> game pixel."""

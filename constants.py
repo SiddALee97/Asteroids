@@ -28,6 +28,8 @@ PLAYER_SPEED = 200
 PLAYER_SHOOT_SPEED = 500
 PLAYER_SHOOT_COOLDOWN_SECONDS = 0.3
 SHOT_RADIUS = 5
+SHIP_SPRITE_SCALE = 2.0 # on screen size mult for ship sprite
+PLAYER_HITBOX_SCALE = 1.1
 
 #----------------------- ASTEROID CONSTANTS -----------------------#
 ASTEROID_SCORES = (5, 10, 15)
@@ -68,7 +70,7 @@ LASER_TRAIL_PER_LEVEL = 15
 LASER_FORCE = (0, 100, 100, 100, 150, 175)  # force applied to asteroids when hit by laser
 TURRET_LENGTH = 30
 TURRET_WIDTH = 6
-TURRET_TURN_SPEED = 420
+TURRET_TURN_SPEED = 300
 
 #----------------------- SHOCKWAVE CONSTANTS -----------------------#
 SHOCKWAVE_SPLITS = (0, 1, 2, 3, 4, 5)
