@@ -16,6 +16,7 @@ class Player(CircleShape):
         self.cdt = 0
 
         # added mutables for upgrades
+        self.turret_image = pygame.image.load("assets/laser_turret1.png").convert_alpha()
         self.image = pygame.image.load("assets/ship2.png").convert_alpha()
         self.speed = PLAYER_SPEED
         self.turn_speed = PLAYER_TURN_SPEED
@@ -42,14 +43,23 @@ class Player(CircleShape):
         return [a, b, c]
 
     def draw_turret(self, screen):
-        if self.weapon_levels["LASER"] > 0:
-            front = self.position - self.aim * TURRET_LENGTH * 0.25
-            back = self.position + self.aim * TURRET_LENGTH * 0.75
-            side = self.aim.rotate(90) * TURRET_WIDTH / 2
-            tip = self.aim * TURRET_LENGTH * 0.75
-            pts = [back + side, front + side, front - side, back - side]
-            pts = [camera.world_to_screen(p) for p in pts]
-            pygame.draw.polygon(screen, "white", pts, camera.line(LINE_WIDTH))
+        if self.weapon_levels["LASER"] <= 0:
+            return
+
+        pos = camera.world_to_screen(self.position)
+
+        # scale the pixel art
+        size_w = int(max(self.turret_image.get_width() * SHIP_SPRITE_SCALE * camera.zoom, 1))
+        size_h = int(max(self.turret_image.get_height() * SHIP_SPRITE_SCALE * camera.zoom, 1))
+        scaled = pygame.transform.scale(self.turret_image, (size_w, size_h))
+
+        # calculate rotation angle from self.aim vector
+        aim_angle = math.degrees(math.atan2(self.aim.x, self.aim.y))
+        rotated = pygame.transform.rotate(scaled, aim_angle)
+
+        # center the rotated image on ship position
+        rect = rotated.get_rect(center = pos)
+        screen.blit(rotated, rect)
 
 
     def draw(self, screen: pygame.Surface) -> None:
@@ -172,15 +182,21 @@ class Player(CircleShape):
     def fire_parallel(self, count: int, spacing: float = 12):
         direction = pygame.Vector2(0, 1).rotate(self.rotation)
         side = direction.rotate(90) # makes bullets line up with width of player
+
+        nose = self.position + direction * self.radius * PLAYER_HITBOX_SCALE
+
         for i in range(count):
             offset = (i - (count - 1) /2) * spacing # spaces shots evenly and centers the group on player
-            pos = self.position + side * offset
+            # use nose instead so it fires from tip
+            pos = nose + side * offset
             shot = Shot(pos.x, pos.y)
             shot.velocity = direction * self.shoot_speed
 
         # adding fire_bullet
     def fire_bullet(self, angle: float):
-        shot = Shot(self.position.x, self.position.y)
+        direction = pygame.Vector2(0, 1).rotate(self.rotation)
+        nose = self.position + direction * self.radius * PLAYER_HITBOX_SCALE
+        shot = Shot(nose.x, nose.y)
         shot.velocity = pygame.Vector2(0, 1).rotate(angle) * self.shoot_speed
 
             #Overrides CircleShape to check Traingle 

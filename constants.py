@@ -68,7 +68,7 @@ LASER_MAX_SPEED_MULT = 3.0  # cap so cant skip over small targets: 2.5
 LASER_TRAIL_LENGTH = 45  # length of drawn streak in world units
 LASER_TRAIL_PER_LEVEL = 15
 LASER_FORCE = (0, 100, 100, 100, 150, 175)  # force applied to asteroids when hit by laser
-TURRET_LENGTH = 30
+TURRET_LENGTH = 45
 TURRET_WIDTH = 6
 TURRET_TURN_SPEED = 300
 
