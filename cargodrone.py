@@ -4,10 +4,14 @@ import pygame
 import random
 from circleshape import CircleShape
 from upgrades import Upgrade
-from constants import ASTEROID_MASS_EXPONENT, LINE_WIDTH, DRONE_SCORE, FORCE_SCALE, ASTEROID_MAX_SPEED
+from constants import ASTEROID_MASS_EXPONENT, LINE_WIDTH, DRONE_SCORE, FORCE_SCALE, ASTEROID_MAX_SPEED, DRONE_SPRITE_SCALE
 from hit import HitResult, HitOutcome
+from explosion import Explosion
+
+
 
 class CargoDrone(CircleShape):
+    
     def __init__(self, x: float, y: float, radius: float):
         super().__init__(x, y, radius)
 
@@ -19,6 +23,9 @@ class CargoDrone(CircleShape):
         # amount of shots to break
         self.health = 3
 
+        
+
+
     def draw(self, screen):
         # skip drawing if off screen
         if not camera.visible(self.position, self.radius * 1.65):
@@ -29,20 +36,18 @@ class CargoDrone(CircleShape):
         h = self.radius * 0.9 * z  # half-height on screen
         c = camera.world_to_screen(self.position)
 
-        # creat rect
-        oval_rect = pygame.Rect(c.x - w, c.y - h, w * 2, h * 2)
+        # grab the exact image linked to drones health
+        current_sprite = self.sprites.get(self.health, self.sprites[1])
 
-        # visual effects for hits
-        color = "cyan"
-        if self.health == 2:
-            color = "yellow"
-        elif self.health == 1:
-            color = "orange"
+        # scale the image
+        size = int(max(1, current_sprite.get_width() * DRONE_SPRITE_SCALE * camera.zoom))
 
+        scaled_image = pygame.transform.scale(current_sprite, (size, size))
 
+        # position and draw to world coordinates
+        image_rect = scaled_image.get_rect(center = (c.x, c.y))
+        screen.blit(scaled_image, image_rect)
 
-        # draw oval ( will still have rect hitbox )
-        pygame.draw.ellipse(screen, color, oval_rect, camera.line(LINE_WIDTH))
 
     def update(self, dt: float):
         self.position += self.velocity * dt
@@ -62,6 +67,9 @@ class CargoDrone(CircleShape):
         return HitResult(HitOutcome.DESTROYED, points = DRONE_SCORE)
 
     def break_open(self):
+        # trigger same explosion from player death
+        Explosion(self.position)
+
         Upgrade(self.position.x, self.position.y, Upgrade.CARGO_POOL)
         self.kill()
 

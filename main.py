@@ -70,6 +70,8 @@ def main():
     Upgrade.containers = (upgrades, drawable, updatable)
     CargoDrone.containers = (drawable, updatable, cargo_drones)
 
+
+
     # making some helper functions to clean up some code in main 
     def clear_map():
         for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots, shockwaves,):
@@ -87,6 +89,19 @@ def main():
     camera.fit_world(instant=True)
     pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    reticle_image = pygame.image.load("assets/reticle.png").convert_alpha()
+    cargo_sprites = {}
+    for h in (3, 2, 1):
+        n = 4 - h # health 3 -> file 1, health 1 -> file
+        try:
+            cargo_sprites[h] = pygame.image.load(f"assets/cargo_drone_{n}.png").convert_alpha()
+        except FileNotFoundError:
+            # fallback if file is missing
+            cargo_sprites[h] = pygame.Surface((100, 100), pygame.SRCALPHA)
+            fallback_color = "cyan" if h == 3 else ("yellow" if h == 2 else "orange")
+            pygame.draw.ellipse(cargo_sprites[h], fallback_color, (0, 0, 100, 100))
+                # specifying sprites
+    CargoDrone.sprites = cargo_sprites
 
     # prints startup message
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
@@ -267,7 +282,7 @@ def main():
                     if len(cargo_drones) < 1:
                         spawn_x = random.choice([0, world.width])
                         spawn_y = random.uniform(0, world.height)
-                        CargoDrone(spawn_x, spawn_y, radius = 25)
+                        CargoDrone(spawn_x, spawn_y, radius = 25,)
 
                     # reset timer
                     drone_spawn_timer = DRONE_SPAWN_COOLDOWN
@@ -367,6 +382,8 @@ def main():
 
 
             if game_state == "PLAYING":
+                reticle_rect = reticle_image.get_rect(center = (mx, my))
+                screen.blit(reticle_image, reticle_rect)
                 draw_reticle(screen, viewport.mouse_pos())
             viewport.present(screen)
             pygame.display.flip()
