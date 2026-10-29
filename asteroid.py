@@ -3,7 +3,7 @@ from camera import camera
 from world import world
 import pygame
 from circleshape import CircleShape
-from constants import *
+from constants import ASTEROID_SCORES, ASTEROID_HEALTHS, ASTEROID_KINDS, ASTEROID_MASS_EXPONENT, ASTEROID_MAX_RADIUS, ASTEROID_MAX_SPEED, ASTEROID_MIN_RADIUS, ASTEROID_SIZES, ASTEROID_SPAWN_RATE_SCALE, ASTEROID_SPAWN_RATE_SECONDS, ASTEROID_SPAWN_SCALE_TIMER, ASTEROID_SPAWN_TIERS, ASTEROID_SPIN_RANGE, ASTEROID_SPRITE_SCALE, LINE_WIDTH, FORCE_SCALE
 from logger import log_event
 import random
 
@@ -13,22 +13,34 @@ class Asteroid(CircleShape):
         super().__init__(x, y, ASTEROID_SIZES[tier])
         self.tier = tier
         self.health = ASTEROID_HEALTHS[tier]
-
+        self.angle = random.uniform(0, 360)
+        self.spin = random.uniform(-ASTEROID_SPIN_RANGE, ASTEROID_SPIN_RANGE)
 
 
     def draw(self, screen):
         # skip drawing when completely off-screen
         if not camera.visible(self.position, self.radius):
             return
-        pygame.draw.circle(
-            screen, "white",
-            camera.world_to_screen(self.position),   # where
-            self.radius * camera.zoom,                # how big
-            camera.line(LINE_WIDTH),                  # line thickness
-        )
+        image = self.sprites.get(self.tier)
+        if image is None:
+            pygame.draw.circle(
+                screen, "white",
+                camera.world_to_screen(self.position),   # where
+                self.radius * camera.zoom,                # how big
+                camera.line(LINE_WIDTH),                  # line thickness
+            )
+            return
+
+        size = int(max(1, image.get_width() * ASTEROID_SPRITE_SCALE * camera.zoom))
+        scaled = pygame.transform.scale(image, (size, size))
+        rotated = pygame.transform.rotate(scaled, self.angle)
+        rect = rotated.get_rect(center = camera.world_to_screen(self.position))
+        screen.blit(rotated, rect)
+
 
 
     def update(self, dt):
+        self.angle += self.spin * dt
         self.position += self.velocity * dt
         # cleanup: delete asteroids that drift far outside the world.
         # the margin must be bigger than the spawn offset (ASTEROID_MAX_RADIUS),

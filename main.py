@@ -97,11 +97,14 @@ def main():
             cargo_sprites[h] = pygame.image.load(f"assets/cargo_drone_{n}.png").convert_alpha()
         except FileNotFoundError:
             # fallback if file is missing
-            cargo_sprites[h] = pygame.Surface((100, 100), pygame.SRCALPHA)
+            cargo_sprites[h] = pygame.Surface((64, 64), pygame.SRCALPHA)
             fallback_color = "cyan" if h == 3 else ("yellow" if h == 2 else "orange")
             pygame.draw.ellipse(cargo_sprites[h], fallback_color, (0, 0, 100, 100))
                 # specifying sprites
     CargoDrone.sprites = cargo_sprites
+    Asteroid.sprites = {
+        0: pygame.image.load("assets/asteroid1.png").convert_alpha()
+        }
 
     # prints startup message
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
