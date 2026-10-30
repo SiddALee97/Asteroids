@@ -78,8 +78,8 @@ TURRET_TURN_SPEED = 300
 #----------------------- SHOCKWAVE CONSTANTS -----------------------#
 SHOCKWAVE_SPLITS = (0, 1, 2, 3, 4, 5)
 SHOCKWAVE_COOLDOWN_MULT = 6.0
-SHOCKWAVE_DAMAGE = (0, 1, 1, 2, 2, 3)
-SHOCKWAVE_FORCE = (0, 300, 350, 400, 450, 500) # force applied to asteroids when hit by shockwave
+SHOCKWAVE_DAMAGE = (0, 1, 1, 1, 2, 3)
+SHOCKWAVE_FORCE = (0, 400, 450, 500, 550, 600) # force applied to asteroids when hit by shockwave
 FORCE_FALLOFF_FLOOR = 0.25 
 
 

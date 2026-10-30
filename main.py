@@ -30,11 +30,7 @@ def resolve_hit(source, target):
         return result
     source.register_hit(target)
     source.already_hit.update(result.spawned)
-    if result.outcome == HitOutcome.DESTROYED:
-        if (isinstance(target, Asteroid)
-                and target.tier == ASTEROID_SPAWN_TIERS - 1
-                and random.random() < UPGRADE_DROP_CHANCE):
-            Upgrade(target.position.x, target.position.y, Upgrade.STANDARD_POOL)
+    # deleted upgrade check to handle it in asteroids.py
     return result
 
 def draw_reticle(screen, pos):
@@ -72,7 +68,11 @@ def main():
 
 
 
-    # making some helper functions to clean up some code in main 
+    # making some helper functions to clean up some code
+    def load_sprite(path: str):
+        return pygame.image.load(path).convert_alpha()
+
+
     def clear_map():
         for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots, shockwaves,):
             group.empty()
@@ -103,7 +103,9 @@ def main():
                 # specifying sprites
     CargoDrone.sprites = cargo_sprites
     Asteroid.sprites = {
-        0: pygame.image.load("assets/asteroid1.png").convert_alpha()
+        0: [load_sprite("assets/asteroid_small_1.png"), load_sprite("assets/asteroid_small_2.png")],
+        1: [load_sprite("assets/asteroid_medium_1.png")],
+        2: [load_sprite("assets/asteroid_large_1.png")],
         }
 
     # prints startup message

@@ -3,12 +3,17 @@ from camera import camera
 from world import world
 import pygame
 from circleshape import CircleShape
-from constants import ASTEROID_SCORES, ASTEROID_HEALTHS, ASTEROID_KINDS, ASTEROID_MASS_EXPONENT, ASTEROID_MAX_RADIUS, ASTEROID_MAX_SPEED, ASTEROID_MIN_RADIUS, ASTEROID_SIZES, ASTEROID_SPAWN_RATE_SCALE, ASTEROID_SPAWN_RATE_SECONDS, ASTEROID_SPAWN_SCALE_TIMER, ASTEROID_SPAWN_TIERS, ASTEROID_SPIN_RANGE, ASTEROID_SPRITE_SCALE, LINE_WIDTH, FORCE_SCALE
+from constants import ASTEROID_SCORES, ASTEROID_HEALTHS, ASTEROID_KINDS, ASTEROID_MASS_EXPONENT, ASTEROID_MAX_RADIUS, ASTEROID_MAX_SPEED, ASTEROID_MIN_RADIUS, ASTEROID_SIZES, ASTEROID_SPAWN_RATE_SCALE, ASTEROID_SPAWN_RATE_SECONDS, ASTEROID_SPAWN_SCALE_TIMER, ASTEROID_SPAWN_TIERS, ASTEROID_SPIN_RANGE, ASTEROID_SPRITE_SCALE, LINE_WIDTH, FORCE_SCALE, UPGRADE_DROP_CHANCE
 from logger import log_event
 import random
+from upgrades import Upgrade
 
 
 class Asteroid(CircleShape):
+
+    # class level container populated in main()
+    sprites = {}
+
     def __init__(self, x: float, y: float, tier: int) -> None:
         super().__init__(x, y, ASTEROID_SIZES[tier])
         self.tier = tier
@@ -16,13 +21,19 @@ class Asteroid(CircleShape):
         self.angle = random.uniform(0, 360)
         self.spin = random.uniform(-ASTEROID_SPIN_RANGE, ASTEROID_SPIN_RANGE)
 
+        sprite_pool = Asteroid.sprites.get(self.tier)
+
+        if sprite_pool:
+            self.image = random.choice(sprite_pool)
+        else:
+            self.image = None
 
     def draw(self, screen):
         # skip drawing when completely off-screen
         if not camera.visible(self.position, self.radius):
             return
-        image = self.sprites.get(self.tier)
-        if image is None:
+        
+        if self.image is None:
             pygame.draw.circle(
                 screen, "white",
                 camera.world_to_screen(self.position),   # where
@@ -31,8 +42,8 @@ class Asteroid(CircleShape):
             )
             return
 
-        size = int(max(1, image.get_width() * ASTEROID_SPRITE_SCALE * camera.zoom))
-        scaled = pygame.transform.scale(image, (size, size))
+        size = int(max(1, self.image.get_width() * ASTEROID_SPRITE_SCALE * camera.zoom))
+        scaled = pygame.transform.scale(self.image, (size, size))
         rotated = pygame.transform.rotate(scaled, self.angle)
         rect = rotated.get_rect(center = camera.world_to_screen(self.position))
         screen.blit(rotated, rect)
@@ -49,6 +60,11 @@ class Asteroid(CircleShape):
         if not (-m < self.position.x < world.width + m
                 and -m < self.position.y < world.height + m):
             self.kill()
+
+    def check_upgrade_drop(self):
+        # helper to spawn upgrade if max tier is destroyed
+        if self.tier == ASTEROID_SPAWN_TIERS - 1 and random.random() < UPGRADE_DROP_CHANCE:
+            Upgrade(self.position.x, self.position.y, Upgrade.STANDARD_POOL)   
 
     def split(self):
         if not self.alive():
@@ -90,7 +106,11 @@ class Asteroid(CircleShape):
         self.health -= hit.damage
         if self.health > 0:
             return HitResult(HitOutcome.CHIPPED)
+
+        self.check_upgrade_drop()
         self.kill()
+
+
         strength = hit.force_at(self.position)
         fragments = self.fragment(hit.breakage, hit, strength)
         return HitResult(HitOutcome.DESTROYED, points = ASTEROID_SCORES[self.tier], spawned = fragments)
@@ -98,12 +118,26 @@ class Asteroid(CircleShape):
     def take_laser(self, hit):
         new_tier = self.tier - hit.breakage
         if new_tier < 0:
+            # inputting upgrade check 
+            self.check_upgrade_drop()
             self.kill()
             return HitResult(HitOutcome.DESTROYED, points = ASTEROID_SCORES[self.tier])
         if new_tier >= 0:
+            # upgrade check so even chippied big asteroids have a chance to drop
+            self.check_upgrade_drop()
+
             new_points = ASTEROID_SCORES[self.tier] - ASTEROID_SCORES[new_tier]
             strength = hit.force_at(self.position)
             self.tier = new_tier
+
+            # select random sprite for new size
+            sprite_pool = Asteroid.sprites.get(self.tier)
+            if sprite_pool:
+                self.image = random.choice(sprite_pool)
+            else:
+                self.image = None
+
+
             self.radius = ASTEROID_SIZES[new_tier]
             self.apply_force(hit, strength)
             self.health = min(self.health, ASTEROID_HEALTHS[new_tier])
@@ -112,6 +146,8 @@ class Asteroid(CircleShape):
     def take_blast(self, hit):
         new_tier = max(0, self.tier - hit.breakage)
         tiers = self.tier - new_tier
+        # inputting upgrade check
+        self.check_upgrade_drop()
         self.kill()
         strength = hit.force_at(self.position)
         fragments = self.fragment(tiers, hit, strength)
@@ -150,8 +186,3 @@ class Asteroid(CircleShape):
         self.velocity += direction.normalize() * strength * FORCE_SCALE / mass
         self.velocity = self.velocity.clamp_magnitude(0, ASTEROID_MAX_SPEED)
        
-
-
-
-
-
