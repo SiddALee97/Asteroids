@@ -23,6 +23,8 @@ class Asteroid(CircleShape):
 
         sprite_pool = Asteroid.sprites.get(self.tier)
 
+
+
         if sprite_pool:
             self.image = random.choice(sprite_pool)
         else:
@@ -43,6 +45,8 @@ class Asteroid(CircleShape):
             return
 
         size = int(max(1, self.image.get_width() * ASTEROID_SPRITE_SCALE * camera.zoom))
+
+        
         scaled = pygame.transform.scale(self.image, (size, size))
         rotated = pygame.transform.rotate(scaled, self.angle)
         rect = rotated.get_rect(center = camera.world_to_screen(self.position))

@@ -38,8 +38,8 @@ ASTEROID_SIZES = (28, 42, 56)
 ASTEROID_SPAWN_TIERS = 3
 ASTEROID_MIN_RADIUS = 20
 ASTEROID_KINDS = 3
-ASTEROID_SPAWN_RATE_SECONDS = 1.2    # in seconds so higher is slower
-ASTEROID_SPAWN_RATE_SCALE = 0.90   # how much the spawn rate increases every frame
+ASTEROID_SPAWN_RATE_SECONDS = 2.4    # in seconds so higher is slower
+ASTEROID_SPAWN_RATE_SCALE = 0.90   # how much the spawn rate increases every inst
 ASTEROID_SPAWN_SCALE_TIMER = 15 
 ASTEROID_MAX_RADIUS = ASTEROID_MIN_RADIUS * ASTEROID_KINDS
 ASTEROID_MAX_SPEED = 400
@@ -55,6 +55,7 @@ DRONE_SCORE = 5
 DRONE_SPRITE_SCALE = 1.25
 
 UPGRADE_DROP_CHANCE = 0.25
+
 
 #----------------------- WEAPON CONSTANTS -----------------------#
 

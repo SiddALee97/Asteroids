@@ -89,12 +89,12 @@ def main():
     camera.fit_world(instant=True)
     pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-    reticle_image = pygame.image.load("assets/reticle.png").convert_alpha()
+    reticle_image = load_sprite("assets/reticle.png")
     cargo_sprites = {}
     for h in (3, 2, 1):
         n = 4 - h # health 3 -> file 1, health 1 -> file
         try:
-            cargo_sprites[h] = pygame.image.load(f"assets/cargo_drone_{n}.png").convert_alpha()
+            cargo_sprites[h] = load_sprite(f"assets/cargo_drone_{n}.png")
         except FileNotFoundError:
             # fallback if file is missing
             cargo_sprites[h] = pygame.Surface((64, 64), pygame.SRCALPHA)
@@ -105,7 +105,7 @@ def main():
     Asteroid.sprites = {
         0: [load_sprite("assets/asteroid_small_1.png"), load_sprite("assets/asteroid_small_2.png")],
         1: [load_sprite("assets/asteroid_medium_1.png")],
-        2: [load_sprite("assets/asteroid_large_1.png")],
+        2: [load_sprite("assets/asteroid_large_1.png"), load_sprite("assets/asteroid_large_2.png")],
         }
 
     # prints startup message
