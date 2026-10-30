@@ -1,3 +1,4 @@
+from hud import draw_hud
 from hit import Hit, HitKind, HitOutcome, HitResult
 import viewport
 from constants import *
@@ -251,8 +252,6 @@ def main():
                     (upgrades, "green")
                 ))
 
-            # temp divider for testing will remove later
-            pygame.draw.line(screen, "cyan", (0, PLAY_HEIGHT), (PLAY_WIDTH, PLAY_HEIGHT), 2)
 
             # render different states and new menus
             if game_state == "MENU":
@@ -386,7 +385,10 @@ def main():
                         clock)
 
 
+
+
             if game_state == "PLAYING":
+                draw_hud(screen)
                 reticle_rect = reticle_image.get_rect(center = (mx, my))
                 screen.blit(reticle_image, reticle_rect)
                 draw_reticle(screen, viewport.mouse_pos())
