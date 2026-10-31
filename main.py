@@ -73,6 +73,12 @@ def main():
     def load_sprite(path: str):
         return pygame.image.load(path).convert_alpha()
 
+    # same but for sprite sheets
+    def slice_sheet(path, count = 5, size = 16):
+        sheet = load_sprite(path)
+        return [sheet.subsurface(pygame.Rect(i * size, 0, size, size)) for i in range(count)]
+    
+
 
     def clear_map():
         for group in (updatable, drawable, cargo_drones, upgrades, asteroids, shots, shockwaves,):
@@ -90,6 +96,8 @@ def main():
     camera.fit_world(instant=True)
     pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+#--------------------------- loading sprites-------------------------
     reticle_image = load_sprite("assets/reticle.png")
     cargo_sprites = {}
     for h in (3, 2, 1):
@@ -108,6 +116,13 @@ def main():
         1: [load_sprite("assets/asteroid_medium_1.png")],
         2: [load_sprite("assets/asteroid_large_1.png"), load_sprite("assets/asteroid_large_2.png")],
         }
+
+    Player.thruster_frames = {
+        "start": slice_sheet("assets/ship_startup_1.png"),
+        "run": slice_sheet("assets/ship_trail_1.png"),
+        "stop": slice_sheet("assets/ship_stop_1.png"),
+    }
+
 
     # prints startup message
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
@@ -388,7 +403,7 @@ def main():
 
 
             if game_state == "PLAYING":
-                draw_hud(screen)
+                
                 reticle_rect = reticle_image.get_rect(center = (mx, my))
                 screen.blit(reticle_image, reticle_rect)
                 draw_reticle(screen, viewport.mouse_pos())

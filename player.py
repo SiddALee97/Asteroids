@@ -2,12 +2,25 @@ from hit import HitKind
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE
+from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE, THRUSTER_FRAME_TIME, THRUSTER_OFFSET
 from shot import Shot
 from circleshape import CircleShape
 import pygame
 import math
 import viewport
+from enum import Enum, auto
+
+class Thruster(Enum):
+    OFF = auto()
+    STARTUP = auto()
+    RUNNING = auto()
+    SHUTDOWN = auto()
+
+THRUSTER_NEXT = {
+    Thruster.STARTUP: Thruster.RUNNING,
+    Thruster.RUNNING: Thruster.RUNNING,
+    Thruster.SHUTDOWN: Thruster.OFF,
+}
 
 class Player(CircleShape):
     def __init__(self, x: float, y: float, radius: float):
@@ -33,6 +46,11 @@ class Player(CircleShape):
         # adding mouse tracker for aiming
         self.aim = pygame.Vector2(0, 1)
 
+        # sprite for thrusters
+        self.thruster_state = Thruster.OFF
+        self.thruster_frame = 0
+        self.thruster_timer = 0.0
+        self.w_was_down = False
 
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -62,6 +80,28 @@ class Player(CircleShape):
         screen.blit(rotated, rect)
 
 
+    def draw_thruster(self, screen):
+
+        if self.thruster_state is Thruster.STARTUP:
+                frame = Player.thruster_frames["start"][self.thruster_frame]
+        elif self.thruster_state is Thruster.RUNNING:
+                frame = Player.thruster_frames["run"][self.thruster_frame]
+        elif self.thruster_state is Thruster.SHUTDOWN:
+                frame = Player.thruster_frames["stop"][self.thruster_frame]
+
+        pos = camera.world_to_screen(self.position)
+        trail_size_w = int(max(frame.get_width() * SHIP_SPRITE_SCALE * camera.zoom, 1))
+        trail_size_h = int(max(frame.get_height() * SHIP_SPRITE_SCALE * camera.zoom, 1))
+        trail_scaled = pygame.transform.scale(frame, (trail_size_w, trail_size_h))
+        trail_rotated = pygame.transform.rotate(trail_scaled, -self.rotation + 180)
+        # positioning the trail
+        forward = pygame.Vector2(0, 1).rotate(self.rotation)
+        tail = self.position - forward * THRUSTER_OFFSET
+        trail_rect = trail_rotated.get_rect(center = camera.world_to_screen(tail))
+
+
+        screen.blit(trail_rotated, trail_rect)
+
     def draw(self, screen: pygame.Surface) -> None:
         # triangle will stay in world space because collides with () uses it
         # convert to screen space at last moment before drawing
@@ -78,11 +118,31 @@ class Player(CircleShape):
         rotated = pygame.transform.rotate(scaled, -self.rotation + 180)
         rect = rotated.get_rect(center=pos)
 
+        # trail sprites 
+        if self.thruster_state is not Thruster.OFF:
+            self.draw_thruster(screen)
+            
+    
         screen.blit(rotated, rect)
         self.draw_turret(screen)
 
     def rotate(self, dt: float):
         self.rotation += self.turn_speed * dt
+
+    # thruster sprite
+    def update_thruster(self, dt):
+        if self.thruster_state is Thruster.OFF:
+            return
+        self.thruster_timer += dt
+        while self.thruster_timer >= THRUSTER_FRAME_TIME:
+            self.thruster_timer -= THRUSTER_FRAME_TIME
+            self.thruster_frame += 1
+
+            if self.thruster_frame >= 5:
+                self.thruster_frame = 0
+                self.thruster_state = THRUSTER_NEXT[self.thruster_state]
+                if self.thruster_state is Thruster.OFF:
+                    return
 
     def update_aim(self, dt):
         # mouse aiming code
@@ -98,6 +158,7 @@ class Player(CircleShape):
 
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
+        
 
 
         # tick every cd here so main.py() doesn't need player.cdt -= dt
@@ -109,8 +170,20 @@ class Player(CircleShape):
             self.rotate(-dt)
         if keys[pygame.K_d]:
             self.rotate(dt)
+        w_down = keys[pygame.K_w]
+        if w_down and not self.w_was_down:
+            self.thruster_state = Thruster.STARTUP
+            self.thruster_frame = 0
+            self.thruster_timer = 0.0
+        elif not w_down and self.w_was_down:
+            self.thruster_state = Thruster.SHUTDOWN
+            self.thruster_frame = 0
+            self.thruster_timer = 0.0
+        self.w_was_down = w_down
+        self.update_thruster(dt)
         if keys[pygame.K_w]:
             self.move(dt)
+
         if keys[pygame.K_s]:
             self.move(-dt)
 
