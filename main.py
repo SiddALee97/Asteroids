@@ -1,4 +1,5 @@
-from hud import draw_hud
+
+from hud import draw_hud, harry_panel, barry_panel, draw_panel
 from hit import Hit, HitKind, HitOutcome, HitResult
 import viewport
 from constants import *
@@ -86,6 +87,8 @@ def main():
         # every new game and every return to the menu starts from the normal
         world.reset_base()
         camera.fit_world(instant=True)
+        harry_panel.reset()
+        barry_panel.reset()
 
     def new_game():
         clear_map()
@@ -171,7 +174,7 @@ def main():
     pause_m = Button(center_x, center_y + 50, btn_width, btn_height, "Main Menu", font, "darkgray", "cyan")
     pause_buttons = [pause_m]
 
-
+#--------------------------- Main Loop -----------------------------
     while True:
             log_state()
 
@@ -221,10 +224,9 @@ def main():
 
                         field = AsteroidField()
                         game_state = "MENU"
-                        break
 
+#------------------------------- KeyBOARD INPUTS --------------------------------
 
-                # keyboard events
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_F11:
                         if not fullscreen:
@@ -236,6 +238,11 @@ def main():
                             fullscreen = False
                         continue
                     debug.handle_key(event, player, game_state)  # debug injection
+                    if game_state == "PLAYING":
+                        if event.key == pygame.K_1:
+                            harry_panel.toggle()
+                        elif event.key == pygame.K_2:
+                            barry_panel.toggle()
                     if event.key == pygame.K_ESCAPE:
                         if game_state == "PLAYING":
                             game_state = "PAUSED"
@@ -300,7 +307,8 @@ def main():
 
                 # adding updating back inside loop since pause didn't work
                 updatable.update(dt)
-
+                harry_panel.update(dt)
+                barry_panel.update(dt)
 
                 # Drone Spawn
 
@@ -416,6 +424,9 @@ def main():
                 reticle_rect = reticle_image.get_rect(center = (mx, my))
                 screen.blit(reticle_image, reticle_rect)
                 draw_reticle(screen, viewport.mouse_pos())
+            draw_hud(screen)
+            harry_panel.draw(screen)
+            barry_panel.draw(screen)
             viewport.present(screen)
             pygame.display.flip()
             dt=clock.tick(60)/1000
