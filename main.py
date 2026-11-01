@@ -99,6 +99,7 @@ def main():
 
 #--------------------------- loading sprites-------------------------
     reticle_image = load_sprite("assets/reticle.png")
+
     cargo_sprites = {}
     for h in (3, 2, 1):
         n = 4 - h # health 3 -> file 1, health 1 -> file
@@ -111,11 +112,14 @@ def main():
             pygame.draw.ellipse(cargo_sprites[h], fallback_color, (0, 0, 100, 100))
                 # specifying sprites
     CargoDrone.sprites = cargo_sprites
+
+
     Asteroid.sprites = {
         0: [load_sprite("assets/asteroid_small_1.png"), load_sprite("assets/asteroid_small_2.png")],
         1: [load_sprite("assets/asteroid_medium_1.png")],
         2: [load_sprite("assets/asteroid_large_1.png"), load_sprite("assets/asteroid_large_2.png")],
         }
+
 
     Player.thruster_frames = {
         "start": slice_sheet("assets/ship_startup_1.png"),
@@ -123,6 +127,11 @@ def main():
         "stop": slice_sheet("assets/ship_stop_1.png"),
     }
 
+    Shot.sprites = {
+        "shot": load_sprite("assets/shot_1.png"),
+        "laser_head": load_sprite("assets/laser_head_1.png"),
+        # later will add "laser_trail": load_sprite("assets/laser_trail_1.png"),
+    }
 
     # prints startup message
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")

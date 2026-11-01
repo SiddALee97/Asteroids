@@ -3,7 +3,7 @@ from camera import camera
 from world import world
 import pygame
 from circleshape import CircleShape
-from constants import SHOT_RADIUS, LINE_WIDTH, LASER_TRAIL_LENGTH
+from constants import SHOT_RADIUS, LINE_WIDTH, LASER_TRAIL_LENGTH, SHOT_SPRTIE_SCALE
 
 
 class Shot(CircleShape):
@@ -36,24 +36,42 @@ class Shot(CircleShape):
         if not self.pierce:
             self.kill()
 
+    def draw_trail(self, screen):
+        if self.pierce and self.velocity.length() > 0:
+            # trail cant be longer than disance travelled so far so it grows out the nose instead
+            trail = min(self.trail_length, self.travelled)
+            head = camera.world_to_screen(self.position)
+            tail = camera.world_to_screen(
+                self.position - self.velocity.normalize() * trail)
+            pygame.draw.line(screen, "purple", head, tail, camera.line(3))
+        return
+
+    def draw_head(self, screen):
+        image = self.sprites["shot"]
+        if self.pierce:
+            image = self.sprites["laser_head"]
+        if image is None:
+            pygame.draw.circle(
+                screen, "white", camera.world_to_screen(self.position),
+                max(1, self.radius * camera.zoom),
+                camera.line(LINE_WIDTH),
+            )
+        else:
+            size = max(1, image.get_width() * SHOT_SPRTIE_SCALE * camera.zoom)
+            scaled = pygame.transform.scale(image, (size, size))
+            heading = pygame.Vector2(0, 1).angle_to(self.velocity)
+            rotated = pygame.transform.rotate(scaled, -heading)
+            head_rect = rotated.get_rect(center=camera.world_to_screen(self.position))
+            screen.blit(rotated, head_rect)
+
     def draw(self, screen):
         # skip drawing when completely off-screen
         if not camera.visible(self.position, self.radius + self.trail_length):
             return
 
-        head = camera.world_to_screen(self.position)
-        if self.pierce and self.velocity.length() > 0:
-            # trail cant be longer than disance travelled so far so it grows out the nose instead
-            trail = min(self.trail_length, self.travelled)
-            tail = camera.world_to_screen(
-                self.position - self.velocity.normalize() * trail)
-            pygame.draw.line(screen, "purple", head, tail, camera.line(3))
-        else:
-            pygame.draw.circle(
-                screen, "white", head,
-                max(1, self.radius * camera.zoom),
-                camera.line(LINE_WIDTH),
-            )
+        self.draw_trail(screen)
+        self.draw_head(screen) 
+        
 
     def update(self, dt):
         self.position += self.velocity * dt

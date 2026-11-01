@@ -65,6 +65,11 @@ UPGRADE_DROP_CHANCE = 0.25
 MAX_WEAPON_LEVEL = 5
 FORCE_SCALE = 20
 
+#----------------------- SHOT CONSTANTS -----------------------#
+
+SHOT_SPRTIE_SCALE = 2.0 
+
+
 #----------------------- LASER CONSTANTS -----------------------#
 LASER_GENERATIONS = (0, 1, 1, 2, 2, 3)
 LASER_COOLDOWN_MULT = 2.0
