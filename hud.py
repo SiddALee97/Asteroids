@@ -93,7 +93,7 @@ class Panel:
         self.set_state(PanelState.CLOSED)
 
 
-    def draw(self, screen):
+    def draw(self, screen,):
         if self.state is PanelState.CLOSED:
             return
         if self.state is PanelState.OPENING:

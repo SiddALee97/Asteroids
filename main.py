@@ -1,5 +1,7 @@
 
-from hud import draw_hud, harry_panel, barry_panel, draw_panel
+
+from comms import hud_comms
+from hud import comms_rect, draw_hud, harry_panel, barry_panel, draw_panel
 from hit import Hit, HitKind, HitOutcome, HitResult
 import viewport
 from constants import *
@@ -87,6 +89,7 @@ def main():
         # every new game and every return to the menu starts from the normal
         world.reset_base()
         camera.fit_world(instant=True)
+        hud_comms.reset()
         harry_panel.reset()
         barry_panel.reset()
 
@@ -228,6 +231,11 @@ def main():
 #------------------------------- KeyBOARD INPUTS --------------------------------
 
                 if event.type == pygame.KEYDOWN:
+                    if debug.visible:
+                        if event.key == pygame.K_t:
+                            hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character.")
+ 
+
                     if event.key == pygame.K_F11:
                         if not fullscreen:
                             window_size = pygame.display.get_surface().get_size()
@@ -299,7 +307,7 @@ def main():
             # Conditionally run game logic or popup menu
             if game_state == "PLAYING":
 
-#-----------------------Normal gameplay loop----------------------------
+#-----------------------"PLAYING" gameplay loop----------------------------
 
                 # handle debug toggles for spawns
                 if debug.no_spawns:
@@ -307,6 +315,7 @@ def main():
 
                 # adding updating back inside loop since pause didn't work
                 updatable.update(dt)
+                hud_comms.update(dt)
                 harry_panel.update(dt)
                 barry_panel.update(dt)
 
@@ -424,7 +433,11 @@ def main():
                 reticle_rect = reticle_image.get_rect(center = (mx, my))
                 screen.blit(reticle_image, reticle_rect)
                 draw_reticle(screen, viewport.mouse_pos())
+
+#----------------------- HUD ----------------------------
+            
             draw_hud(screen)
+            hud_comms.draw(screen, comms_rect)
             harry_panel.draw(screen)
             barry_panel.draw(screen)
             viewport.present(screen)
