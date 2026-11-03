@@ -56,10 +56,8 @@ PANEL_DURATION = {
 }
 
 PANEL_NEXT = {
-    PanelState.CLOSED: PanelState.OPENING,
     PanelState.OPENING: PanelState.BOOTING,
     PanelState.BOOTING: PanelState.OPEN,
-     PanelState.OPEN: PanelState.CLOSING,
     PanelState.CLOSING: PanelState.CLOSED,
 }
 

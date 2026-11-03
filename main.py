@@ -105,6 +105,7 @@ def main():
 
 #--------------------------- loading sprites-------------------------
     reticle_image = load_sprite("assets/reticle.png")
+    comms_image = load_sprite("assets/comms_panel.png")
 
     cargo_sprites = {}
     for h in (3, 2, 1):
@@ -437,7 +438,7 @@ def main():
 #----------------------- HUD ----------------------------
             
             draw_hud(screen)
-            hud_comms.draw(screen, comms_rect)
+            hud_comms.draw(screen, comms_rect, comms_image)
             harry_panel.draw(screen)
             barry_panel.draw(screen)
             viewport.present(screen)

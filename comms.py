@@ -1,5 +1,5 @@
 import pygame
-from constants import COMMS_CHARS_PER_SECOND, COMMS_HOLD_TIME
+from constants import COMMS_CHARS_PER_SECOND, COMMS_HOLD_TIME, COMMS_SPRITE_SCALE
 
 
 
@@ -12,7 +12,7 @@ class Comms:
         self.hold_timer = 0.0   # float: how long the current message stays up
         self.seen = set()       # set: keys for say_once
         self.font = None  # Default font and size
-
+        
     def say(self, message):
         # Add a message to the queue
         self.queue.append(message)
@@ -58,13 +58,20 @@ class Comms:
                 self.current_message = None
 
 
-    def draw(self, screen, rect):
+    def draw(self, screen, rect, image):
         # adjust for the screen on comms panel
         if self.font is None:
             self.font = pygame.font.Font(None, 24)  # Default font and size
         comms_screen = rect.inflate(-64, -28)  # Adjust for padding
         pygame.draw.rect(screen, (24, 16, 6), comms_screen)  # Draw the background
         pygame.draw.rect(screen, (120, 125, 135), comms_screen, 2)  # Draw the outline
+        # scale the comms panel image to fit the rect
+        size_h = int(image.get_height() * COMMS_SPRITE_SCALE)
+        size_w = int(image.get_width() * COMMS_SPRITE_SCALE)
+        scaled_image = pygame.transform.scale(image, (size_w, size_h))
+        # Draw the scaled image centered in the rect
+        image_rect = scaled_image.get_rect(center=rect.center)
+        screen.blit(scaled_image, image_rect)
 
 
 
