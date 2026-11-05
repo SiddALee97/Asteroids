@@ -1,8 +1,8 @@
-from hit import HitKind
+from hit import HitKind, HitResult, HitOutcome
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE, THRUSTER_FRAME_TIME, THRUSTER_OFFSET
+from constants import PLAYER_INVULNERABILITY_TIME, PLAYER_SPEED, PLAYER_START_HULL, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, ASTEROID_MAX_SPEED, SHIELD_BOUNCE
 from shot import Shot
 from circleshape import CircleShape
 import pygame
@@ -52,9 +52,14 @@ class Player(CircleShape):
         self.thruster_timer = 0.0
         self.w_was_down = False
 
+        # adding hull and invulnerability timer
+        self.hull = PLAYER_START_HULL
+        self.max_hull = PLAYER_START_HULL
+        self.invulnerability_timer = 0.0
+
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
-        right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius * PLAYER_HITBOX_SCALE * 1.3 / 1.5
+        right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius * PLAYER_HITBOX_WIDTH 
         a = self.position + forward * self.radius * PLAYER_HITBOX_SCALE
         b = self.position - forward * self.radius * PLAYER_HITBOX_SCALE - right
         c = self.position - forward * self.radius * PLAYER_HITBOX_SCALE + right
@@ -163,9 +168,15 @@ class Player(CircleShape):
 
         # tick every cd here so main.py() doesn't need player.cdt -= dt
         self.cdt -= dt
+
+        # invulnerability timer
+        self.invulnerability_timer = max(0.0, self.invulnerability_timer - dt)
+
+        # update weapon cooldowns
         for name in self.weapon_cooldowns:
             self.weapon_cooldowns[name] = max(0.0, self.weapon_cooldowns[name] - dt)
 
+        # handle input for movement and shooting
         if keys[pygame.K_a]:
             self.rotate(-dt)
         if keys[pygame.K_d]:
@@ -273,36 +284,42 @@ class Player(CircleShape):
         shot.velocity = pygame.Vector2(0, 1).rotate(angle) * self.shoot_speed
 
             #Overrides CircleShape to check Traingle 
-    def collides_with(self, other: CircleShape) -> bool:
+
+    # helper for inside check
+    def contains_point(self, point):
         vertices = self.triangle()
-        circle_center = other.position
-        circle_radius = other.radius
-
-        inside = True
-        for i in range(3):
+        n = len(vertices)        
+        for i in range(n):
             p1 = vertices[i]
-            p2 = vertices[(i + 1) % 3]  # '% or modulo' use to loop to the first point. very cool
-
-            # vector along edge
+            p2 = vertices[(i + 1) % n]
             edge = p2 - p1
+            to_point = point - p1
+            cross = edge.x * to_point.y - edge.y * to_point.x
+            if cross < 0:
+                return False # outside this edge
+        return True          # inside all edges so inside the polygon
 
-            # vector from vertex to asteroids center
-            to_circle = circle_center - p1
 
-            # logic to check if center of asteroid is inside player 'cross product'
-            cross_product = edge.x * to_circle.y - edge.y * to_circle.x
-            if cross_product < 0:
-                inside = False
-                break
-        if inside:
+    def collides_with(self, other: CircleShape) -> bool:
+
+        if self.contains_point(other.position):
             return True
 
+        closest = self.closest_point_on_triangle(other.position)
 
-        for i in range(3):
+        return closest.distance_to(other.position) <= other.radius
+
+    def closest_point_on_triangle(self, point):
+        vertices = self.triangle()
+        n = len(vertices)
+        best = None
+        best_dist = float("inf")
+
+        
+        for i in range(n):
             p1 = vertices[i]
-            p2 = vertices[(i + 1) % 3]
+            p2 = vertices[(i + 1) % n]
             edge = p2 - p1
-            to_circle = circle_center - p1
 
             # dot projection for calculating closest point along a line segment that is infinte
 
@@ -313,19 +330,55 @@ class Player(CircleShape):
                 continue
 
             # t is the percentage along the line segment (must be between 0.0 and 1.0)
-            t = max(0.0, min(1.0, to_circle.dot(edge) / edge_length_sq))
-            closest_point = p1 + edge * t
+            t = max(0.0, min(1.0, (point - p1).dot(edge) / edge_length_sq))
+            candidate = p1 + edge * t
+            d = candidate.distance_to(point)
+            if d < best_dist:
+                best, best_dist = candidate, d
+        return best
 
-            # distance from asteroid center to closest point
-            distance_to_edge = pygame.Vector2.distance_to(circle_center, closest_point)
+    # stopping the ghosting
+    def separate(self, rock, shield = 1.0):
+        if self.contains_point(rock.position):
+            normal = rock.radius + self.radius
+            push = rock.radius + self.radius
+            offset = rock.position - self.position
+            if offset.length_squared() == 0:
+                normal = pygame.Vector2(1, 0)
+            else:
+                normal = offset.normalize()
+            rock.position += normal * (rock.radius + self.radius)  # pushes a self radius so maybe weird shenanigans with telporting asteroids
+            return True
 
-            # use that distance with radius to calculate collision
-            if distance_to_edge <= circle_radius:
-                return True
+        closest = self.closest_point_on_triangle(rock.position)
+        offset = rock.position - closest
+        dist = offset.length()
 
-        return False
+        if dist >= rock.radius:
+            return False
+        if dist == 0:
+            normal = pygame.Vector2(1, 0)       # this is a fallback to never divide by zero
 
+        normal = offset / dist
+        push = rock.radius - dist 
+        rock.position += normal * push
+        approach = (rock.velocity - self.velocity).dot(normal)
+        if approach < 0:
+            rock.velocity -= normal * approach * (1 + SHIELD_BOUNCE * shield)
+        rock.velocity = rock.velocity.clamp_magnitude(0, ASTEROID_MAX_SPEED)
+        return True
 
+        
+
+    def take_hit(self, hit):
+        if self.invulnerability_timer > 0:
+            return HitResult(HitOutcome.NOTHING)
+        self.hull -= hit.damage
+        self.invulnerability_timer = PLAYER_INVULNERABILITY_TIME
+        if self.hull > 0:
+            return HitResult(HitOutcome.CHIPPED)
+        else:
+            return HitResult(HitOutcome.DESTROYED)
 
 
 

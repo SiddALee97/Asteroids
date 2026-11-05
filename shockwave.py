@@ -12,7 +12,7 @@ class Shockwave(CircleShape):
     FRAMES = []
 
 
-    def __init__(self, x, y, max_radius, force = 0, speed=500, damage = 1, breakage = 1):
+    def __init__(self, x, y, max_radius, force = 0, speed=350, damage = 1, breakage = 1):
         super().__init__(x, y, radius=10)
         self.max_radius = max_radius
         self.speed = speed

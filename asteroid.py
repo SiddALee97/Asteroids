@@ -1,9 +1,9 @@
-from hit import HitResult, HitOutcome, HitKind
+from hit import HitResult, HitOutcome, HitKind, Hit
 from camera import camera
 from world import world
 import pygame
 from circleshape import CircleShape
-from constants import ASTEROID_SCORES, ASTEROID_HEALTHS, ASTEROID_KINDS, ASTEROID_MASS_EXPONENT, ASTEROID_MAX_RADIUS, ASTEROID_MAX_SPEED, ASTEROID_MIN_RADIUS, ASTEROID_SIZES, ASTEROID_SPAWN_RATE_SCALE, ASTEROID_SPAWN_RATE_SECONDS, ASTEROID_SPAWN_SCALE_TIMER, ASTEROID_SPAWN_TIERS, ASTEROID_SPIN_RANGE, ASTEROID_SPRITE_SCALE, LINE_WIDTH, FORCE_SCALE, UPGRADE_DROP_CHANCE
+from constants import ASTEROID_SCORES, ASTEROID_HEALTHS, ASTEROID_KINDS, ASTEROID_MASS_EXPONENT, ASTEROID_MAX_RADIUS, ASTEROID_MAX_SPEED, ASTEROID_MIN_RADIUS, ASTEROID_SIZES, ASTEROID_SPAWN_RATE_SCALE, ASTEROID_SPAWN_RATE_SECONDS, ASTEROID_SPAWN_SCALE_TIMER, ASTEROID_SPAWN_TIERS, ASTEROID_SPIN_RANGE, ASTEROID_SPRITE_SCALE, LINE_WIDTH, FORCE_SCALE, UPGRADE_DROP_CHANCE, ASTEROID_CONTACT_DAMAGE
 from logger import log_event
 import random
 from upgrades import Upgrade
@@ -22,6 +22,8 @@ class Asteroid(CircleShape):
         self.spin = random.uniform(-ASTEROID_SPIN_RANGE, ASTEROID_SPIN_RANGE)
 
         sprite_pool = Asteroid.sprites.get(self.tier)
+
+        self.already_hit = set()
 
 
 
@@ -189,4 +191,11 @@ class Asteroid(CircleShape):
             return
         self.velocity += direction.normalize() * strength * FORCE_SCALE / mass
         self.velocity = self.velocity.clamp_magnitude(0, ASTEROID_MAX_SPEED)
-       
+
+    # hit logic for asteroids
+    def make_hit(self):
+        return Hit(kind = HitKind.CONTACT, damage = ASTEROID_CONTACT_DAMAGE[self.tier], force = 0, breakage = 0)
+
+    def register_hit(self, target):
+        pass
+

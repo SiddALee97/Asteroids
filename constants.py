@@ -36,8 +36,17 @@ PLAYER_SHOOT_COOLDOWN_SECONDS = 0.3
 SHOT_RADIUS = 5
 SHIP_SPRITE_SCALE = 2.0 # on screen size mult for ship sprite
 PLAYER_HITBOX_SCALE = 1.1
+PLAYER_HITBOX_WIDTH = 1.4
 THRUSTER_FRAME_TIME = 0.125   # seconds per frame
 THRUSTER_OFFSET = 41         # world units behind ship center   
+PLAYER_START_HULL = 3
+PLAYER_MASS = 20
+PLAYER_INVULNERABILITY_TIME = 1.5
+RAM_DAMAGE_CAP = 100
+ASTEROID_CONTACT_DAMAGE = (1, 1, 2) # damage for each tier as a tuple, must be same length as asteroid tiers
+PLAYER_CONTACT_RADIUS = 26
+SHIELD_BOUNCE = 0.1  
+
 
 #----------------------- ASTEROID CONSTANTS -----------------------#
 ASTEROID_SCORES = (5, 10, 15)

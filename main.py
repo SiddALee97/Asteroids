@@ -344,17 +344,26 @@ def main():
                             
                         
 
-                # checks player death
+                # checks player collision
                 for obj in asteroids:
-                    if player.collides_with(obj) and not debug.god_mode:        # checks god mode toggle
-                        log_event("player_hit")
-                        # create and explosion where player is
-                        Explosion(player.position)
-                        # make player ship disappear
-                        player.kill()
-                        # changes the game state
-                        game_state = "GAME_OVER"
-                        break
+                    touched = player.separate(obj)
+                    if touched and not debug.god_mode:             # checks god mode toggle
+                               
+                        # replacing death on hit with damage taken
+                        result = resolve_hit(obj, player)
+                        if result.outcome is HitOutcome.NOTHING:
+                            continue
+
+                        if result.outcome is HitOutcome.CHIPPED:
+                            log_event("player_hit")
+                            # will add camera or hud shake and voice lines here later
+                                
+                        if result.outcome is HitOutcome.DESTROYED:
+                            log_event("player_destroyed")
+                            Explosion(player.position)
+                            player.kill()
+                            game_state = "GAME_OVER"
+                            break
 
                 # checks upgrade collision and applies
                 if game_state == "PLAYING":

@@ -13,6 +13,8 @@ class HitKind(Enum):
     LASER = auto()
     BLAST = auto()
     SHOT = auto()
+    CONTACT = auto()  # collided with something
+    RAM = auto()  # rammed into something with force
 
 @dataclass(frozen = True)
 class HitResult():

@@ -103,6 +103,7 @@ class Debug:
                 "levels: " + " ".join(
                     f"{'>' if WEAPONS[self.selected] == n else ''}{n} {player.weapon_levels[n]}"
                     for n in WEAPONS),
+                f"hull: {player.hull} / {player.max_hull}",
                 f"speed: {player.speed:.0f} turn: {player.turn_speed:.0f}",
                 f"cooldown: {player.shoot_cooldown:.2f} shot speed: {player.shoot_speed:.0f}",
                 f"radius {player.radius:.1f}",
