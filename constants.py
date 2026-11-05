@@ -31,6 +31,7 @@ PANEL_BOTTOM_GAP = 100
 PLAYER_RADIUS = 20
 PLAYER_TURN_SPEED = 300
 PLAYER_SPEED = 200
+PLAYER_REVERSE_MULT = 0.5 # mult speed going backwards
 PLAYER_SHOOT_SPEED = 500
 PLAYER_SHOOT_COOLDOWN_SECONDS = 0.3
 SHOT_RADIUS = 5
@@ -66,12 +67,20 @@ ASTEROID_SPIN_RANGE = 60  # max degrees per second
 
 
 
-#----------------------- CARGO DRONE / UPGRADE CONSTANTS -----------------------#
+#----------------------- CARGO DRONE -----------------------#
 DRONE_SPAWN_COOLDOWN = 20
 DRONE_SCORE = 5
 DRONE_SPRITE_SCALE = 1.25
 
-UPGRADE_DROP_CHANCE = 0.25
+
+
+#----------------------- SALVAGE / SCRAP ------------------------#
+
+STANDARD_DROP_TABLE = [1, 1, 1, 2, 2]
+RARE_DROP_TABLE = [1, 1, 1, 2, 5]
+SCRAP_DROP_CHANCE = (0.10, 0.15, 0.25) # one per tier, same length as len(asteroid_sizes)
+SCRAP_DROP_TABLES = (STANDARD_DROP_TABLE, STANDARD_DROP_TABLE, RARE_DROP_TABLE) # which table does each tier pull from
+
 
 
 #----------------------- WEAPON CONSTANTS -----------------------#

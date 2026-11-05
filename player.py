@@ -2,7 +2,7 @@ from hit import HitKind, HitResult, HitOutcome
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import PLAYER_INVULNERABILITY_TIME, PLAYER_SPEED, PLAYER_START_HULL, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, ASTEROID_MAX_SPEED, SHIELD_BOUNCE
+from constants import PLAYER_INVULNERABILITY_TIME, PLAYER_SPEED, PLAYER_START_HULL, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT
 from shot import Shot
 from circleshape import CircleShape
 import pygame
@@ -56,6 +56,10 @@ class Player(CircleShape):
         self.hull = PLAYER_START_HULL
         self.max_hull = PLAYER_START_HULL
         self.invulnerability_timer = 0.0
+
+        # adding "wallet" for new upgrade system
+        self.scrap = 0
+        self.salvage = 0
 
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -196,7 +200,7 @@ class Player(CircleShape):
             self.move(dt)
 
         if keys[pygame.K_s]:
-            self.move(-dt)
+            self.move_backward(-dt) 
 
         # new momentum code
         # 1. apply friction over time (import math to use math.pow (ensures friction scales evenly regardless of frame rate))
@@ -229,6 +233,14 @@ class Player(CircleShape):
 
         # accelerate
         self.velocity += rotated_vector * self.speed * dt
+
+    def move_backward(self, dt: float):
+        # instead of moving position, we add "thrust" to velocity but backwards
+        unit_vector = pygame.Vector2(0, 1)
+        rotated_vector = unit_vector.rotate(self.rotation)
+
+        # slower
+        self.velocity += rotated_vector * self.speed * PLAYER_REVERSE_MULT * dt
 
     def try_fire(self, name, fire_func, cooldown_mult):
         # lvl 0 or still cooling down do nothing

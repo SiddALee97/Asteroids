@@ -3,10 +3,11 @@ from camera import camera
 from world import world
 import pygame
 from circleshape import CircleShape
-from constants import ASTEROID_SCORES, ASTEROID_HEALTHS, ASTEROID_KINDS, ASTEROID_MASS_EXPONENT, ASTEROID_MAX_RADIUS, ASTEROID_MAX_SPEED, ASTEROID_MIN_RADIUS, ASTEROID_SIZES, ASTEROID_SPAWN_RATE_SCALE, ASTEROID_SPAWN_RATE_SECONDS, ASTEROID_SPAWN_SCALE_TIMER, ASTEROID_SPAWN_TIERS, ASTEROID_SPIN_RANGE, ASTEROID_SPRITE_SCALE, LINE_WIDTH, FORCE_SCALE, UPGRADE_DROP_CHANCE, ASTEROID_CONTACT_DAMAGE
+from constants import ASTEROID_SCORES, ASTEROID_HEALTHS, ASTEROID_KINDS, ASTEROID_MASS_EXPONENT, ASTEROID_MAX_RADIUS, ASTEROID_MAX_SPEED, ASTEROID_MIN_RADIUS, ASTEROID_SIZES, ASTEROID_SPAWN_RATE_SCALE, ASTEROID_SPAWN_RATE_SECONDS, ASTEROID_SPAWN_SCALE_TIMER, ASTEROID_SPAWN_TIERS, ASTEROID_SPIN_RANGE, ASTEROID_SPRITE_SCALE, LINE_WIDTH, FORCE_SCALE, SCRAP_DROP_CHANCE, ASTEROID_CONTACT_DAMAGE, RARE_DROP_TABLE, SCRAP_DROP_TABLES
 from logger import log_event
 import random
 from upgrades import Upgrade
+from pickups import Pickup
 
 
 class Asteroid(CircleShape):
@@ -68,9 +69,9 @@ class Asteroid(CircleShape):
             self.kill()
 
     def check_upgrade_drop(self):
-        # helper to spawn upgrade if max tier is destroyed
-        if self.tier == ASTEROID_SPAWN_TIERS - 1 and random.random() < UPGRADE_DROP_CHANCE:
-            Upgrade(self.position.x, self.position.y, Upgrade.STANDARD_POOL)   
+        # helper to spawn pickup according to asteroid tier
+        if random.random() < SCRAP_DROP_CHANCE[self.tier]:
+            Pickup(self.position.x, self.position.y, "SCRAP", SCRAP_DROP_TABLES[self.tier])
 
     def split(self):
         if not self.alive():

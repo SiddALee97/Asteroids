@@ -4,9 +4,10 @@ import pygame
 import random
 from circleshape import CircleShape
 from upgrades import Upgrade
-from constants import ASTEROID_MASS_EXPONENT, LINE_WIDTH, DRONE_SCORE, FORCE_SCALE, ASTEROID_MAX_SPEED, DRONE_SPRITE_SCALE
+from constants import ASTEROID_MASS_EXPONENT, LINE_WIDTH, DRONE_SCORE, FORCE_SCALE, ASTEROID_MAX_SPEED, DRONE_SPRITE_SCALE, RARE_DROP_TABLE
 from hit import HitResult, HitOutcome
 from explosion import Explosion
+from pickups import Pickup
 
 
 
@@ -70,7 +71,8 @@ class CargoDrone(CircleShape):
         # trigger same explosion from player death
         Explosion(self.position)
 
-        Upgrade(self.position.x, self.position.y, Upgrade.CARGO_POOL)
+        Pickup(self.position.x, self.position.y, "SALVAGE")
+        Pickup(self.position.x, self.position.y, "SALVAGE", RARE_DROP_TABLE)
         self.kill()
 
     def apply_force(self, hit, strength):

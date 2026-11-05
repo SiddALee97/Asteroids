@@ -19,7 +19,6 @@ class Upgrade(CircleShape):
         if upgrade_pool is None:
             upgrade_pool = Upgrade.STANDARD_POOL
 
-        #
 
         self.kind = random.choice(upgrade_pool)  # random choice what kind of upgrade
         self.velocity = pygame.Vector2(0, 1).rotate(random.uniform(0, 360)) * 40

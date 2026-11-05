@@ -1,5 +1,5 @@
 
-
+from pickups import Pickup
 from comms import hud_comms
 from hud import comms_rect, draw_hud, harry_panel, barry_panel, draw_panel
 from hit import Hit, HitKind, HitOutcome, HitResult
@@ -51,6 +51,8 @@ def main():
     font = pygame.font.Font(None, 48)
 
     # creating the groups
+    
+    pickups = pygame.sprite.Group()
     shockwaves = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
@@ -60,6 +62,8 @@ def main():
     drawable = pygame.sprite.Group()
 
     # specifying containers the class belongs to
+
+    Pickup.containers = (pickups, drawable, updatable)
     Shockwave.containers = (shockwaves, updatable, drawable)
     Shot.containers = (shots, updatable, drawable)
     AsteroidField.containers = (updatable,)
@@ -106,6 +110,15 @@ def main():
 #--------------------------- loading sprites-------------------------
     reticle_image = load_sprite("assets/reticle.png")
     comms_image = load_sprite("assets/comms_panel.png")
+
+    Pickup.scrap_sprites = [
+        load_sprite("assets/scrap_1.png"),
+    ]
+
+    Pickup.salvage_sprites = [
+        load_sprite("assets/salvage_1.png"),
+        load_sprite("assets/salvage_2.png"),
+    ]
 
     cargo_sprites = {}
     for h in (3, 2, 1):
@@ -372,6 +385,15 @@ def main():
                             log_event(f"upgrade_collected_{upgrade.kind}")
                             upgrade.apply_to_player(player)
                             upgrade.kill()
+                            break
+
+                # checks pickup collision and collection
+                if game_state == "PLAYING":
+                    for pickup in pickups:
+                        if player.collides_with(pickup):
+                            log_event(f"{pickup.kind}_collected")
+                            pickup.apply_to_player(player)
+                            pickup.kill()
                             break
 
 

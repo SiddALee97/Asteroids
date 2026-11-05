@@ -4,6 +4,8 @@ from world import world
 from cargodrone import CargoDrone
 from upgrades import Upgrade
 from constants import SCREEN_WIDTH, MAX_WEAPON_LEVEL
+import random
+from pickups import Pickup
 
 # Master switch: change to False to disable debug feature
 DEBUG = True
@@ -82,7 +84,7 @@ class Debug:
 
         # F9 drop a standard upgrade
         elif k == pygame.K_F9:
-            Upgrade(player.position.x + 120, player.position.y, Upgrade.STANDARD_POOL)
+            Pickup(player.position.x + 120, player.position.y, "SALVAGE")
 
         # F10 toggles visible hitboxes
         elif k == pygame.K_F10:
@@ -103,7 +105,7 @@ class Debug:
                 "levels: " + " ".join(
                     f"{'>' if WEAPONS[self.selected] == n else ''}{n} {player.weapon_levels[n]}"
                     for n in WEAPONS),
-                f"hull: {player.hull} / {player.max_hull}",
+                f"hull: {player.hull} / {player.max_hull} scrap / salvage: {player.scrap} / {player.salvage}",
                 f"speed: {player.speed:.0f} turn: {player.turn_speed:.0f}",
                 f"cooldown: {player.shoot_cooldown:.2f} shot speed: {player.shoot_speed:.0f}",
                 f"radius {player.radius:.1f}",
