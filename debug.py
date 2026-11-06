@@ -55,12 +55,12 @@ class Debug:
         # F4 weapon level up
         elif k == pygame.K_F4:
             name = WEAPONS[self.selected]
-            player.weapon_levels[name] = min(player.weapon_levels[name] + 1, MAX_WEAPON_LEVEL)
+            player.levels[name] = min(player.levels[name] + 1, MAX_WEAPON_LEVEL)
 
         # F5 weapon level down
         elif k == pygame.K_F5:
             name = WEAPONS[self.selected]
-            player.weapon_levels[name] = max(player.weapon_levels[name] - 1, 0)
+            player.levels[name] = max(player.levels[name] - 1, 0)
 
         # F6 toggle god mode
         elif k == pygame.K_F6:
@@ -82,9 +82,10 @@ class Debug:
             player.position = pygame.Vector2(world.width / 2, world.height / 2)
             player.velocity = pygame.Vector2(0, 0)
 
-        # F9 drop a standard upgrade
+        # F9 drop a random pickup
         elif k == pygame.K_F9:
-            Pickup(player.position.x + 120, player.position.y, "SALVAGE")
+            choices = ["SALVAGE", "SCRAP"]
+            Pickup(player.position.x + 120, player.position.y, random.choice(choices))
 
         # F10 toggles visible hitboxes
         elif k == pygame.K_F10:
@@ -103,7 +104,7 @@ class Debug:
         if player is not None:
             lines += [
                 "levels: " + " ".join(
-                    f"{'>' if WEAPONS[self.selected] == n else ''}{n} {player.weapon_levels[n]}"
+                    f"{'>' if WEAPONS[self.selected] == n else ''}{n} {player.levels[n]}"
                     for n in WEAPONS),
                 f"hull: {player.hull} / {player.max_hull} scrap / salvage: {player.scrap} / {player.salvage}",
                 f"speed: {player.speed:.0f} turn: {player.turn_speed:.0f}",
@@ -119,7 +120,7 @@ class Debug:
             f"spawns: {'PAUSED' if self.no_spawns else 'ON'}",
             "",
             "F1: debug  F2: drone  F3: pick weapon  F4/F5: its lvl +/-",
-            "F6: god mode  F7: spawns  F8: zoom  F9: upgrade  F10: hitboxes"
+            "F6: god mode  F7: spawns  F8: zoom  F9: pickup  F10: hitboxes"
         ]
 
         # position it on the top right of screen

@@ -113,6 +113,7 @@ def main():
 
     Pickup.scrap_sprites = [
         load_sprite("assets/scrap_1.png"),
+        load_sprite("assets/scrap_2.png"),
     ]
 
     Pickup.salvage_sprites = [

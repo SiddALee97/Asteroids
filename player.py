@@ -9,6 +9,7 @@ import pygame
 import math
 import viewport
 from enum import Enum, auto
+from ships import BARRY_SLOTS, HARRY_SLOTS
 
 class Thruster(Enum):
     OFF = auto()
@@ -36,7 +37,6 @@ class Player(CircleShape):
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.shoot_speed = PLAYER_SHOOT_SPEED
         self.radius = PLAYER_RADIUS
-        self.weapon_levels = {"MULTISHOT": 0, "SHOCKWAVE": 0, "LASER": 0}
         self.weapon_cooldowns = {"SHOCKWAVE": 0.0, "LASER": 0.0}
 
         # adding base velocity and friction coefficient for momentum calcs
@@ -61,6 +61,11 @@ class Player(CircleShape):
         self.scrap = 0
         self.salvage = 0
 
+        # future proofing for different ships
+        self.levels = {}
+        for slot in BARRY_SLOTS + HARRY_SLOTS:
+            self.levels[slot.key] = 0
+
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius * PLAYER_HITBOX_WIDTH 
@@ -70,7 +75,7 @@ class Player(CircleShape):
         return [a, b, c]
 
     def draw_turret(self, screen):
-        if self.weapon_levels["LASER"] <= 0:
+        if self.levels["LASER"] <= 0:
             return
 
         pos = camera.world_to_screen(self.position)
@@ -214,7 +219,7 @@ class Player(CircleShape):
 
         if keys[pygame.K_SPACE] and self.cdt <= 0:
                 self.cdt = max(0.08, self.shoot_cooldown)
-                self.fire_parallel(self.weapon_levels["MULTISHOT"] + 1)
+                self.fire_parallel(self.levels["MULTISHOT"] + 1)
 
         # time to add some more weapon buttons!
         if keys[pygame.K_q]:
@@ -244,14 +249,14 @@ class Player(CircleShape):
 
     def try_fire(self, name, fire_func, cooldown_mult):
         # lvl 0 or still cooling down do nothing
-        if self.weapon_levels[name] <= 0 or self.weapon_cooldowns[name] > 0:
+        if self.levels[name] <= 0 or self.weapon_cooldowns[name] > 0:
             return
         self.weapon_cooldowns[name] = max(0.08, self.shoot_cooldown * cooldown_mult)
         fire_func()
 
         # refactoring logic for shockwave
     def fire_shockwave(self):
-        level = self.weapon_levels["SHOCKWAVE"]
+        level = self.levels["SHOCKWAVE"]
         max_radius = 150 + 50 * (level - 1)
         force = SHOCKWAVE_FORCE[level]
         breakage = SHOCKWAVE_SPLITS[level]
@@ -261,7 +266,7 @@ class Player(CircleShape):
         # adding laser logic
     def fire_laser(self):
         kind = HitKind.LASER
-        level = self.weapon_levels["LASER"]
+        level = self.levels["LASER"]
         force = LASER_FORCE[level]
         breakage = LASER_GENERATIONS[level]
         damage = LASER_BASE_DAMAGE + LASER_DAMAGE_PER_LEVEL * (level - 1)
