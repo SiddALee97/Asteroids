@@ -2,7 +2,7 @@ from hit import HitKind, HitResult, HitOutcome
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import PLAYER_INVULNERABILITY_TIME, PLAYER_SPEED, PLAYER_START_HULL, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT
+from constants import PLAYER_INVULNERABILITY_TIME, PLAYER_SPEED, PLAYER_START_HULL, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT, SPEED_BONUS, HULL_BONUS
 from shot import Shot
 from circleshape import CircleShape
 import pygame
@@ -32,7 +32,7 @@ class Player(CircleShape):
         # added mutables for upgrades
         self.turret_image = pygame.image.load("assets/laser_turret1.png").convert_alpha()
         self.image = pygame.image.load("assets/ship2.png").convert_alpha()
-        self.speed = PLAYER_SPEED
+
         self.turn_speed = PLAYER_TURN_SPEED
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.shoot_speed = PLAYER_SHOOT_SPEED
@@ -54,7 +54,7 @@ class Player(CircleShape):
 
         # adding hull and invulnerability timer
         self.hull = PLAYER_START_HULL
-        self.max_hull = PLAYER_START_HULL
+
         self.invulnerability_timer = 0.0
 
         # adding "wallet" for new upgrade system
@@ -65,6 +65,16 @@ class Player(CircleShape):
         self.levels = {}
         for slot in BARRY_SLOTS + HARRY_SLOTS:
             self.levels[slot.key] = 0
+
+    # handle upgrades
+    @property
+    def speed(self):
+        return PLAYER_SPEED + SPEED_BONUS[self.levels["speed"]]
+
+    @property
+    def max_hull(self):
+        return PLAYER_START_HULL + HULL_BONUS[self.levels["max_hull"]]
+
 
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)

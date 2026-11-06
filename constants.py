@@ -82,6 +82,11 @@ SCRAP_DROP_CHANCE = (0.10, 0.15, 0.25) # one per tier, same length as len(astero
 SCRAP_DROP_TABLES = (STANDARD_DROP_TABLE, STANDARD_DROP_TABLE, RARE_DROP_TABLE) # which table does each tier pull from
 
 
+#----------------------- UPGRADES ------------------------------#
+
+SPEED_BONUS = (0, 40, 80, 120, 160) # 4 purchases -> 5 entries
+HULL_BONUS = (0, 1, 2, 3)
+
 
 #----------------------- WEAPON CONSTANTS -----------------------#
 

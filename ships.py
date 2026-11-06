@@ -11,8 +11,8 @@ class Slot:
 
 HARRY_SLOTS = (
     Slot("MULTISHOT", "CANNON", currency="salvage", costs=(6, 10, 16, 24)),
-    Slot("LASER", "LASER", currency="salvage", costs=(10, 16, 24, 36), requires="LASER"),
-    Slot("SHOCKWAVE", "SHOCKWAVE", currency="salvage", costs=(10, 16, 24, 36), requires="SHOCKWAVE"),
+    Slot("LASER", "LASER", currency="salvage", costs=(8, 10, 16, 24, 36)),
+    Slot("SHOCKWAVE", "SHOCKWAVE", currency="salvage", costs=(8, 10, 16, 24, 36)),
     Slot("maintenance", "MAINT", kind="mode", currency="salvage"),
 )
 

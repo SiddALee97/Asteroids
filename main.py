@@ -23,6 +23,8 @@ from asteroidfield import AsteroidField
 import pygame
 from player import Player
 from logger import log_state
+from ships import BARRY_SLOTS, HARRY_SLOTS
+from upgrades_shop import buy
 
 # helper for future weapons that dont use shots
 
@@ -249,7 +251,12 @@ def main():
                     if debug.visible:
                         if event.key == pygame.K_t:
                             hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character.")
- 
+
+                    if debug.visible:
+                        if event.key == pygame.K_3:
+                            buy(player, BARRY_SLOTS[0])
+                        elif event.key == pygame.K_4:
+                            buy(player, BARRY_SLOTS[1])
 
                     if event.key == pygame.K_F11:
                         if not fullscreen:
