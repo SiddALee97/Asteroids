@@ -106,12 +106,17 @@ def main():
     # initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
     field = AsteroidField()
     camera.fit_world(instant=True)
+
+#---------------------------- set_mode -----------------------------
     pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 #--------------------------- loading sprites-------------------------
     reticle_image = load_sprite("assets/reticle.png")
     comms_image = load_sprite("assets/comms_panel.png")
+    harry_panel_image = load_sprite("assets/harry_panel.png")
+    barry_panel_image = load_sprite("assets/barry_panel.png")
+    
 
     Pickup.scrap_sprites = [
         load_sprite("assets/scrap_1.png"),
@@ -155,6 +160,8 @@ def main():
         "laser_head": load_sprite("assets/laser_head_1.png"),
         # later will add "laser_trail": load_sprite("assets/laser_trail_1.png"),
     }
+
+
 
     # prints startup message
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
@@ -478,8 +485,8 @@ def main():
             
             draw_hud(screen)
             hud_comms.draw(screen, comms_rect, comms_image)
-            harry_panel.draw(screen)
-            barry_panel.draw(screen)
+            harry_panel.draw(screen, harry_panel_image)
+            barry_panel.draw(screen, barry_panel_image)
             viewport.present(screen)
             pygame.display.flip()
             dt=clock.tick(60)/1000

@@ -1,4 +1,4 @@
-import pygame
+
 
 
 def buy(player, slot):
@@ -13,4 +13,6 @@ def buy(player, slot):
         return False
     setattr(player, slot.currency, wallet - cost) # pay and update wallet
     player.levels[slot.key] += 1                  # level up
+    if slot.key == "max_hull":
+        player.hull += 1
     return True

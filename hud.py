@@ -6,6 +6,8 @@ from constants import (
     COMMS_HEIGHT, HUD_MARGIN, H_PANEL_WIDTH,
     H_PANEL_HEIGHT, B_PANEL_WIDTH, B_PANEL_HEIGHT,
     PANEL_BOTTOM_GAP, PANEL_SLIDE_TIME, PANEL_BOOT_TIME,
+    H_SLOT_RECTS, B_SLOT_RECTS, H_LIGHT_RECTS, B_LIGHT_RECTS,
+    H_SCREEN_RECT, B_SCREEN_RECT
 )
 
 
@@ -63,11 +65,14 @@ PANEL_NEXT = {
 
 
 class Panel:
-    def __init__(self, rect, side):
+    def __init__(self, rect, side, slots):
         self.side = side
         self.rect = rect
         self.state = PanelState.CLOSED
         self.timer = 0.0
+        self.selected = 0
+        self.slots = slots
+        self.font = None
 
     def set_state(self, state):
         self.state = state
@@ -91,7 +96,7 @@ class Panel:
         self.set_state(PanelState.CLOSED)
 
 
-    def draw(self, screen,):
+    def draw(self, screen, image):
         if self.state is PanelState.CLOSED:
             return
         if self.state is PanelState.OPENING:
@@ -105,13 +110,23 @@ class Panel:
         progress = max(0.0, min(1.0, progress))
 
         r = self.rect.move(self.side * (1.0 - progress) * (self.rect.width + HUD_MARGIN), 0)
+        self.drawn_rect = r
+
+        if image == None:
+            draw_panel(screen, r)
+            return
+
+        size_h = int(image.get_height() * 2)
+        size_w = int(image.get_width() * 2)
+        scaled_image = pygame.transform.scale(image, (size_w, size_h))
+        # Draw the scaled image centered in the rect
+        image_rect = scaled_image.get_rect(center=r.center)
+        screen.blit(scaled_image, r.topleft)
+
 
         
 
 
-        draw_panel(screen, r)
-
-
-harry_panel = Panel(harry_rect, -1)
-barry_panel = Panel(barry_rect, 1)
+harry_panel = Panel(harry_rect, -1, H_SLOT_RECTS)
+barry_panel = Panel(barry_rect, 1, B_SLOT_RECTS)
             
