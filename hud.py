@@ -1,4 +1,6 @@
 from enum import Enum, auto
+from upgrades_shop import buy
+
 
 import pygame
 from constants import (
@@ -43,6 +45,12 @@ def draw_panel(screen, rect):
 def draw_hud(screen):
     draw_panel(screen, comms_rect)
 
+def mouse_over_panel(pos):
+    for p in (harry_panel, barry_panel):
+        if p.state is PanelState.OPEN and p.drawn_rect and p.drawn_rect.collidepoint(pos):
+            return True
+    return False
+
 
 class PanelState(Enum):
     CLOSED = auto()
@@ -75,9 +83,17 @@ class Panel:
         self.slots = slots
         self.selected = 0
         self.slot_rects = slot_rects
-        self.font = None
+        self.label_font = None
+        self.screen_font = None
+        self.title_font = None
         self.light_rects = lights
         self.screen_rect = screen_rect
+
+    def enable_fonts(self):
+        if self.label_font is None:
+            self.label_font = pygame.font.Font(None, 16)
+            self.screen_font = pygame.font.Font(None, 20)
+            self.title_font = pygame.font.Font(None, 26)
 
     def set_state(self, state):
         self.state = state
@@ -101,7 +117,10 @@ class Panel:
         self.set_state(PanelState.CLOSED)
 
 
-    def draw(self, screen):
+    def draw(self, screen, player):
+        if player is None:
+            return
+        
         if self.state is PanelState.CLOSED:
             return
         if self.state is PanelState.OPENING:
@@ -123,23 +142,77 @@ class Panel:
         screen.blit(self.image, r.topleft)
 
         if self.state == PanelState.OPEN:
-            for slot in self.slot_rects:
-                rect = pygame.Rect(slot)
-                pygame.draw.rect(screen, "red", rect.move(r.topleft), 1)
-            for light in self.light_rects:
-                rect = pygame.Rect(light)
-                pygame.draw.rect(screen, "yellow", rect.move(r.topleft), 1)
+            
             panel_screen = pygame.Rect(self.screen_rect)   
-            pygame.draw.rect(screen, "green", panel_screen.move(r.topleft), 1)
             pygame.draw.rect(screen, (24, 16, 6), panel_screen.move(r.topleft))  # Draw the background
             pygame.draw.rect(screen, (120, 125, 135), panel_screen.move(r.topleft), 2)  # Draw the outline
 
+            self.draw_contents(screen, r, player)
+
+    def draw_contents(self, screen, r, player):
+        self.enable_fonts()
+
+        #-------- slots: label text, highlight selected one -------
+        for index, s in enumerate(self.slots):   # enumerate to get indexes as well
+            box = pygame.Rect(self.slot_rects[index]).move(r.topleft)
+            color = (255, 220, 120) if index == self.selected else (190, 170, 110) # highlights the selected rect
+            surf = self.label_font.render(s.label, True, color)
+            screen.blit(surf, surf.get_rect(center = box.center))
+            if index == self.selected:
+                pygame.draw.rect(screen, color, box, 2)  # thicker outline
+
+        #--------- screen readout ---------------
+        screen_box = pygame.Rect(self.screen_rect).move(r.topleft)
+        slot = self.slots[self.selected]
+        lines = [
+            slot.label,
+            f"{slot.currency.upper()}: {getattr(player, slot.currency)}",            
+        ]
+
+        if slot.kind == "mode":
+            lines.append("MODE")
+        else:
+            level = player.levels[slot.key]
+            if level >= len(slot.costs):
+                lines.append("MAX")
+            else:
+                lines.append(f"LEVEL {level}")
+                lines.append(f"NEXT: {slot.costs[level]}")
+
+        # add level and next price lines
+        y = screen_box.y + 8
+        for index, text in enumerate(lines): # using index to filter just the title
+            font = self.title_font if index == 0 else self.screen_font
+            color = (255, 220, 120) if index == 0 else (224, 160, 48)
+            surf = font.render(text, True, color)
+            screen.blit(surf, (screen_box.x + 8, y))
+            y += font.get_linesize() + (4 if index == 0 else 0) # extra spacing for the title
 
     def set_image(self, image):
         self.image = pygame.transform.scale(
             image, (image.get_width() * 2, image.get_height() * 2)
         )
-        
+
+    def handle_click(self, pos, player):
+        if self.state is not PanelState.OPEN or self.drawn_rect is None:
+            return
+        for index, s in enumerate(self.slot_rects):
+            rect = pygame.Rect(self.slot_rects[index]).move(self.drawn_rect.topleft)
+            if rect.collidepoint(pos):
+                self.selected = index
+                return
+
+        for index, s in enumerate(self.light_rects):
+            rect = pygame.Rect(self.light_rects[index]).move(self.drawn_rect.topleft)
+            if rect.collidepoint(pos):
+                buy(player, self.slots[index])
+                self.selected = index
+                if buy(player, self.slots[index]) and self.slots[index].key == "max_hull":
+                    player.hull += 1
+                return
+
+    
+
 
 
 harry_panel = Panel(harry_rect, -1, HARRY_SLOTS, H_SLOT_RECTS, H_LIGHT_RECTS, H_SCREEN_RECT)

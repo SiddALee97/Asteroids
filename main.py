@@ -299,8 +299,14 @@ def main():
             camera.update(dt)  # runs in every state so zooms keep easing during pause and cutscenes
             screen.fill("black")
 
+#-------------------- MOUSE POSITION -------------
             mx, my = viewport.mouse_pos() # hidden in game but bugged on WSL check on native windows
             pygame.mouse.set_visible(game_state != "PLAYING" or my >= PLAY_HEIGHT)
+
+            if game_state == "PLAYING" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                harry_panel.handle_click(event.pos, player)
+                barry_panel.handle_click(event.pos, player)
+
 
 # -------------------Draw everything in the background first to ensure objects stay visible and frozen
 
@@ -485,8 +491,8 @@ def main():
             
             draw_hud(screen)
             hud_comms.draw(screen, comms_rect, comms_image)
-            harry_panel.draw(screen)
-            barry_panel.draw(screen)
+            harry_panel.draw(screen, player)
+            barry_panel.draw(screen, player)
             viewport.present(screen)
             pygame.display.flip()
             dt=clock.tick(60)/1000
