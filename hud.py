@@ -9,7 +9,7 @@ from constants import (
     H_SLOT_RECTS, B_SLOT_RECTS, H_LIGHT_RECTS, B_LIGHT_RECTS,
     H_SCREEN_RECT, B_SCREEN_RECT
 )
-
+from ships import HARRY_SLOTS, BARRY_SLOTS
 
 comms_rect = pygame.Rect(
     (SCREEN_WIDTH - COMMS_WIDTH) // 2,
@@ -65,14 +65,19 @@ PANEL_NEXT = {
 
 
 class Panel:
-    def __init__(self, rect, side, slots):
+    def __init__(self, rect, side, slots, slot_rects, lights, screen_rect,):
         self.side = side
         self.rect = rect
         self.state = PanelState.CLOSED
         self.timer = 0.0
-        self.selected = 0
+        self.drawn_rect = None
+        self.image = None
         self.slots = slots
+        self.selected = 0
+        self.slot_rects = slot_rects
         self.font = None
+        self.light_rects = lights
+        self.screen_rect = screen_rect
 
     def set_state(self, state):
         self.state = state
@@ -96,7 +101,7 @@ class Panel:
         self.set_state(PanelState.CLOSED)
 
 
-    def draw(self, screen, image):
+    def draw(self, screen):
         if self.state is PanelState.CLOSED:
             return
         if self.state is PanelState.OPENING:
@@ -112,21 +117,31 @@ class Panel:
         r = self.rect.move(self.side * (1.0 - progress) * (self.rect.width + HUD_MARGIN), 0)
         self.drawn_rect = r
 
-        if image == None:
+        if self.image is None:
             draw_panel(screen, r)
             return
+        screen.blit(self.image, r.topleft)
 
-        size_h = int(image.get_height() * 2)
-        size_w = int(image.get_width() * 2)
-        scaled_image = pygame.transform.scale(image, (size_w, size_h))
-        # Draw the scaled image centered in the rect
-        image_rect = scaled_image.get_rect(center=r.center)
-        screen.blit(scaled_image, r.topleft)
+        if self.state == PanelState.OPEN:
+            for slot in self.slot_rects:
+                rect = pygame.Rect(slot)
+                pygame.draw.rect(screen, "red", rect.move(r.topleft), 1)
+            for light in self.light_rects:
+                rect = pygame.Rect(light)
+                pygame.draw.rect(screen, "yellow", rect.move(r.topleft), 1)
+            panel_screen = pygame.Rect(self.screen_rect)   
+            pygame.draw.rect(screen, "green", panel_screen.move(r.topleft), 1)
+            pygame.draw.rect(screen, (24, 16, 6), panel_screen.move(r.topleft))  # Draw the background
+            pygame.draw.rect(screen, (120, 125, 135), panel_screen.move(r.topleft), 2)  # Draw the outline
 
 
+    def set_image(self, image):
+        self.image = pygame.transform.scale(
+            image, (image.get_width() * 2, image.get_height() * 2)
+        )
         
 
 
-harry_panel = Panel(harry_rect, -1, H_SLOT_RECTS)
-barry_panel = Panel(barry_rect, 1, B_SLOT_RECTS)
+harry_panel = Panel(harry_rect, -1, HARRY_SLOTS, H_SLOT_RECTS, H_LIGHT_RECTS, H_SCREEN_RECT)
+barry_panel = Panel(barry_rect, 1, BARRY_SLOTS, B_SLOT_RECTS, B_LIGHT_RECTS, B_SCREEN_RECT)
             

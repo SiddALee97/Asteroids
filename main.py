@@ -114,8 +114,8 @@ def main():
 #--------------------------- loading sprites-------------------------
     reticle_image = load_sprite("assets/reticle.png")
     comms_image = load_sprite("assets/comms_panel.png")
-    harry_panel_image = load_sprite("assets/harry_panel.png")
-    barry_panel_image = load_sprite("assets/barry_panel.png")
+    harry_panel.set_image(load_sprite("assets/harry_panel.png"))
+    barry_panel.set_image(load_sprite("assets/barry_panel.png"))
     
 
     Pickup.scrap_sprites = [
@@ -485,8 +485,8 @@ def main():
             
             draw_hud(screen)
             hud_comms.draw(screen, comms_rect, comms_image)
-            harry_panel.draw(screen, harry_panel_image)
-            barry_panel.draw(screen, barry_panel_image)
+            harry_panel.draw(screen)
+            barry_panel.draw(screen)
             viewport.present(screen)
             pygame.display.flip()
             dt=clock.tick(60)/1000
