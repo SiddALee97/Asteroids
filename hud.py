@@ -1,6 +1,8 @@
 from enum import Enum, auto
 from upgrades_shop import buy
-
+from upgrades_shop import affordable_slots, auto_buy
+from constants import PANEL_OPEN_TIME_SCALE, PANEL_IDLE_TIME
+import math
 
 import pygame
 from constants import (
@@ -9,7 +11,8 @@ from constants import (
     H_PANEL_HEIGHT, B_PANEL_WIDTH, B_PANEL_HEIGHT,
     PANEL_BOTTOM_GAP, PANEL_SLIDE_TIME, PANEL_BOOT_TIME,
     H_SLOT_RECTS, B_SLOT_RECTS, H_LIGHT_RECTS, B_LIGHT_RECTS,
-    H_SCREEN_RECT, B_SCREEN_RECT
+    H_SCREEN_RECT, B_SCREEN_RECT, H_AUTO_RECT, B_AUTO_RECT,
+    PANEL_PULSE_SPEED,
 )
 from ships import HARRY_SLOTS, BARRY_SLOTS
 
@@ -52,6 +55,20 @@ def mouse_over_panel(pos):
     return False
 
 
+
+class SlotState(Enum):
+    PURCHASEABLE = auto()
+    UNAFFORDABLE = auto()
+    MAXED = auto()
+    MODE = auto()
+
+LIGHT_COLORS = {
+    SlotState.PURCHASEABLE: (280, 342, 322),
+    SlotState.UNAFFORDABLE: (0, 0, 0),
+    SlotState.MAXED: (420, 402, 330),
+}
+    
+
 class PanelState(Enum):
     CLOSED = auto()
     OPENING = auto()
@@ -73,21 +90,28 @@ PANEL_NEXT = {
 
 
 class Panel:
-    def __init__(self, rect, side, slots, slot_rects, lights, screen_rect,):
+    def __init__(self, rect, side, slots, slot_rects, lights, screen_rect, auto_rect):
         self.side = side
         self.rect = rect
         self.state = PanelState.CLOSED
         self.timer = 0.0
+
         self.drawn_rect = None
         self.image = None
         self.slots = slots
         self.selected = 0
+
         self.slot_rects = slot_rects
         self.label_font = None
         self.screen_font = None
         self.title_font = None
         self.light_rects = lights
         self.screen_rect = screen_rect
+
+        self.auto_enabled = True
+        self.auto_timer = 0.0
+        self.auto_rect = auto_rect
+        self.anim_time = 0.0
 
     def enable_fonts(self):
         if self.label_font is None:
@@ -106,12 +130,23 @@ class Panel:
         elif self.state in (PanelState.OPEN, PanelState.BOOTING): 
             self.set_state(PanelState.CLOSING)
 
-    def update(self, dt):
-        if self.state not in PANEL_DURATION:
-            return
-        self.timer += dt
-        if self.timer >= PANEL_DURATION[self.state]:
-            self.set_state(PANEL_NEXT[self.state])
+    def update(self, dt, player):
+        # animation state machine always runs
+        if self.state in PANEL_DURATION:
+            self.timer += dt
+            if self.timer >= PANEL_DURATION[self.state]:
+                self.set_state(PANEL_NEXT[self.state])
+
+        # auto buy machine always runs
+        if self.auto_enabled and affordable_slots(player, self.slots):
+            scale = PANEL_OPEN_TIME_SCALE if self.state is PanelState.OPEN else 1.0
+            self.auto_timer += dt * scale
+            if self.auto_timer >= PANEL_IDLE_TIME:
+                auto_buy(player, self.slots)
+                self.auto_timer = 0.0
+        else:
+            self.auto_timer = 0.0
+
 
     def reset(self):
         self.set_state(PanelState.CLOSED)
@@ -139,6 +174,8 @@ class Panel:
         if self.image is None:
             draw_panel(screen, r)
             return
+        
+        self.draw_lights(screen, r, player)
         screen.blit(self.image, r.topleft)
 
         if self.state == PanelState.OPEN:
@@ -149,8 +186,15 @@ class Panel:
 
             self.draw_contents(screen, r, player)
 
+
     def draw_contents(self, screen, r, player):
         self.enable_fonts()
+
+        #-------- auto toggle button -------------------
+        box = pygame.Rect(self.auto_rect).move(r.topleft)
+        color = (255, 220, 120) if self.auto_enabled else (190, 170, 110)
+        surf = self.label_font.render("AUTO", True, color)
+        screen.blit(surf, surf.get_rect(center = box.center))
 
         #-------- slots: label text, highlight selected one -------
         for index, s in enumerate(self.slots):   # enumerate to get indexes as well
@@ -188,33 +232,56 @@ class Panel:
             screen.blit(surf, (screen_box.x + 8, y))
             y += font.get_linesize() + (4 if index == 0 else 0) # extra spacing for the title
 
+
+    def light_state(self, player):
+        pass
+
+
+    def draw_lights(self, screen, r, player):
+        for index in range(len(self.light_rects)):
+            rect = pygame.Rect(self.light_rects[index]).move(self.drawn_rect.topleft)
+            pygame.draw.circle(screen, (0, 0 ,0), rect.center, 10)
+
+
+
     def set_image(self, image):
         self.image = pygame.transform.scale(
             image, (image.get_width() * 2, image.get_height() * 2)
         )
 
     def handle_click(self, pos, player):
+
         if self.state is not PanelState.OPEN or self.drawn_rect is None:
             return
+
+        # auto toggle loops
+        toggle_rect = pygame.Rect(self.auto_rect).move(self.drawn_rect.topleft)
+        if toggle_rect.collidepoint(pos):
+            self.auto_enabled = not self.auto_enabled
+            self.auto_timer = 0.0
+            return
+
+        # slot loops
         for index, s in enumerate(self.slot_rects):
             rect = pygame.Rect(self.slot_rects[index]).move(self.drawn_rect.topleft)
             if rect.collidepoint(pos):
                 self.selected = index
                 return
-
-        for index, s in enumerate(self.light_rects):
+        # light button loops
+        for index in range(len(self.light_rects)):
             rect = pygame.Rect(self.light_rects[index]).move(self.drawn_rect.topleft)
             if rect.collidepoint(pos):
-                buy(player, self.slots[index])
-                self.selected = index
-                if buy(player, self.slots[index]) and self.slots[index].key == "max_hull":
+                slot = self.slots[index]
+                bought = buy(player, slot)
+                if bought and slot.key == "max_hull":
                     player.hull += 1
+                self.selected = index
                 return
 
     
 
 
 
-harry_panel = Panel(harry_rect, -1, HARRY_SLOTS, H_SLOT_RECTS, H_LIGHT_RECTS, H_SCREEN_RECT)
-barry_panel = Panel(barry_rect, 1, BARRY_SLOTS, B_SLOT_RECTS, B_LIGHT_RECTS, B_SCREEN_RECT)
+harry_panel = Panel(harry_rect, -1, HARRY_SLOTS, H_SLOT_RECTS, H_LIGHT_RECTS, H_SCREEN_RECT, H_AUTO_RECT)
+barry_panel = Panel(barry_rect, 1, BARRY_SLOTS, B_SLOT_RECTS, B_LIGHT_RECTS, B_SCREEN_RECT, B_AUTO_RECT)
             

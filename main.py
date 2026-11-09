@@ -212,6 +212,10 @@ def main():
                 if event.type == pygame.QUIT:
                         return
 
+                if game_state == "PLAYING" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    harry_panel.handle_click(event.pos, player)
+                    barry_panel.handle_click(event.pos, player)
+
                 # boot menu first
                 if game_state == "MENU":
                     if play_button.is_clicked(event):
@@ -259,11 +263,6 @@ def main():
                         if event.key == pygame.K_t:
                             hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character.")
 
-                    if debug.visible:
-                        if event.key == pygame.K_3:
-                            buy(player, BARRY_SLOTS[0])
-                        elif event.key == pygame.K_4:
-                            buy(player, BARRY_SLOTS[1])
 
                     if event.key == pygame.K_F11:
                         if not fullscreen:
@@ -303,9 +302,6 @@ def main():
             mx, my = viewport.mouse_pos() # hidden in game but bugged on WSL check on native windows
             pygame.mouse.set_visible(game_state != "PLAYING" or my >= PLAY_HEIGHT)
 
-            if game_state == "PLAYING" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                harry_panel.handle_click(event.pos, player)
-                barry_panel.handle_click(event.pos, player)
 
 
 # -------------------Draw everything in the background first to ensure objects stay visible and frozen
@@ -351,8 +347,8 @@ def main():
                 # adding updating back inside loop since pause didn't work
                 updatable.update(dt)
                 hud_comms.update(dt)
-                harry_panel.update(dt)
-                barry_panel.update(dt)
+                harry_panel.update(dt, player)
+                barry_panel.update(dt, player)
 
                 # Drone Spawn
 
