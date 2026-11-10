@@ -1,9 +1,8 @@
 from enum import Enum, auto
-from upgrades_shop import buy
-from upgrades_shop import affordable_slots, auto_buy
+from upgrades_shop import affordable_slots, auto_buy, buy, SlotState, LIGHT_COLORS, slot_state
 from constants import PANEL_OPEN_TIME_SCALE, PANEL_IDLE_TIME
+from ships import HARRY_SLOTS, BARRY_SLOTS
 import math
-
 import pygame
 from constants import (
     PANEL_CLOSE_TIME, SCREEN_WIDTH, SCREEN_HEIGHT, COMMS_WIDTH,
@@ -14,7 +13,7 @@ from constants import (
     H_SCREEN_RECT, B_SCREEN_RECT, H_AUTO_RECT, B_AUTO_RECT,
     PANEL_PULSE_SPEED,
 )
-from ships import HARRY_SLOTS, BARRY_SLOTS
+
 
 comms_rect = pygame.Rect(
     (SCREEN_WIDTH - COMMS_WIDTH) // 2,
@@ -56,19 +55,6 @@ def mouse_over_panel(pos):
 
 
 
-class SlotState(Enum):
-    PURCHASEABLE = auto()
-    UNAFFORDABLE = auto()
-    MAXED = auto()
-    MODE = auto()
-
-LIGHT_COLORS = {
-    SlotState.PURCHASEABLE: (133, 250, 250),
-    SlotState.UNAFFORDABLE: (79, 49, 105),
-    SlotState.MAXED: (232, 255, 191),
-    SlotState.MODE: (79, 49, 105)
-}
-    
 
 class PanelState(Enum):
     CLOSED = auto()
@@ -117,8 +103,9 @@ class Panel:
     def enable_fonts(self):
         if self.label_font is None:
             self.label_font = pygame.font.Font(None, 16)
-            self.screen_font = pygame.font.Font(None, 20)
+            self.screen_font = pygame.font.Font(None, 18)
             self.title_font = pygame.font.Font(None, 26)
+            self.wallet_font = pygame.font.Font(None, 20)
 
     def set_state(self, state):
         self.state = state
@@ -212,9 +199,9 @@ class Panel:
         #--------- screen readout ---------------
         screen_box = pygame.Rect(self.screen_rect).move(r.topleft)
         slot = self.slots[self.selected]
+        wallet = f"{slot.currency.upper()}: {getattr(player, slot.currency)}"
         lines = [
-            slot.label,
-            f"{slot.currency.upper()}: {getattr(player, slot.currency)}",            
+            slot.label,           
         ]
 
         if slot.kind == "mode":
@@ -228,30 +215,28 @@ class Panel:
                 lines.append(f"NEXT: {slot.costs[level]}")
 
         # add level and next price lines
-        y = screen_box.y + 8
+        y = screen_box.y + 16
+        
         for index, text in enumerate(lines): # using index to filter just the title
             font = self.title_font if index == 0 else self.screen_font
             color = (255, 220, 120) if index == 0 else (224, 160, 48)
             surf = font.render(text, True, color)
             screen.blit(surf, (screen_box.x + 8, y))
-            y += font.get_linesize() + (4 if index == 0 else 0) # extra spacing for the title
+            y += font.get_linesize() + (10 if index == 0 else 0) # extra spacing for the title
+
+        # drawing wallet seperate
+        font = self.wallet_font
+        color = (255, 220, 120)
+        surf = font.render(wallet, True, color)
+        screen.blit(surf, (screen_box.x + 75, screen_box.y + 150))
 
 
-    def light_state(self, player, slot):
-        if slot.kind == "mode":
-            return SlotState.MODE
-        level = player.levels[slot.key]
-        if level >= len(slot.costs):
-            return SlotState.MAXED
-        if getattr(player, slot.currency) >= slot.costs[level]:
-            return SlotState.PURCHASEABLE
-        return SlotState.UNAFFORDABLE
 
 
     def draw_lights(self, screen, r, player):
         for index, slot in enumerate(self.slots):
             rect = pygame.Rect(self.light_rects[index]).move(r.topleft)
-            state = self.light_state(player, slot)
+            state = slot_state(player, slot)
             dark = LIGHT_COLORS[SlotState.UNAFFORDABLE]
             bright = LIGHT_COLORS[state]
 

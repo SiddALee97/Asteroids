@@ -25,6 +25,8 @@ from player import Player
 from logger import log_state
 from ships import BARRY_SLOTS, HARRY_SLOTS
 from upgrades_shop import buy
+from background import BackgroundLayer
+
 
 # helper for future weapons that dont use shots
 
@@ -79,8 +81,12 @@ def main():
 
 
     # making some helper functions to clean up some code
+
+
     def load_sprite(path: str):
         return pygame.image.load(path).convert_alpha()
+
+
 
     # same but for sprite sheets
     def slice_sheet(path, count = 5, size = 16):
@@ -112,10 +118,20 @@ def main():
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 #--------------------------- loading sprites-------------------------
+    background_default = load_sprite("assets/background_default.png")
+    bg_far = BackgroundLayer(load_sprite("assets/background_1.png"), (-2, 1))
+    bg_near = BackgroundLayer(load_sprite("assets/background_2.png"), (-8, 2))
     reticle_image = load_sprite("assets/reticle.png")
     comms_image = load_sprite("assets/comms_panel.png")
     harry_panel.set_image(load_sprite("assets/harry_panel.png"))
     barry_panel.set_image(load_sprite("assets/barry_panel.png"))
+
+    bg_images = [
+        load_sprite("assets/background_1.png"),
+        load_sprite("assets/background_2.png"),
+    ]
+    
+
     
 
     Pickup.scrap_sprites = [
@@ -296,7 +312,12 @@ def main():
 
 
             camera.update(dt)  # runs in every state so zooms keep easing during pause and cutscenes
-            screen.fill("black")
+            screen.blit(background_default, (0, 0))
+            bg_far.draw(screen)
+            bg_near.draw(screen)
+
+            # trying bg stuff
+            
 
 #-------------------- MOUSE POSITION -------------
             mx, my = viewport.mouse_pos() # hidden in game but bugged on WSL check on native windows
@@ -326,6 +347,8 @@ def main():
             # render different states and new menus
             if game_state == "MENU":
                 updatable.update(dt)
+                bg_far.update(dt)
+                bg_near.update(dt)
 
                 title_font = pygame.font.Font(None, 80)
                 title_text = title_font.render("ASS*ROIDS", True, "white")
@@ -344,11 +367,13 @@ def main():
                 if debug.no_spawns:
                     field.spawn_timer = 0
 
-                # adding updating back inside loop since pause didn't work
+                # adding updating back inside loop 
                 updatable.update(dt)
                 hud_comms.update(dt)
                 harry_panel.update(dt, player)
                 barry_panel.update(dt, player)
+                bg_far.update(dt)
+                bg_near.update(dt)
 
                 # Drone Spawn
 
@@ -492,6 +517,7 @@ def main():
             viewport.present(screen)
             pygame.display.flip()
             dt=clock.tick(60)/1000
+            
 
 
 

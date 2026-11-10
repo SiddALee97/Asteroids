@@ -5,6 +5,8 @@ SCREEN_HEIGHT = 720
 WORLD_BASE_SCALE = 1.5
 BOSS_WORLD_SCALE = 3.5
 LINE_WIDTH = 2
+BG_FAR_SPEED = ()
+BG_NEAR_SPEED = ()
 
 #----------------------- HUD CONSTANTS --------------------------#
 
