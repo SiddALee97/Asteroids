@@ -63,9 +63,10 @@ class SlotState(Enum):
     MODE = auto()
 
 LIGHT_COLORS = {
-    SlotState.PURCHASEABLE: (280, 342, 322),
-    SlotState.UNAFFORDABLE: (0, 0, 0),
-    SlotState.MAXED: (420, 402, 330),
+    SlotState.PURCHASEABLE: (133, 250, 250),
+    SlotState.UNAFFORDABLE: (79, 49, 105),
+    SlotState.MAXED: (232, 255, 191),
+    SlotState.MODE: (79, 49, 105)
 }
     
 
@@ -131,6 +132,9 @@ class Panel:
             self.set_state(PanelState.CLOSING)
 
     def update(self, dt, player):
+        # pulseing lights
+        self.anim_time += dt
+
         # animation state machine always runs
         if self.state in PANEL_DURATION:
             self.timer += dt
@@ -233,15 +237,32 @@ class Panel:
             y += font.get_linesize() + (4 if index == 0 else 0) # extra spacing for the title
 
 
-    def light_state(self, player):
-        pass
+    def light_state(self, player, slot):
+        if slot.kind == "mode":
+            return SlotState.MODE
+        level = player.levels[slot.key]
+        if level >= len(slot.costs):
+            return SlotState.MAXED
+        if getattr(player, slot.currency) >= slot.costs[level]:
+            return SlotState.PURCHASEABLE
+        return SlotState.UNAFFORDABLE
 
 
     def draw_lights(self, screen, r, player):
-        for index in range(len(self.light_rects)):
-            rect = pygame.Rect(self.light_rects[index]).move(self.drawn_rect.topleft)
-            pygame.draw.circle(screen, (0, 0 ,0), rect.center, 10)
+        for index, slot in enumerate(self.slots):
+            rect = pygame.Rect(self.light_rects[index]).move(r.topleft)
+            state = self.light_state(player, slot)
+            dark = LIGHT_COLORS[SlotState.UNAFFORDABLE]
+            bright = LIGHT_COLORS[state]
 
+            if state is SlotState.PURCHASEABLE:
+                pulse = 0.5 + 0.5 * math.sin(self.anim_time * PANEL_PULSE_SPEED)
+                color = tuple(int(d + (b - d) * pulse) for d, b in zip(dark, bright))
+            else:
+                color = bright
+
+            pygame.draw.circle(screen, (0, 0, 0), rect.center, 10)
+            pygame.draw.circle(screen, color, rect.center, 8)
 
 
     def set_image(self, image):
