@@ -370,6 +370,7 @@ def main():
                 # adding updating back inside loop 
                 updatable.update(dt)
                 hud_comms.update(dt)
+                hud_comms.update_lights(dt, player, harry_panel, barry_panel)
                 harry_panel.update(dt, player)
                 barry_panel.update(dt, player)
                 bg_far.update(dt)
@@ -511,7 +512,7 @@ def main():
 #----------------------- HUD ----------------------------
             
             draw_hud(screen)
-            hud_comms.draw(screen, comms_rect, comms_image)
+            hud_comms.draw(screen, comms_rect, comms_image, player, harry_panel, barry_panel)
             harry_panel.draw(screen, player)
             barry_panel.draw(screen, player)
             viewport.present(screen)

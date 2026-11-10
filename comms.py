@@ -1,8 +1,13 @@
 import pygame
-from constants import COMMS_CHARS_PER_SECOND, COMMS_HOLD_TIME, COMMS_SPRITE_SCALE
+from constants import (
+    COMMS_CHARS_PER_SECOND, COMMS_HOLD_TIME, COMMS_SPRITE_SCALE,
+    COMMS_LIGHTS, LIGHT_BLINK_INVUL, LIGHT_BLINK_SLOW, LIGHT_BLINK_FAST,
+    PANEL_IDLE_TIME,
+)
+from upgrades_shop import affordable_slots
 
-
-
+LIGHT_ON = ((255, 68, 74), (140, 171, 255), (179, 255, 85))
+LIGHT_OFF = (75, 61, 68)
 
 class Comms:
     def __init__(self):
@@ -12,6 +17,8 @@ class Comms:
         self.hold_timer = 0.0   # float: how long the current message stays up
         self.seen = set()       # set: keys for say_once
         self.font = None  # Default font and size
+        self.light_phase = [0.0, 0.0, 0.0]
+        self.light_lit = [False, False, False]
         
     def say(self, message):
         # Add a message to the queue
@@ -57,8 +64,48 @@ class Comms:
             if self.hold_timer >= COMMS_HOLD_TIME:
                 self.current_message = None
 
+    def update_lights(self, dt, player, harry, barry):
+        if player is None:
+            self.light_lit = [False, False, False]
+            return
+        # blink rate per light
+        rates = [0.0, 0.0, 0.0]
+        solid = [False, False, False]
+        if player.invulnerability_timer > 0:
+            rates[0] = LIGHT_BLINK_INVUL
+        for i, panel in ((1, harry), (2, barry)):
+            can_buy = bool(affordable_slots(player, panel.slots))
+            if panel.auto_enabled:
+                if panel.auto_timer > 0:
+                    progress = min(1.0, panel.auto_timer / PANEL_IDLE_TIME)
+                    rates[i] = LIGHT_BLINK_SLOW + (LIGHT_BLINK_FAST - LIGHT_BLINK_SLOW) * progress
+            elif can_buy:
+                solid[i] = True
+        
+        for i in range(3):
 
-    def draw(self, screen, rect, image):
+            if solid[i]:
+                self.light_lit[i] = True
+
+            elif rates[i] == 0.0:
+                self.light_phase[i] = 0.0       # reset lit next t
+                self.light_lit[i] = False
+            else:
+                self.light_phase[i] += rates[i] * dt
+                self.light_lit[i] = (self.light_phase[i] % 1.0) < 0.5
+
+
+
+    def draw_lights(self, screen, origin, player, harry, barry):
+        states = self.light_lit
+        for i, light in enumerate(COMMS_LIGHTS):
+            box = pygame.Rect(light).move(origin)
+            pygame.draw.rect(screen, (0, 0, 0), box.inflate(2, 2))
+            color = LIGHT_ON[i] if states[i] else LIGHT_OFF
+            pygame.draw.rect(screen, color, box)
+
+
+    def draw(self, screen, rect, image, player, harry, barry):
         # adjust for the screen on comms panel
         if self.font is None:
             self.font = pygame.font.Font(None, 24)  # Default font and size
@@ -71,6 +118,10 @@ class Comms:
         scaled_image = pygame.transform.scale(image, (size_w, size_h))
         # Draw the scaled image centered in the rect
         image_rect = scaled_image.get_rect(center=rect.center)
+
+        # lights before so image is overlayed
+        self.draw_lights(screen, image_rect.topleft, player, harry, barry)
+
         screen.blit(scaled_image, image_rect)
 
 
@@ -93,6 +144,8 @@ class Comms:
                 remaining -= len(line)
                 y += self.font.get_linesize()
 
+        
+        
 
     def reset(self):
         self.queue.clear()
