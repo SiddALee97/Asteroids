@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from upgrades_shop import affordable_slots, auto_buy, buy, SlotState, LIGHT_COLORS, slot_state
+from upgrades_shop import affordable_slots, auto_buy, buy, SlotState, LIGHT_COLORS, slot_state, repair
 from constants import PANEL_OPEN_TIME_SCALE, PANEL_IDLE_TIME
 from ships import HARRY_SLOTS, BARRY_SLOTS
 import math
@@ -11,7 +11,7 @@ from constants import (
     PANEL_BOTTOM_GAP, PANEL_SLIDE_TIME, PANEL_BOOT_TIME,
     H_SLOT_RECTS, B_SLOT_RECTS, H_LIGHT_RECTS, B_LIGHT_RECTS,
     H_SCREEN_RECT, B_SCREEN_RECT, H_AUTO_RECT, B_AUTO_RECT,
-    PANEL_PULSE_SPEED,
+    PANEL_PULSE_SPEED, REPAIR_TIME, REPAIR_COST, REPAIR_RUSH_COST,
 )
 
 
@@ -100,6 +100,10 @@ class Panel:
         self.auto_rect = auto_rect
         self.anim_time = 0.0
 
+        self.repair_progress = 0.0
+        self.repairing = False
+        self.has_repair = any(s.key == "repair" for s in slots)  # to check for barrys panel
+
     def enable_fonts(self):
         if self.label_font is None:
             self.label_font = pygame.font.Font(None, 16)
@@ -119,8 +123,30 @@ class Panel:
             self.set_state(PanelState.CLOSING)
 
     def update(self, dt, player):
+
+        if player is None:
+            return
+        
         # pulseing lights
         self.anim_time += dt
+
+        # repair: standing order that outranks cheapest-first
+        if self.repairing:
+            self.repair_progress += dt / REPAIR_TIME
+            if self.repair_progress >= 1.0:
+                player.hull = min(player.hull + 1, player.max_hull)
+                self.repair_progress = 0.0
+                self.repairing = False
+            
+        else:
+            self.repair_progress = 0.0
+
+        # standing order: repair selected -> keep repairing until full
+        if (self.has_repair
+                and self.slots[self.selected].key == "repair"
+                and not self.repairing
+                and player.hull < player.max_hull):
+            self.start_repair(player)
 
         # animation state machine always runs
         if self.state in PANEL_DURATION:
@@ -128,20 +154,32 @@ class Panel:
             if self.timer >= PANEL_DURATION[self.state]:
                 self.set_state(PANEL_NEXT[self.state])
 
+
         # auto buy machine always runs
-        if self.auto_enabled and affordable_slots(player, self.slots):
+        if self.auto_enabled and (affordable_slots(player, self.slots) or self.can_auto_repair(player)):
             scale = PANEL_OPEN_TIME_SCALE if self.state is PanelState.OPEN else 1.0
             self.auto_timer += dt * scale
             if self.auto_timer >= PANEL_IDLE_TIME:
-                auto_buy(player, self.slots)
+                if not (self.can_auto_repair(player) and self.start_repair(player)):
+                    auto_buy(player, self.slots)
                 self.auto_timer = 0.0
         else:
             self.auto_timer = 0.0
 
+    def can_auto_repair(self, player):
+        return (
+            self.has_repair
+            and not self.repairing
+            and player.hull <= player.max_hull / 2
+            and player.scrap >= REPAIR_COST
+        )
 
     def reset(self):
         self.set_state(PanelState.CLOSED)
-
+        self.repair_progress = 0.0
+        self.repairing = False
+        self.selected = 0
+        self.auto_enabled = True
 
     def draw(self, screen, player):
         if player is None:
@@ -260,6 +298,7 @@ class Panel:
         if self.state is not PanelState.OPEN or self.drawn_rect is None:
             return
 
+
         # auto toggle loops
         toggle_rect = pygame.Rect(self.auto_rect).move(self.drawn_rect.topleft)
         if toggle_rect.collidepoint(pos):
@@ -279,11 +318,24 @@ class Panel:
             if rect.collidepoint(pos):
                 slot = self.slots[index]
                 bought = buy(player, slot)
-                if bought and slot.key == "max_hull":
-                    player.hull += 1
-                self.selected = index
-                return
+                if slot.key == "repair":
+                    if self.repairing:
+                        extra = REPAIR_RUSH_COST - REPAIR_COST
+                        if player.scrap >= extra:
+                            player.scrap -= extra
+                            player.hull = min(player.hull + 1, player.max_hull)
+                            self.repairing = False
+                            self.repair_progress = 0.0
+                    else:
+                        repair(player, REPAIR_RUSH_COST)                   
 
+    def start_repair(self, player):
+        if self.repairing or player.hull == player.max_hull or player.scrap < REPAIR_COST:
+            return False
+        player.scrap -= REPAIR_COST
+        self.repairing = True
+        self.repair_progress = 0.0
+        return True
     
 
 

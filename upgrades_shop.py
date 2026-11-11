@@ -60,3 +60,10 @@ def auto_buy(player, slots):
     if slot.key == "max_hull":
         player.hull += 1
     return slot
+
+def repair(player, cost):
+    if player.hull == player.max_hull or player.scrap < cost:
+        return False
+    player.scrap -= cost
+    player.hull = min(player.hull + 1, player.max_hull)
+    return True

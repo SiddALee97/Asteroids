@@ -13,6 +13,7 @@ BG_NEAR_SPEED = ()
 PLAY_WIDTH = SCREEN_WIDTH
 PLAY_HEIGHT = SCREEN_HEIGHT
 HUD_MARGIN = 25
+
 #----------------------- COMMS CONSTANTS -----------------------#
 COMMS_WIDTH = 420
 COMMS_HEIGHT = 132
@@ -44,7 +45,9 @@ PANEL_BOTTOM_GAP = 100
 PANEL_OPEN_TIME_SCALE = 0.25   # how much the auto buy timer slows down if panel is open
 PANEL_IDLE_TIME = 8.0          # the timer for auto buy
 PANEL_PULSE_SPEED = 3.0
-
+REPAIR_TIME = 6.0
+REPAIR_COST = 4
+REPAIR_RUSH_COST = 8
 
 #----------------------- PLAYER CONSTANTS -----------------------#
 PLAYER_RADIUS = 20
@@ -59,7 +62,7 @@ PLAYER_HITBOX_SCALE = 1.1
 PLAYER_HITBOX_WIDTH = 1.4
 THRUSTER_FRAME_TIME = 0.125   # seconds per frame
 THRUSTER_OFFSET = 41         # world units behind ship center   
-PLAYER_START_HULL = 3
+PLAYER_START_HULL = 5
 PLAYER_MASS = 20
 PLAYER_INVULNERABILITY_TIME = 1.5
 RAM_DAMAGE_CAP = 100

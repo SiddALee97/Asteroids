@@ -1,4 +1,5 @@
-
+import os
+os.environ["SDL_AUDIODRIVER"] = "pulseaudio"
 from pickups import Pickup
 from comms import hud_comms
 from hud import comms_rect, draw_hud, harry_panel, barry_panel, draw_panel
@@ -52,6 +53,9 @@ def main():
 
     # initializing pygame early in order to draw menu
     pygame.init()
+    # initializing py mixer for music
+    pygame.mixer.init()
+
     font = pygame.font.Font(None, 48)
 
     # creating the groups
@@ -86,7 +90,11 @@ def main():
     def load_sprite(path: str):
         return pygame.image.load(path).convert_alpha()
 
+    def load_sound(path: str):
+        return pygame.mixer.music.load(path)
 
+    def set_volume(level: float): # volume has to be a float between 0 and 1
+        pygame.mixer.music.set_volume(level)
 
     # same but for sprite sheets
     def slice_sheet(path, count = 5, size = 16):
@@ -109,7 +117,7 @@ def main():
         clear_map()
         return AsteroidField(), Player(world.width / 2, world.height / 2, PLAYER_RADIUS), ScoreKeeper()
 
-    # initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
+# initializing an instance of the objects ( we will only init asteroid field on startup for background of main menu )
     field = AsteroidField()
     camera.fit_world(instant=True)
 
@@ -117,6 +125,10 @@ def main():
     pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 
+#--------------------------- loading music and sound tracks ----------
+    main_track = load_sound("assets/music/cb_egg_and_i.mp3")
+    set_volume(0.25)
+    pygame.mixer.music.play(-1)
 #--------------------------- loading sprites-------------------------
     background_default = load_sprite("assets/background_default.png")
     bg_far = BackgroundLayer(load_sprite("assets/background_1.png"), (-2, 1))
