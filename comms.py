@@ -76,7 +76,7 @@ class Comms:
         for i, panel in ((1, harry), (2, barry)):
             can_buy = bool(affordable_slots(player, panel.slots))
             if panel.auto_enabled:
-                if panel.auto_timer > 0:
+                if panel.auto_timer > 0 or barry.repairing:
                     progress = min(1.0, panel.auto_timer / PANEL_IDLE_TIME)
                     rates[i] = LIGHT_BLINK_SLOW + (LIGHT_BLINK_FAST - LIGHT_BLINK_SLOW) * progress
             elif can_buy:

@@ -45,7 +45,7 @@ PANEL_BOTTOM_GAP = 100
 PANEL_OPEN_TIME_SCALE = 0.25   # how much the auto buy timer slows down if panel is open
 PANEL_IDLE_TIME = 8.0          # the timer for auto buy
 PANEL_PULSE_SPEED = 3.0
-REPAIR_TIME = 6.0
+REPAIR_TIME = 10.0
 REPAIR_COST = 4
 REPAIR_RUSH_COST = 8
 

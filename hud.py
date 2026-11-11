@@ -243,7 +243,10 @@ class Panel:
         ]
 
         if slot.kind == "mode":
-            lines.append("MODE")
+            if slot.key == "repair":
+                lines.append(f"STATUS: {player.hull} / {player.max_hull}")
+            if slot.key == "maintenance":
+                lines.append(f"STATUS: ")
         else:
             level = player.levels[slot.key]
             if level >= len(slot.costs):
@@ -261,6 +264,24 @@ class Panel:
             surf = font.render(text, True, color)
             screen.blit(surf, (screen_box.x + 8, y))
             y += font.get_linesize() + (10 if index == 0 else 0) # extra spacing for the title
+
+        # repair progress bar
+        if slot.key == "repair":
+            track = pygame.Rect(screen_box.x + 8, screen_box.y + 100, screen_box.width - 16, 14)
+            pygame.draw.rect(screen, (40, 28, 10), track)
+            fill = track.copy()
+            fill.width = int(track.width * self.repair_progress)
+            pygame.draw.rect(screen, (224, 160, 48), fill)
+            pygame.draw.rect(screen, (120, 125, 135), track, 1)
+
+            if self.repairing:
+                text = "TURNING WRENCHES"
+            elif player.hull < player.max_hull:
+                text = f"COST: {REPAIR_COST}  RUSH: {REPAIR_RUSH_COST}"
+            else:
+                text = "HEALTHY"
+            surf = self.screen_font.render(text, True, (224, 160, 48))
+            screen.blit(surf, (track.x, track.bottom + 4))
 
         # drawing wallet seperate
         font = self.wallet_font
