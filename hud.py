@@ -12,7 +12,17 @@ from constants import (
     H_SLOT_RECTS, B_SLOT_RECTS, H_LIGHT_RECTS, B_LIGHT_RECTS,
     H_SCREEN_RECT, B_SCREEN_RECT, H_AUTO_RECT, B_AUTO_RECT,
     PANEL_PULSE_SPEED, REPAIR_TIME, REPAIR_COST, REPAIR_RUSH_COST,
+    PLAYER_TURN_SPEED, PLAYER_SPEED, HUD_ACCEL_PIXELS, HUD_HIT_KICK, HUD_LEAN_PIXELS,
+    HUD_SWAY_PIXELS, COMMS_STIFFNESS, COMMS_DAMPING, HARRY_STIFFNESS, HARRY_DAMPING,
+    BARRY_STIFFNESS, BARRY_DAMPING, HUD_INWARD_SCALE,
+    HUD_DEPTH_BARRY, HUD_DEPTH_HARRY,
 )
+
+
+_hud_time = 0.0
+_last_rotation = None
+_last_velocity = None
+_kick = pygame.Vector2(0, 0)
 
 
 comms_rect = pygame.Rect(
@@ -45,7 +55,7 @@ def draw_panel(screen, rect):
 
 
 def draw_hud(screen):
-    draw_panel(screen, comms_rect)
+    pass
 
 def mouse_over_panel(pos):
     for p in (harry_panel, barry_panel):
@@ -53,7 +63,65 @@ def mouse_over_panel(pos):
             return True
     return False
 
+def bias_outward(target, side):
+    t = target.copy()
+    if t.x * side < 0:     # pointing inward since sides are 1 and -1
+        t.x *= HUD_INWARD_SCALE
+    return t
 
+def update_hud(dt, player):
+
+    global _last_rotation, _last_velocity, _hud_time, _kick
+
+    if player is None or dt <= 0:
+        _last_rotation = None
+        _last_velocity = None
+        for s in (comms_spring, harry_spring, barry_spring):
+            s.reset()
+        return
+    
+    if _last_rotation is None:
+        _last_rotation = player.rotation
+    if _last_velocity is None:
+        _last_velocity = player.velocity.copy()       
+
+    # turn lean
+    angular_speed = (player.rotation - _last_rotation) / dt
+    turn = angular_speed / PLAYER_TURN_SPEED
+    turn = max(-1.0, min(1.0, turn))
+    lean = pygame.Vector2(-turn * HUD_LEAN_PIXELS, 0)
+
+    # thrust / bump shove
+    acceleration = (player.velocity - _last_velocity) / dt
+    accel_normal = acceleration / PLAYER_SPEED
+    if accel_normal.length() > 1.0:
+        accel_normal.scale_to_length(1.0)  
+    shove = -accel_normal * HUD_ACCEL_PIXELS
+
+    # idle sway 
+    _hud_time += dt
+    sway = pygame.Vector2(
+        math.sin(_hud_time * 0.8) + 0.5 * math.sin(_hud_time * 1.9 + 1.3),           # sin and cos at different rates so it doesnt oscilate in a perfect circle (cool math)
+        math.cos(_hud_time * 0.6) + 0.5 * math.sin(_hud_time * 1.4 + 0.7),     # need more variance so adding more layers
+    ) * HUD_SWAY_PIXELS       # scaled
+
+
+
+    target = lean + shove + sway + _kick
+    # trying a spring for each panel
+    comms_spring.update(target, dt)
+    harry_spring.update(bias_outward(target, -1), dt)
+    barry_spring.update(bias_outward(target, 1), dt)
+
+    _kick *= 0.85
+    _last_rotation = player.rotation
+    _last_velocity = player.velocity.copy()
+
+
+def kick_hud(direction):
+    global _kick
+    if direction.length_squared() > 0:
+        _kick = direction.normalize() * HUD_HIT_KICK
 
 
 class PanelState(Enum):
@@ -76,8 +144,28 @@ PANEL_NEXT = {
 }
 
 
+class Spring:
+    def __init__(self, stiffness, damping):
+        self.stiffness = stiffness
+        self.damping = damping
+        self.offset = pygame.Vector2(0, 0)
+        self.vel = pygame.Vector2(0, 0)
+
+    def update(self, target, dt):
+        force = (target - self.offset) * self.stiffness - self.vel * self.damping
+        self.vel += force * dt
+        self.offset += self.vel * dt
+
+    def reset(self):
+        self.offset.update(0, 0)
+        self.vel.update(0, 0)
+
+comms_spring = Spring(COMMS_STIFFNESS, COMMS_DAMPING)
+harry_spring = Spring(HARRY_STIFFNESS, HARRY_DAMPING)
+barry_spring = Spring(BARRY_STIFFNESS, BARRY_DAMPING)
+
 class Panel:
-    def __init__(self, rect, side, slots, slot_rects, lights, screen_rect, auto_rect):
+    def __init__(self, rect, side, slots, slot_rects, lights, screen_rect, auto_rect, depth, spring):
         self.side = side
         self.rect = rect
         self.state = PanelState.CLOSED
@@ -104,6 +192,9 @@ class Panel:
         self.repairing = False
         self.has_repair = any(s.key == "repair" for s in slots)  # to check for barrys panel
 
+        self.depth = depth
+        self.spring = spring 
+
     def enable_fonts(self):
         if self.label_font is None:
             self.label_font = pygame.font.Font(None, 16)
@@ -121,6 +212,7 @@ class Panel:
             self.set_state(PanelState.OPENING)
         elif self.state in (PanelState.OPEN, PanelState.BOOTING): 
             self.set_state(PanelState.CLOSING)
+
 
     def update(self, dt, player):
 
@@ -198,6 +290,7 @@ class Panel:
         progress = max(0.0, min(1.0, progress))
 
         r = self.rect.move(self.side * (1.0 - progress) * (self.rect.width + HUD_MARGIN), 0)
+        r = r.move(round(self.spring.offset.x * self.depth), round(self.spring.offset.y * self.depth))
         self.drawn_rect = r
 
         if self.image is None:
@@ -361,6 +454,6 @@ class Panel:
 
 
 
-harry_panel = Panel(harry_rect, -1, HARRY_SLOTS, H_SLOT_RECTS, H_LIGHT_RECTS, H_SCREEN_RECT, H_AUTO_RECT)
-barry_panel = Panel(barry_rect, 1, BARRY_SLOTS, B_SLOT_RECTS, B_LIGHT_RECTS, B_SCREEN_RECT, B_AUTO_RECT)
+harry_panel = Panel(harry_rect, -1, HARRY_SLOTS, H_SLOT_RECTS, H_LIGHT_RECTS, H_SCREEN_RECT, H_AUTO_RECT, HUD_DEPTH_HARRY, harry_spring)
+barry_panel = Panel(barry_rect, 1, BARRY_SLOTS, B_SLOT_RECTS, B_LIGHT_RECTS, B_SCREEN_RECT, B_AUTO_RECT, HUD_DEPTH_BARRY, barry_spring)
             

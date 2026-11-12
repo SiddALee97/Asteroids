@@ -2,9 +2,10 @@ import pygame
 from constants import (
     COMMS_CHARS_PER_SECOND, COMMS_HOLD_TIME, COMMS_SPRITE_SCALE,
     COMMS_LIGHTS, LIGHT_BLINK_INVUL, LIGHT_BLINK_SLOW, LIGHT_BLINK_FAST,
-    PANEL_IDLE_TIME,
+    PANEL_IDLE_TIME, COMMS_SCREEN_RECT, HUD_DEPTH_COMMS
 )
 from upgrades_shop import affordable_slots
+from hud import comms_spring
 
 LIGHT_ON = ((255, 68, 74), (140, 171, 255), (179, 255, 85))
 LIGHT_OFF = (75, 61, 68)
@@ -19,6 +20,7 @@ class Comms:
         self.font = None  # Default font and size
         self.light_phase = [0.0, 0.0, 0.0]
         self.light_lit = [False, False, False]
+        self.depth = HUD_DEPTH_COMMS
         
     def say(self, message):
         # Add a message to the queue
@@ -100,12 +102,16 @@ class Comms:
         states = self.light_lit
         for i, light in enumerate(COMMS_LIGHTS):
             box = pygame.Rect(light).move(origin)
+
             pygame.draw.rect(screen, (0, 0, 0), box.inflate(2, 2))
             color = LIGHT_ON[i] if states[i] else LIGHT_OFF
             pygame.draw.rect(screen, color, box)
 
 
     def draw(self, screen, rect, image, player, harry, barry):
+        # adjust comms panel for offset
+        rect = rect.move(round(comms_spring.offset.x * self.depth), round(comms_spring.offset.y * self.depth))
+
         # adjust for the screen on comms panel
         if self.font is None:
             self.font = pygame.font.Font(None, 24)  # Default font and size
@@ -118,6 +124,9 @@ class Comms:
         scaled_image = pygame.transform.scale(image, (size_w, size_h))
         # Draw the scaled image centered in the rect
         image_rect = scaled_image.get_rect(center=rect.center)
+        screen_area = pygame.Rect(COMMS_SCREEN_RECT).move(image_rect.topleft)
+        pygame.draw.rect(screen, (24, 16, 6), screen_area)
+    
 
         # lights before so image is overlayed
         self.draw_lights(screen, image_rect.topleft, player, harry, barry)

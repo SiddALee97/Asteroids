@@ -7,16 +7,33 @@ BOSS_WORLD_SCALE = 3.5
 LINE_WIDTH = 2
 BG_FAR_SPEED = ()
 BG_NEAR_SPEED = ()
+MUSIC_VOLUME = 0.25
+SFX_VOLUME = 0.5
 
 #----------------------- HUD CONSTANTS --------------------------#
 
 PLAY_WIDTH = SCREEN_WIDTH
 PLAY_HEIGHT = SCREEN_HEIGHT
 HUD_MARGIN = 25
+HUD_LEAN_PIXELS = 50     # max sideways sway from turning
+HUD_ACCEL_PIXELS = 5    # max shove from thrust / bumps
+HUD_SWAY_PIXELS = 3     # idle drift anim
+HUD_HIT_KICK = 10        # extra pixels on hit
+COMMS_STIFFNESS = 10      # for the spring of the hud sway snappier is higher
+COMMS_DAMPING = 10         # lower damping is more wobble
+HARRY_STIFFNESS = 20
+HARRY_DAMPING = 3
+BARRY_STIFFNESS = 20
+BARRY_DAMPING = 3
+HUD_DEPTH_COMMS = 0.5
+HUD_DEPTH_HARRY = 1.0
+HUD_DEPTH_BARRY = 1.0
+HUD_INWARD_SCALE = 0.5
 
 #----------------------- COMMS CONSTANTS -----------------------#
 COMMS_WIDTH = 420
 COMMS_HEIGHT = 132
+COMMS_SCREEN_RECT = (34, 16, 352, 100)
 COMMS_CHARS_PER_SECOND = 30.0
 COMMS_HOLD_TIME = 3.0
 COMMS_SPRITE_SCALE = 2.0

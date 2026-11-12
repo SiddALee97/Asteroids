@@ -1,8 +1,9 @@
 import os
 os.environ["SDL_AUDIODRIVER"] = "pulseaudio"
+import audio
 from pickups import Pickup
 from comms import hud_comms
-from hud import comms_rect, draw_hud, harry_panel, barry_panel, draw_panel
+from hud import comms_rect, draw_hud, harry_panel, barry_panel, draw_panel, update_hud, kick_hud
 from hit import Hit, HitKind, HitOutcome, HitResult
 import viewport
 from constants import *
@@ -90,11 +91,7 @@ def main():
     def load_sprite(path: str):
         return pygame.image.load(path).convert_alpha()
 
-    def load_sound(path: str):
-        return pygame.mixer.music.load(path)
 
-    def set_volume(level: float): # volume has to be a float between 0 and 1
-        pygame.mixer.music.set_volume(level)
 
     # same but for sprite sheets
     def slice_sheet(path, count = 5, size = 16):
@@ -126,9 +123,8 @@ def main():
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 #--------------------------- loading music and sound tracks ----------
-    main_track = load_sound("assets/music/cb_egg_and_i.mp3")
-    set_volume(0.25)
-    pygame.mixer.music.play(-1)
+    audio.play_music("assets/sounds/music/cb_too_good_too_bad.mp3")
+
 #--------------------------- loading sprites-------------------------
     background_default = load_sprite("assets/background_default.png")
     bg_far = BackgroundLayer(load_sprite("assets/background_1.png"), (-2, 1))
@@ -381,6 +377,7 @@ def main():
 
                 # adding updating back inside loop 
                 updatable.update(dt)
+                update_hud(dt, player)
                 hud_comms.update(dt)
                 hud_comms.update_lights(dt, player, harry_panel, barry_panel)
                 harry_panel.update(dt, player)
@@ -424,6 +421,7 @@ def main():
 
                         if result.outcome is HitOutcome.CHIPPED:
                             log_event("player_hit")
+                            
                             # will add camera or hud shake and voice lines here later
                                 
                         if result.outcome is HitOutcome.DESTROYED:
