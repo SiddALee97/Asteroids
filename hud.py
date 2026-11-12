@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import random
 from upgrades_shop import affordable_slots, auto_buy, buy, SlotState, LIGHT_COLORS, slot_state, repair
 from constants import PANEL_OPEN_TIME_SCALE, PANEL_IDLE_TIME
 from ships import HARRY_SLOTS, BARRY_SLOTS
@@ -15,7 +16,7 @@ from constants import (
     PLAYER_TURN_SPEED, PLAYER_SPEED, HUD_ACCEL_PIXELS, HUD_HIT_KICK, HUD_LEAN_PIXELS,
     HUD_SWAY_PIXELS, COMMS_STIFFNESS, COMMS_DAMPING, HARRY_STIFFNESS, HARRY_DAMPING,
     BARRY_STIFFNESS, BARRY_DAMPING, HUD_INWARD_SCALE,
-    HUD_DEPTH_BARRY, HUD_DEPTH_HARRY,
+    HUD_DEPTH_BARRY, HUD_DEPTH_HARRY, HUD_SHAKE_TIME, HUD_SHAKE_PIXELS
 )
 
 
@@ -23,7 +24,7 @@ _hud_time = 0.0
 _last_rotation = None
 _last_velocity = None
 _kick = pygame.Vector2(0, 0)
-
+_shake = 0.0
 
 comms_rect = pygame.Rect(
     (SCREEN_WIDTH - COMMS_WIDTH) // 2,
@@ -71,7 +72,7 @@ def bias_outward(target, side):
 
 def update_hud(dt, player):
 
-    global _last_rotation, _last_velocity, _hud_time, _kick
+    global _last_rotation, _last_velocity, _hud_time, _kick, _shake
 
     if player is None or dt <= 0:
         _last_rotation = None
@@ -106,8 +107,10 @@ def update_hud(dt, player):
     ) * HUD_SWAY_PIXELS       # scaled
 
 
-
-    target = lean + shove + sway + _kick
+    # update shake decay
+    _shake = max(0.0, _shake - dt / HUD_SHAKE_TIME)
+    
+    target = lean + shove + sway + _kick 
     # trying a spring for each panel
     comms_spring.update(target, dt)
     harry_spring.update(bias_outward(target, -1), dt)
@@ -119,10 +122,17 @@ def update_hud(dt, player):
 
 
 def kick_hud(direction):
-    global _kick
-    if direction.length_squared() > 0:
-        _kick = direction.normalize() * HUD_HIT_KICK
+    global _kick, _shake
+    if direction.length_squared() == 0:
+        direction = pygame.Vector2(1, 0).rotate(random.unifrom(0, 360))
+    _kick = direction.normalize() * HUD_HIT_KICK
+    _shake = 1.0
 
+def shake_offset(scale = 1.0):
+    if _shake <= 0:
+        return pygame.Vector2(0, 0)
+    amp = HUD_SHAKE_PIXELS * _shake * _shake * scale
+    return pygame.Vector2(random.uniform(-amp, amp), random.uniform(-amp, amp))
 
 class PanelState(Enum):
     CLOSED = auto()
@@ -201,6 +211,7 @@ class Panel:
             self.screen_font = pygame.font.Font(None, 18)
             self.title_font = pygame.font.Font(None, 26)
             self.wallet_font = pygame.font.Font(None, 20)
+
 
     def set_state(self, state):
         self.state = state
@@ -290,7 +301,8 @@ class Panel:
         progress = max(0.0, min(1.0, progress))
 
         r = self.rect.move(self.side * (1.0 - progress) * (self.rect.width + HUD_MARGIN), 0)
-        r = r.move(round(self.spring.offset.x * self.depth), round(self.spring.offset.y * self.depth))
+        offset = self.spring.offset + shake_offset(1.0)
+        r = r.move(round(offset.x), round(offset.y))
         self.drawn_rect = r
 
         if self.image is None:

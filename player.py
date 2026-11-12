@@ -12,6 +12,7 @@ from enum import Enum, auto
 from ships import BARRY_SLOTS, HARRY_SLOTS
 from hud import mouse_over_panel
 import audio
+from hud import kick_hud
 
 class Thruster(Enum):
     OFF = auto()
@@ -408,10 +409,8 @@ class Player(CircleShape):
         self.hull -= hit.damage
         self.invulnerability_timer = PLAYER_INVULNERABILITY_TIME
         if self.hull > 0:
-            audio.play("player_hit")
             return HitResult(HitOutcome.CHIPPED)
         else:
-            audio.play("player_death")
             return HitResult(HitOutcome.DESTROYED)
 
 

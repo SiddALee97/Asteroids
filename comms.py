@@ -5,7 +5,8 @@ from constants import (
     PANEL_IDLE_TIME, COMMS_SCREEN_RECT, HUD_DEPTH_COMMS
 )
 from upgrades_shop import affordable_slots
-from hud import comms_spring
+from hud import comms_spring, shake_offset
+
 
 LIGHT_ON = ((255, 68, 74), (140, 171, 255), (179, 255, 85))
 LIGHT_OFF = (75, 61, 68)
@@ -110,7 +111,8 @@ class Comms:
 
     def draw(self, screen, rect, image, player, harry, barry):
         # adjust comms panel for offset
-        rect = rect.move(round(comms_spring.offset.x * self.depth), round(comms_spring.offset.y * self.depth))
+        offset = comms_spring.offset + shake_offset(0.6)
+        rect = rect.move(round(offset.x), round(offset.y))
 
         # adjust for the screen on comms panel
         if self.font is None:

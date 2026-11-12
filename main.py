@@ -52,7 +52,7 @@ def draw_reticle(screen, pos):
     
 def main():
 
-    # initializing pygame early in order to draw menu
+    # initializing pygame 
     pygame.init()
     # initializing py mixer for music
     pygame.mixer.init()
@@ -109,6 +109,7 @@ def main():
         hud_comms.reset()
         harry_panel.reset()
         barry_panel.reset()
+        
 
     def new_game():
         clear_map()
@@ -121,10 +122,17 @@ def main():
 #---------------------------- set_mode -----------------------------
     pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    # creates time keeper
+    clock = pygame.time.Clock()
+    dt = 0.0
+    fullscreen = False
+    window_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
+    player = None
+
 
 #--------------------------- loading music and sound tracks ----------
-    audio.play_music("assets/audio/music/cb_too_good_too_bad.mp3")
     audio.load_sounds()
+    audio.play_music("assets/audio/music/cb_space_lion.mp3")
 #--------------------------- loading sprites-------------------------
     background_default = load_sprite("assets/background_default.png")
     bg_far = BackgroundLayer(load_sprite("assets/background_1.png"), (-2, 1))
@@ -192,13 +200,7 @@ def main():
     print(f"Screen width: {SCREEN_WIDTH}")
     print(f"Screen height: {SCREEN_HEIGHT}")
 
-    # creates time keeper
-    clock = pygame.time.Clock()
-    dt = 0.0
-    fullscreen = False
-    window_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
-    player = None
 
     # Game State (possible: "PLAYING", "GAME_OVER", "PAUSED", "MENU"
     game_state = "MENU"
@@ -228,7 +230,7 @@ def main():
 #--------------------------- Main Loop -----------------------------
     while True:
             log_state()
-
+            
 
             for event in pygame.event.get():
                 if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
@@ -243,6 +245,10 @@ def main():
                 # boot menu first
                 if game_state == "MENU":
                     if play_button.is_clicked(event):
+                        # audio
+                    
+                        audio.play_music("assets/audio/music/cb_too_good_too_bad.mp3")
+
                         # use helper to create new game
                         field, player, score_keeper = new_game()
 
@@ -267,6 +273,8 @@ def main():
                     elif game_over_m.is_clicked(event):
                         # use helper to clear map
                         clear_map()
+                        # audio
+                        
 
                         field = AsteroidField()
                         game_state = "MENU"
@@ -275,6 +283,7 @@ def main():
                 elif game_state == "PAUSED":
                     if pause_m.is_clicked(event):
                         # helper to clear map
+
                         clear_map()
 
                         field = AsteroidField()
@@ -368,6 +377,7 @@ def main():
 
             # Conditionally run game logic or popup menu
             if game_state == "PLAYING":
+                
 
 #-----------------------"PLAYING" gameplay loop----------------------------
 
@@ -421,14 +431,16 @@ def main():
 
                         if result.outcome is HitOutcome.CHIPPED:
                             log_event("player_hit")
-                            audio.play("player_hit")
-                            direction = pygame.Vector2(player.position) - pygame.Vector2(obj.position)
-                            kick_hud(direction)
+
                             # will add camera or hud shake and voice lines here later
-                                
+                            audio.play("player_hit")
+                            kick_hud(player.position - obj.position)
+
                         if result.outcome is HitOutcome.DESTROYED:
                             log_event("player_destroyed")
                             Explosion(player.position)
+                            audio.play("player_death")
+                            kick_hud(player.position - obj.position)
                             player.kill()
                             game_state = "GAME_OVER"
                             break
