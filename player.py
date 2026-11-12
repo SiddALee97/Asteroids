@@ -11,6 +11,7 @@ import viewport
 from enum import Enum, auto
 from ships import BARRY_SLOTS, HARRY_SLOTS
 from hud import mouse_over_panel
+import audio
 
 class Thruster(Enum):
     OFF = auto()
@@ -273,6 +274,7 @@ class Player(CircleShape):
         breakage = SHOCKWAVE_SPLITS[level]
         damage = SHOCKWAVE_DAMAGE[level]
         Shockwave(self.position.x, self.position.y, max_radius, damage = damage, breakage = breakage, force = force)
+        audio.play("shockwave")
 
         # adding laser logic
     def fire_laser(self):
@@ -288,6 +290,7 @@ class Player(CircleShape):
         trail = LASER_TRAIL_LENGTH + LASER_TRAIL_PER_LEVEL * (level - 1)
         nose = self.position + self.aim * TURRET_LENGTH * 0.75
         shot = Shot(nose.x, nose.y, damage = damage, pierce = True, kind = kind, breakage = breakage, trail_length = trail, force = force)
+        audio.play("laser")
         shot.velocity = direction * self.shoot_speed * speed_mult
 
         # adding logic for multishot
@@ -302,6 +305,7 @@ class Player(CircleShape):
             # use nose instead so it fires from tip
             pos = nose + side * offset
             shot = Shot(pos.x, pos.y)
+            audio.play("shot")
             shot.velocity = direction * self.shoot_speed
 
         # adding fire_bullet
@@ -404,8 +408,10 @@ class Player(CircleShape):
         self.hull -= hit.damage
         self.invulnerability_timer = PLAYER_INVULNERABILITY_TIME
         if self.hull > 0:
+            audio.play("player_hit")
             return HitResult(HitOutcome.CHIPPED)
         else:
+            audio.play("player_death")
             return HitResult(HitOutcome.DESTROYED)
 
 

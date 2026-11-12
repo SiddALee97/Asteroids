@@ -43,7 +43,7 @@ class Shot(CircleShape):
             head = camera.world_to_screen(self.position)
             tail = camera.world_to_screen(
                 self.position - self.velocity.normalize() * trail)
-            pygame.draw.line(screen, "purple", head, tail, camera.line(3))
+            pygame.draw.line(screen, (87, 72, 82), head, tail, camera.line(4))
         return
 
     def draw_head(self, screen):

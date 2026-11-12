@@ -7,12 +7,24 @@ def load_sounds():
     # call this in main to load all the sounds
     names = {
         "shot": "assets/audio/sfx/shot.wav",
-        "radio": "assets/audio/sfs/radio.wav",
+        "shockwave": "assets/audio/sfx/shockwave.wav",
+        "laser": "assets/audio/sfx/laser.wav",
+        "panel_boot": "assets/audio/sfx/panel_boot.oog",
+        "panel_opening_closing": "assets/audio/sfx/panel_opening_closing.wav",
+        "player_hit": "assets/audio/sfx/player_hit.wav",
+        "player_death": "assets/audio/sfx/player_death.wav"
     }
     for name, path in names.items():
         try:
             s = pygame.mixer.Sound(path)
-            s.set_volume(SFX_VOLUME)
+            if name is "shot":
+                s.set_volume(SFX_VOLUME * 0.2)
+            elif name in ("laser", "player_death"):
+                s.set_volume(SFX_VOLUME * 0.5)
+            elif name is "player_hit":
+                s.set_volume(SFX_VOLUME * 0.75)            
+            else:
+                s.set_volume(SFX_VOLUME)
             sounds[name] = s
         except (FileNotFoundError, pygame.error):
             print(f"missing sound: {path}")

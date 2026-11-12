@@ -123,8 +123,8 @@ def main():
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 #--------------------------- loading music and sound tracks ----------
-    audio.play_music("assets/sounds/music/cb_too_good_too_bad.mp3")
-
+    audio.play_music("assets/audio/music/cb_too_good_too_bad.mp3")
+    audio.load_sounds()
 #--------------------------- loading sprites-------------------------
     background_default = load_sprite("assets/background_default.png")
     bg_far = BackgroundLayer(load_sprite("assets/background_1.png"), (-2, 1))
@@ -421,7 +421,9 @@ def main():
 
                         if result.outcome is HitOutcome.CHIPPED:
                             log_event("player_hit")
-                            
+                            audio.play("player_hit")
+                            direction = pygame.Vector2(player.position) - pygame.Vector2(obj.position)
+                            kick_hud(direction)
                             # will add camera or hud shake and voice lines here later
                                 
                         if result.outcome is HitOutcome.DESTROYED:
