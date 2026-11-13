@@ -138,12 +138,14 @@ class Comms:
 
 
         if self.current_message is None:
+            self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 24)
             surf = self.font.render("STANDBY", True, (110, 75, 25))
             text_rect = surf.get_rect(center=comms_screen.center)
             screen.blit(surf, text_rect)
 
         else:
             # Draw the current message up to the number of characters typed
+            self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 16)
             lines = self.wrap_text(self.current_message, self.font, comms_screen.width - 16)  
             remaining = int(self.chars)
             y = comms_screen.y + 8

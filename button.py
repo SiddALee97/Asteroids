@@ -1,6 +1,8 @@
 import viewport
 import pygame
 
+
+
 class Button:
     def __init__(self, x, y, width, height, text, font, base_color="gray", hover_color="white", text_color="black"):
         self.rect = pygame.Rect(x, y, width, height)
@@ -32,3 +34,5 @@ class Button:
             if self.rect.collidepoint(event.pos):
                 return True
         return False
+
+

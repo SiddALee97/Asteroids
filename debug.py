@@ -109,7 +109,7 @@ class Debug:
                 f"hull: {player.hull} / {player.max_hull} salvage / scrap: {player.salvage} / {player.scrap}",
                 f"speed: {player.speed:.0f} turn: {player.turn_speed:.0f}",
                 f"cooldown: {player.shoot_cooldown:.2f} shot speed: {player.shoot_speed:.0f}",
-                f"radius {player.radius:.1f}",
+                f"heat {player.heat:.1f}",
             ]
         lines += [
             f"world: {world.width:.0f}x{world.height:.0f} zoom: {camera.zoom:.2f}",

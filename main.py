@@ -70,7 +70,7 @@ def main():
  
     pygame.init()
     pygame.mixer.init()
-    font = pygame.font.Font(None, 48)
+    font = pygame.font.Font("assets/fonts/future_earth.ttf", 36)
 
     #---------- creating sprite groups ----------
     
@@ -148,29 +148,29 @@ def main():
     #                 (must be after set mode)
 
     #-------- backgrounds ---------
-    background_default = load_sprite("assets/background_default.png")
-    bg_far = BackgroundLayer(load_sprite("assets/background_1.png"), (-2, 1))
-    bg_near = BackgroundLayer(load_sprite("assets/background_2.png"), (-8, 2))
+    background_default = load_sprite("assets/sprites/background_default.png")
+    bg_far = BackgroundLayer(load_sprite("assets/sprites/background_1.png"), (-2, 1))
+    bg_near = BackgroundLayer(load_sprite("assets/sprites/background_2.png"), (-8, 2))
     bg_images = [
-        load_sprite("assets/background_1.png"),
-        load_sprite("assets/background_2.png"),
+        load_sprite("assets/sprites/background_1.png"),
+        load_sprite("assets/sprites/background_2.png"),
     ]
 
     #---------- UI art -----------
-    reticle_image = load_sprite("assets/reticle.png")
-    comms_image = load_sprite("assets/comms_panel.png")
-    harry_panel.set_image(load_sprite("assets/harry_panel.png"))
-    barry_panel.set_image(load_sprite("assets/barry_panel.png"))
+    reticle_image = load_sprite("assets/sprites/reticle.png")
+    comms_image = load_sprite("assets/sprites/comms_panel.png")
+    harry_panel.set_image(load_sprite("assets/sprites/harry_panel.png"))
+    barry_panel.set_image(load_sprite("assets/sprites/barry_panel.png"))
 
     #---------- pickups ----------
     Pickup.scrap_sprites = [
-        load_sprite("assets/scrap_1.png"),
-        load_sprite("assets/scrap_2.png"),
+        load_sprite("assets/sprites/scrap_1.png"),
+        load_sprite("assets/sprites/scrap_2.png"),
     ]
 
     Pickup.salvage_sprites = [
-        load_sprite("assets/salvage_1.png"),
-        load_sprite("assets/salvage_2.png"),
+        load_sprite("assets/sprites/salvage_1.png"),
+        load_sprite("assets/sprites/salvage_2.png"),
     ]
 
     #---------- cargo drone (one sprite per health value 3=healthy) -------------------
@@ -178,7 +178,7 @@ def main():
     for h in (3, 2, 1):
         n = 4 - h # health 3 -> file 1, health 1 -> file
         try:
-            cargo_sprites[h] = load_sprite(f"assets/cargo_drone_{n}.png")
+            cargo_sprites[h] = load_sprite(f"assets/sprites/cargo_drone_{n}.png")
         except FileNotFoundError:
             # fallback if file is missing
             cargo_sprites[h] = pygame.Surface((64, 64), pygame.SRCALPHA)
@@ -189,22 +189,22 @@ def main():
 
     #--------- asteroids: list of variants per tier, random selected on spawn ---------------
     Asteroid.sprites = {
-        0: [load_sprite("assets/asteroid_small_1.png"), load_sprite("assets/asteroid_small_2.png")],
-        1: [load_sprite("assets/asteroid_medium_1.png")],
-        2: [load_sprite("assets/asteroid_large_1.png"), load_sprite("assets/asteroid_large_2.png")],
+        0: [load_sprite("assets/sprites/asteroid_small_1.png"), load_sprite("assets/sprites/asteroid_small_2.png")],
+        1: [load_sprite("assets/sprites/asteroid_medium_1.png")],
+        2: [load_sprite("assets/sprites/asteroid_large_1.png"), load_sprite("assets/sprites/asteroid_large_2.png")],
         }
 
     #----------- ship thruster animation strips ----------
     Player.thruster_frames = {
-        "start": slice_sheet("assets/ship_startup_1.png"),
-        "run": slice_sheet("assets/ship_trail_1.png"),
-        "stop": slice_sheet("assets/ship_stop_1.png"),
+        "start": slice_sheet("assets/sprites/ship_startup_1.png"),
+        "run": slice_sheet("assets/sprites/ship_trail_1.png"),
+        "stop": slice_sheet("assets/sprites/ship_stop_1.png"),
     }
 
     #-------------- shots -----------------
     Shot.sprites = {
-        "shot": load_sprite("assets/shot_1.png"),
-        "laser_head": load_sprite("assets/laser_head_1.png"),
+        "shot": load_sprite("assets/sprites/shot_1.png"),
+        "laser_head": load_sprite("assets/sprites/laser_head_1.png"),
         # later will add "laser_trail": load_sprite("assets/laser_trail_1.png"),
     }
 
@@ -231,6 +231,7 @@ def main():
     btn_width, btn_height = 240, 50
     center_x = (SCREEN_WIDTH // 2) - (btn_width // 2)
     center_y = PLAY_HEIGHT // 2
+
 
     #--------------- settings screen ---------------------
     music_slider = Slider(center_x - 60, 260, 360, "MUSIC", audio.music_volume)
@@ -337,7 +338,7 @@ def main():
                 if event.type == pygame.KEYDOWN:
                     if debug.visible:
                         if event.key == pygame.K_t:
-                            hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character.")
+                            hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character. Still not sure if I will fix the issue of the text going of the screen or just make sure i dont render any long texts but that kind of sounds annoying. So i will probably just fix it.")
 
                     if event.key == pygame.K_F11:   # fullscreen toggle (restore scale is buggy in WSL but works in native windows)
                         if not fullscreen:
@@ -410,7 +411,7 @@ def main():
                 bg_far.update(dt)
                 bg_near.update(dt)
 
-                title_font = pygame.font.Font(None, 80)         # ToDo: create once, not every frame
+                title_font = pygame.font.Font("assets/fonts/future_earth.ttf", 80)         # ToDo: create once, not every frame
                 title_text = title_font.render("ASS*ROIDS", True, "white")
                 title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, center_y - 200))
                 screen.blit(title_text, title_rect)
@@ -479,44 +480,45 @@ def main():
                             break
 
                 # ---- pickups (old upgrades, then scrap/salvage) ----
-                if game_state == "PLAYING":
-                    for upgrade in upgrades:                    # ToDo: old system, may reuse later
-                        if player.collides_with(upgrade):
-                            log_event(f"upgrade_collected_{upgrade.kind}")
-                            upgrade.apply_to_player(player)
-                            upgrade.kill()
-                            break
+            
+                for upgrade in upgrades:                    # ToDo: old system, may reuse later
+                    if player.collides_with(upgrade):
+                        log_event(f"upgrade_collected_{upgrade.kind}")
+                        upgrade.apply_to_player(player)
+                        upgrade.kill()
+                        break
 
-                if game_state == "PLAYING":
-                    for pickup in pickups:
-                        if player.collides_with(pickup):
-                            log_event(f"{pickup.kind}_collected")
-                            pickup.apply_to_player(player)
-                            pickup.kill()
-                            break
+                
+                for pickup in pickups:
+                    if player.collides_with(pickup):
+                        log_event(f"{pickup.kind}_collected")
+                        audio.play(f"scrap_{random.randint(1, 11)}")
+                        pickup.apply_to_player(player)
+                        pickup.kill()
+                        break
 
                 # ---- weapons vs targets ----
-                if game_state == "PLAYING":
+                
                     # shots (cannon + laser) vs asteroids
-                    for obj in asteroids:
-                        for shot in shots:
-                            if shot.can_hit(obj) and shot.collides_with(obj):
-                                log_event("asteroid_shot")
-                                result = resolve_hit(shot, obj)
-                                score_keeper.add_points(result.points)
-                                break
+                for obj in asteroids:
+                    for shot in shots:
+                        if shot.can_hit(obj) and shot.collides_with(obj):
+                            log_event("asteroid_shot")
+                            result = resolve_hit(shot, obj)
+                            score_keeper.add_points(result.points)
+                            break
 
                     # shockwave vs asteroids and drones (list() because fragments spawn mid-loop)
-                    for wave in shockwaves:
-                        for obj in list(asteroids):
-                            if obj not in wave.already_hit and wave.collides_with(obj):
-                                result = resolve_hit(wave, obj)
-                                score_keeper.add_points(result.points)
-                                wave.already_hit.add(obj)
-                        for drone in cargo_drones:
-                            if drone not in wave.already_hit and wave.collides_with(drone):
-                                result = resolve_hit(wave, drone)
-                                score_keeper.add_points(result.points)
+                for wave in shockwaves:
+                    for obj in list(asteroids):
+                        if obj not in wave.already_hit and wave.collides_with(obj):
+                            result = resolve_hit(wave, obj)
+                            score_keeper.add_points(result.points)
+                            wave.already_hit.add(obj)
+                    for drone in cargo_drones:
+                        if drone not in wave.already_hit and wave.collides_with(drone):
+                            result = resolve_hit(wave, drone)
+                            score_keeper.add_points(result.points)
 
             #--------------------------------- GAME OVER ---------------------------------------
             elif game_state == "GAME_OVER":

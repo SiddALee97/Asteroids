@@ -2,7 +2,19 @@ from hit import HitKind, HitResult, HitOutcome
 from camera import camera
 from world import world
 from shockwave import Shockwave
-from constants import PLAYER_INVULNERABILITY_TIME, PLAYER_SPEED, PLAYER_START_HULL, PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT, SPEED_BONUS, HULL_BONUS
+from constants import (
+    PLAYER_INVULNERABILITY_TIME, PLAYER_SPEED, PLAYER_START_HULL,
+    PLAYER_TURN_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED,
+    PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, 
+    SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, 
+    LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, 
+    LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, 
+    TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, 
+    PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, 
+    ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT, SPEED_BONUS, HULL_BONUS,
+    CANNON_COOL_RATE, CANNON_HEAT_PER_SHOT, CANNON_RESUME_HEAT, CANNON_COOL_DELAY, CANNON_OVERHEAT_COOL_RATE,
+)
+
 from shot import Shot
 from circleshape import CircleShape
 import pygame
@@ -33,8 +45,8 @@ class Player(CircleShape):
         self.cdt = 0
 
         # added mutables for upgrades
-        self.turret_image = pygame.image.load("assets/laser_turret1.png").convert_alpha()
-        self.image = pygame.image.load("assets/ship2.png").convert_alpha()
+        self.turret_image = pygame.image.load("assets/sprites/laser_turret1.png").convert_alpha()
+        self.image = pygame.image.load("assets/sprites/ship2.png").convert_alpha()
 
         self.turn_speed = PLAYER_TURN_SPEED
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
@@ -59,6 +71,11 @@ class Player(CircleShape):
         self.hull = PLAYER_START_HULL
 
         self.invulnerability_timer = 0.0
+
+        # adding cannon heat mechanic
+        self.heat = 0.0
+        self.overheated = False
+        self.since_shot = 0.0
 
         # adding "wallet" for new upgrade system
         self.scrap = 0
@@ -185,9 +202,6 @@ class Player(CircleShape):
 
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
-        
-
-
         # tick every cd here so main.py() doesn't need player.cdt -= dt
         self.cdt -= dt
 
@@ -197,6 +211,15 @@ class Player(CircleShape):
         # update weapon cooldowns
         for name in self.weapon_cooldowns:
             self.weapon_cooldowns[name] = max(0.0, self.weapon_cooldowns[name] - dt)
+
+        # check cannon heat
+        self.since_shot += dt
+        if self.overheated:
+            self.heat = max(0.0, self.heat - CANNON_OVERHEAT_COOL_RATE * dt)
+            if self.heat <= CANNON_RESUME_HEAT:
+                self.overheated = False
+        elif self.since_shot >= CANNON_COOL_DELAY:
+            self.heat = max(0.0, self.heat - CANNON_COOL_RATE * dt)
 
         # handle input for movement and shooting
         if keys[pygame.K_a]:
@@ -231,8 +254,13 @@ class Player(CircleShape):
         self.update_aim(dt)
 
         if keys[pygame.K_SPACE] and self.cdt <= 0:
-                self.cdt = max(0.08, self.shoot_cooldown)
-                self.fire_parallel(self.levels["MULTISHOT"] + 1)
+                if self.heat >= 1.0:
+                    self.overheated = True
+                if not self.overheated:    
+                    self.cdt = max(0.08, self.shoot_cooldown)
+                    self.fire_parallel(self.levels["MULTISHOT"] + 1)
+                    self.heat = min(1.0, self.heat + CANNON_HEAT_PER_SHOT)
+                    self.since_shot = 0.0
 
         # time to add some more weapon buttons!
         if keys[pygame.K_q]:
@@ -242,6 +270,10 @@ class Player(CircleShape):
 
         # no more screen wrapping! time for soft border!
         world.pull_inside(self, dt, margin=60, strength=15)
+
+
+    def grav_dash(self, dt):
+        direction = pygame.Vector2(0, 1).rotate(self.rotation)
 
 
     def move(self, dt: float):
@@ -270,7 +302,7 @@ class Player(CircleShape):
         # refactoring logic for shockwave
     def fire_shockwave(self):
         level = self.levels["SHOCKWAVE"]
-        max_radius = 150 + 50 * (level - 1)
+        max_radius = 200 + 50 * (level - 1)
         force = SHOCKWAVE_FORCE[level]
         breakage = SHOCKWAVE_SPLITS[level]
         damage = SHOCKWAVE_DAMAGE[level]
@@ -298,7 +330,6 @@ class Player(CircleShape):
     def fire_parallel(self, count: int, spacing: float = 12):
         direction = pygame.Vector2(0, 1).rotate(self.rotation)
         side = direction.rotate(90) # makes bullets line up with width of player
-
         nose = self.position + direction * self.radius * PLAYER_HITBOX_SCALE
 
         for i in range(count):
@@ -306,15 +337,8 @@ class Player(CircleShape):
             # use nose instead so it fires from tip
             pos = nose + side * offset
             shot = Shot(pos.x, pos.y)
-            audio.play("shot")
             shot.velocity = direction * self.shoot_speed
-
-        # adding fire_bullet
-    def fire_bullet(self, angle: float):
-        direction = pygame.Vector2(0, 1).rotate(self.rotation)
-        nose = self.position + direction * self.radius * PLAYER_HITBOX_SCALE
-        shot = Shot(nose.x, nose.y)
-        shot.velocity = pygame.Vector2(0, 1).rotate(angle) * self.shoot_speed
+        audio.play("shot")
 
             #Overrides CircleShape to check Traingle 
 

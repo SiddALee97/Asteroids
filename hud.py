@@ -5,6 +5,7 @@ from constants import PANEL_OPEN_TIME_SCALE, PANEL_IDLE_TIME
 from ships import HARRY_SLOTS, BARRY_SLOTS
 import math
 import pygame
+import audio
 from constants import (
     PANEL_CLOSE_TIME, SCREEN_WIDTH, SCREEN_HEIGHT, COMMS_WIDTH,
     COMMS_HEIGHT, HUD_MARGIN, H_PANEL_WIDTH,
@@ -16,7 +17,7 @@ from constants import (
     PLAYER_TURN_SPEED, PLAYER_SPEED, HUD_ACCEL_PIXELS, HUD_HIT_KICK, HUD_LEAN_PIXELS,
     HUD_SWAY_PIXELS, COMMS_STIFFNESS, COMMS_DAMPING, HARRY_STIFFNESS, HARRY_DAMPING,
     BARRY_STIFFNESS, BARRY_DAMPING, HUD_INWARD_SCALE,
-    HUD_DEPTH_BARRY, HUD_DEPTH_HARRY, HUD_SHAKE_TIME, HUD_SHAKE_PIXELS
+    HUD_DEPTH_BARRY, HUD_DEPTH_HARRY, HUD_SHAKE_TIME, HUD_SHAKE_PIXELS, CANNON_RESUME_HEAT,
 )
 
 
@@ -184,12 +185,13 @@ class Panel:
         self.drawn_rect = None
         self.image = None
         self.slots = slots
-        self.selected = 0
+        self.selected = 3
 
         self.slot_rects = slot_rects
         self.label_font = None
         self.screen_font = None
         self.title_font = None
+        self.wallet_font = None
         self.light_rects = lights
         self.screen_rect = screen_rect
 
@@ -207,16 +209,21 @@ class Panel:
 
     def enable_fonts(self):
         if self.label_font is None:
-            self.label_font = pygame.font.Font(None, 16)
-            self.screen_font = pygame.font.Font(None, 18)
-            self.title_font = pygame.font.Font(None, 26)
-            self.wallet_font = pygame.font.Font(None, 20)
+            self.label_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 16)
+            self.screen_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 18)
+            self.title_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 26)
+            self.wallet_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 20)
 
 
     def set_state(self, state):
         self.state = state
         self.timer = 0.0
-    
+        if state is PanelState.OPENING:
+            audio.play("panel_opening")
+        if state is PanelState.BOOTING:
+            audio.play("panel_booting")
+        if state is PanelState.CLOSING:
+            audio.play("panel_closing")
 
     def toggle(self):
         if self.state is PanelState.CLOSED:
@@ -248,7 +255,8 @@ class Panel:
         if (self.has_repair
                 and self.slots[self.selected].key == "repair"
                 and not self.repairing
-                and player.hull < player.max_hull):
+                and player.hull < player.max_hull
+                and self.auto_enabled):
             self.start_repair(player)
 
         # animation state machine always runs
@@ -281,7 +289,7 @@ class Panel:
         self.set_state(PanelState.CLOSED)
         self.repair_progress = 0.0
         self.repairing = False
-        self.selected = 0
+        self.selected = 3
         self.auto_enabled = True
 
     def draw(self, screen, player):
@@ -351,7 +359,7 @@ class Panel:
             if slot.key == "repair":
                 lines.append(f"STATUS: {player.hull} / {player.max_hull}")
             if slot.key == "maintenance":
-                lines.append(f"STATUS: ")
+                lines.append(f"TEMP (K): {int(player.heat * 3695)}")
         else:
             level = player.levels[slot.key]
             if level >= len(slot.costs):
@@ -373,6 +381,7 @@ class Panel:
         # repair progress bar
         if slot.key == "repair":
             track = pygame.Rect(screen_box.x + 8, screen_box.y + 100, screen_box.width - 16, 14)
+           
             pygame.draw.rect(screen, (40, 28, 10), track)
             fill = track.copy()
             fill.width = int(track.width * self.repair_progress)
@@ -387,6 +396,36 @@ class Panel:
                 text = "HEALTHY"
             surf = self.screen_font.render(text, True, (224, 160, 48))
             screen.blit(surf, (track.x, track.bottom + 4))
+
+        # cannon heat bar
+        if slot.key == "maintenance":
+            track = pygame.Rect(screen_box.x + 8, screen_box.y + 100, screen_box.width - 16, 14)
+           
+            pygame.draw.rect(screen, (40, 28, 10), track)      # same track fill and border as repair
+            fill = track.copy()
+            fill.width = min(track.width, int(track.width * player.heat))  # clamped in track width so it doesnt trust inputs and overflow
+            # assign a color for the temp
+            if player.overheated:
+                color = (200, 60, 40)
+                text = "OVERHEATED"
+            elif player.heat >= 0.8:
+                color = (230, 110, 40)
+                text = "HOT"
+            else:
+                color = (224, 160, 48)
+                text = "COOL"
+            pygame.draw.rect(screen, color, fill)         
+            pygame.draw.rect(screen, (120, 125, 135), track, 1)
+
+            # maker for when the gun can fire again
+            mark_x = track.x + int(track.width * CANNON_RESUME_HEAT)
+            pygame.draw.line(screen, (255, 220, 120), (mark_x, track.y - 3), (mark_x, track.bottom + 2), 1)
+
+            
+            
+            surf = self.screen_font.render(text, True, (224, 160, 48))
+            screen.blit(surf, (track.x, track.bottom + 4))
+
 
         # drawing wallet seperate
         font = self.wallet_font
@@ -443,7 +482,7 @@ class Panel:
             rect = pygame.Rect(self.light_rects[index]).move(self.drawn_rect.topleft)
             if rect.collidepoint(pos):
                 slot = self.slots[index]
-                bought = buy(player, slot)
+
                 if slot.key == "repair":
                     if self.repairing:
                         extra = REPAIR_RUSH_COST - REPAIR_COST
@@ -453,7 +492,9 @@ class Panel:
                             self.repairing = False
                             self.repair_progress = 0.0
                     else:
-                        repair(player, REPAIR_RUSH_COST)                   
+                        self.start_repair(player)
+                else:
+                    buy(player, slot)            
 
     def start_repair(self, player):
         if self.repairing or player.hull == player.max_hull or player.scrap < REPAIR_COST:

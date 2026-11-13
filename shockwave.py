@@ -24,7 +24,7 @@ class Shockwave(CircleShape):
         # load and slice 64x64 sprite sheet
         if Shockwave.SHEET is None:
             # use file path to load sheet
-            Shockwave.SHEET = pygame.image.load("assets/shockwave_sheet.png").convert_alpha()
+            Shockwave.SHEET = pygame.image.load("assets/sprites/shockwave_sheet.png").convert_alpha()
 
             # based on 64 x 64 setup
             frame_w, frame_h = 64, 64

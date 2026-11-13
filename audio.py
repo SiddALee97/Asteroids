@@ -9,11 +9,25 @@ SOUNDS = {
     "shot": ("assets/audio/sfx/shot.wav", 0.2),
     "shockwave": ("assets/audio/sfx/shockwave.wav", 1.0),
     "laser": ("assets/audio/sfx/laser.wav", 0.5),
-    "panel_boot": ("assets/audio/sfx/panel_boot.ogg", 1.0),
-    "panel_opening_closing": ("assets/audio/sfx/panel_opening_closing.wav", 1.0),
+    "panel_booting": ("assets/audio/sfx/panel_booting.wav", 0.75),
+    "panel_opening": ("assets/audio/sfx/panel_opening.wav", 0.25),
+    "panel_closing": ("assets/audio/sfx/panel_closing.wav", 0.40),
     "player_hit": ("assets/audio/sfx/player_hit.wav", 0.75),
     "player_death": ("assets/audio/sfx/player_death.wav", 0.5),
+    "scrap_1": ("assets/audio/sfx/scrap_1.wav", 1.0),
+    "scrap_2": ("assets/audio/sfx/scrap_2.wav", 1.0),
+    "scrap_3": ("assets/audio/sfx/scrap_3.wav", 1.0),
+    "scrap_4": ("assets/audio/sfx/scrap_4.wav", 1.0),
+    "scrap_5": ("assets/audio/sfx/scrap_5.wav", 1.0),
+    "scrap_6": ("assets/audio/sfx/scrap_6.wav", 1.0),
+    "scrap_7": ("assets/audio/sfx/scrap_7.wav", 1.0),
+    "scrap_8": ("assets/audio/sfx/scrap_8.wav", 1.0),
+    "scrap_9": ("assets/audio/sfx/scrap_9.wav", 1.0),
+    "scrap_10": ("assets/audio/sfx/scrap_10.wav", 1.0),
+    "scrap_11": ("assets/audio/sfx/scrap_11.wav", 1.0),
 }
+
+
 
 def set_sfx_volume(v):
     global sfx_volume
