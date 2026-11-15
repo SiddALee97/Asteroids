@@ -165,6 +165,14 @@ SHOCKWAVE_DAMAGE = (0, 1, 1, 1, 2, 3)
 SHOCKWAVE_FORCE = (0, 400, 450, 500, 550, 600) # force applied to asteroids when hit by shockwave
 FORCE_FALLOFF_FLOOR = 0.25 
 
+#------------------------ ABILITIES ------------------------------#
+DASH_DISTANCE_PER_LEVEL = 100
+DASH_DISTANCE = 160
+DASH_TIME = 0.12
+DASH_COOLDOWN = 2.0
+DASH_SHIFT_WINDOW = 0.25
+GRAV_GRAZE_RANGE = 20
+GRAV_CHARGE = (0.4, 0.7, 1.0)  # seconds of refund per tier 
 
 
 

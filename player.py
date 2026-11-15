@@ -13,6 +13,8 @@ from constants import (
     PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, 
     ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT, SPEED_BONUS, HULL_BONUS,
     CANNON_COOL_RATE, CANNON_HEAT_PER_SHOT, CANNON_RESUME_HEAT, CANNON_COOL_DELAY, CANNON_OVERHEAT_COOL_RATE,
+    DASH_DISTANCE, DASH_TIME, DASH_COOLDOWN, DASH_SHIFT_WINDOW, GRAV_GRAZE_RANGE, GRAV_CHARGE,
+    DASH_DISTANCE_PER_LEVEL,
 )
 
 from shot import Shot
@@ -37,6 +39,13 @@ THRUSTER_NEXT = {
     Thruster.RUNNING: Thruster.RUNNING,
     Thruster.SHUTDOWN: Thruster.OFF,
 }
+
+class DashState(Enum):
+    READY = auto()
+    DASHING = auto()
+    COOLDOWN = auto()
+
+
 
 class Player(CircleShape):
     def __init__(self, x: float, y: float, radius: float):
@@ -86,7 +95,61 @@ class Player(CircleShape):
         for slot in BARRY_SLOTS + HARRY_SLOTS:
             self.levels[slot.key] = 0
 
+        # player dash state
+        self.dash_state = DashState.READY 
+        self.game_time = 0.0                        # advances by dt in update, so pause freezes it
+        self.shift_time = -999.0                    # when shift was last tapped
+        self.dash_timer = 0.0                       # how far through the current dash
+        self.dash_start = pygame.Vector2(0, 0)
+        self.dash_end = pygame.Vector2(0, 0)
+        self.dash_gravitron = False                 # was this dash the shift-timed kind?
+        self.dash_cooldown = 0.0                    # seconds left before READY
+        self.dash_charge = 0.0                      # refund earned this dash
+        self.dash_hit = set()                       # rocks already counted this dash
+        
+    def press_shift(self):
+        self.shift_time = self.game_time
+
+    def try_dash(self):
+        if self.levels["ability"] < 1 or self.dash_state != DashState.READY:
+            return
+        self.dash_gravitron = (self.game_time - self.shift_time) <= DASH_SHIFT_WINDOW
+        self.shift_time = -999.0
+        self.dash_hit.clear()
+        self.dash_charge = 0.0
+
+        if self.dash_gravitron:
+            target = camera.screen_to_world(viewport.mouse_pos())
+            direction = target - self.position
+            if direction.length_squared() == 0:
+                direction = pygame.Vector2(0, 1).rotate(self.rotation)
+            direction = direction.normalize()
+
+            self.rotation = pygame.Vector2(0, 1).angle_to(direction)
+
+            current_velocity = self.velocity.length()
+            self.velocity = direction * current_velocity
+        else:
+            direction = pygame.Vector2(0, 1).rotate(self.rotation)
+
+        self.dash_start = self.position.copy()
+        self.dash_end = self.position + direction * self.dash_distance
+        self.dash_end.x = max(0, min(world.width, self.dash_end.x))
+        self.dash_end.y = max(0, min(world.height, self.dash_end.y))
+        self.dash_timer = 0.0
+        self.dash_state = DashState.DASHING
+        self.invulnerability_timer = max(self.invulnerability_timer, DASH_TIME + 0.2)
+        
+
+    
+
+        
+
     # handle upgrades
+    @property
+    def dash_distance(self):
+        return DASH_DISTANCE + DASH_DISTANCE_PER_LEVEL * self.levels["ability"]
+
     @property
     def speed(self):
         return PLAYER_SPEED + SPEED_BONUS[self.levels["speed"]]
@@ -208,6 +271,20 @@ class Player(CircleShape):
         # invulnerability timer
         self.invulnerability_timer = max(0.0, self.invulnerability_timer - dt)
 
+        # dash update logic
+        self.game_time += dt
+        if self.dash_state is DashState.DASHING:
+            self.dash_timer += dt
+            t = min(1.0, self.dash_timer / DASH_TIME)
+            self.position = self.dash_start.lerp(self.dash_end, t) # lerp to find distance between two points and t is how far along
+            if t >= 1.0:
+                self.dash_state = DashState.COOLDOWN
+                self.dash_cooldown = max(0.0, DASH_COOLDOWN - self.dash_charge)
+        elif self.dash_state is DashState.COOLDOWN:
+            self.dash_cooldown -= dt
+            if self.dash_cooldown <= 0:
+                self.dash_state = DashState.READY
+
         # update weapon cooldowns
         for name in self.weapon_cooldowns:
             self.weapon_cooldowns[name] = max(0.0, self.weapon_cooldowns[name] - dt)
@@ -243,12 +320,16 @@ class Player(CircleShape):
         if keys[pygame.K_s]:
             self.move_backward(-dt) 
 
-        # new momentum code
-        # 1. apply friction over time (import math to use math.pow (ensures friction scales evenly regardless of frame rate))
-        self.velocity *= math.pow(self.friction, dt * 60) # instead of just multiplying by friction we use math.pow to tie the reduction to the frame rate so it is independent of computer speed
+        if self.dash_state is not DashState.DASHING:
+            # new momentum code
+            # 1. apply friction over time (import math to use math.pow (ensures friction scales evenly regardless of frame rate))
+            self.velocity *= math.pow(self.friction, dt * 60) # instead of just multiplying by friction we use math.pow to tie the reduction to the frame rate so it is independent of computer speed
 
-        # 2. update your position based on new velocity
-        self.position += self.velocity * dt
+            # 2. update your position based on new velocity
+            self.position += self.velocity * dt
+
+                    # no more screen wrapping! time for soft border!
+            world.pull_inside(self, dt, margin=60, strength=15)
 
         # 3. update aim based on mouse position
         self.update_aim(dt)
@@ -268,8 +349,6 @@ class Player(CircleShape):
         if keys[pygame.K_e] or pygame.mouse.get_pressed()[0] and not mouse_over_panel(viewport.mouse_pos()):  # left mouse button (a held commence click could fire on frame 1 if the laser is unlocked)
             self.try_fire("LASER", self.fire_laser, LASER_COOLDOWN_MULT)
 
-        # no more screen wrapping! time for soft border!
-        world.pull_inside(self, dt, margin=60, strength=15)
 
 
     def grav_dash(self, dt):

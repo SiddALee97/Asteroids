@@ -19,7 +19,7 @@ from ships import BARRY_SLOTS, HARRY_SLOTS         # ToDo: unused?
 from upgrades_shop import buy                      # ToDo: unused?
 
 #-------- game objects --------
-from player import Player
+from player import Player, DashState
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
 from cargodrone import CargoDrone
@@ -264,6 +264,11 @@ def main():
 
             for event in pygame.event.get():
 
+                if game_state == "PLAYING" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                    player.try_dash()
+                if game_state == "PLAYING" and event.type == pygame.KEYDOWN and event.key == pygame.K_LSHIFT:
+                    player.press_shift()
+
 
                 #------ convert window mouse positions to game-surface positions ------
                 if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
@@ -459,6 +464,8 @@ def main():
                 # ---- asteroids vs player ----
                 # seperate() runs first so the ship never overlaps a rock, even in god mode
                 for obj in asteroids:
+                    if player.dash_state is DashState.DASHING and player.dash_gravitron:
+                        continue
                     touched = player.separate(obj)
                     if touched and not debug.god_mode:             
                         result = resolve_hit(obj, player)
