@@ -68,8 +68,9 @@ def main():
 
     #================== SETUP ==============
  
+    pygame.mixer.pre_init(44100, -16, 2, 128)
     pygame.init()
-    pygame.mixer.init()
+    
     font = pygame.font.Font("assets/fonts/future_earth.ttf", 36)
 
     #---------- creating sprite groups ----------
