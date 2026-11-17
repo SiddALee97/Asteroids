@@ -8,13 +8,13 @@ from constants import (
     PLAYER_RADIUS, SHOCKWAVE_COOLDOWN_MULT, SHOCKWAVE_FORCE, SHOCKWAVE_SPLITS, 
     SHOCKWAVE_DAMAGE, LASER_FORCE, LASER_GENERATIONS, LASER_BASE_DAMAGE, 
     LASER_DAMAGE_PER_LEVEL, LASER_SPEED_PER_LEVEL, LASER_MAX_SPEED_MULT, 
-    LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LINE_WIDTH, LASER_COOLDOWN_MULT, 
-    TURRET_LENGTH, TURRET_WIDTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, 
+    LASER_TRAIL_LENGTH, LASER_TRAIL_PER_LEVEL, LASER_COOLDOWN_MULT, 
+    TURRET_LENGTH, TURRET_TURN_SPEED, SHIP_SPRITE_SCALE, 
     PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, 
     ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT, SPEED_BONUS, HULL_BONUS,
     CANNON_COOL_RATE, CANNON_HEAT_PER_SHOT, CANNON_RESUME_HEAT, CANNON_COOL_DELAY, CANNON_OVERHEAT_COOL_RATE,
     DASH_DISTANCE, DASH_TIME, DASH_COOLDOWN, DASH_SHIFT_WINDOW, GRAV_GRAZE_RANGE, GRAV_CHARGE,
-    DASH_DISTANCE_PER_LEVEL,
+    DASH_DISTANCE_PER_LEVEL, GRAV_DASH_BONUS, DASH_FLASH_TIME, GRAV_DASH_MAX, GRAV_DASH_LAND_BUFFER
 )
 
 from shot import Shot
@@ -26,7 +26,6 @@ from enum import Enum, auto
 from ships import BARRY_SLOTS, HARRY_SLOTS
 from hud import mouse_over_panel
 import audio
-from hud import kick_hud
 
 class Thruster(Enum):
     OFF = auto()
@@ -45,6 +44,13 @@ class DashState(Enum):
     DASHING = auto()
     COOLDOWN = auto()
 
+def point_segment_distance(p, a, b): 
+    ab = b - a
+    lenghth_squared = ab.length_squared()
+    if lenghth_squared == 0:
+        return p.distance_to(a)
+    t = max(0.0, min(1.0, (p - a).dot(ab) / lenghth_squared))
+    return p.distance_to(a + ab * t)
 
 
 class Player(CircleShape):
@@ -95,6 +101,9 @@ class Player(CircleShape):
         for slot in BARRY_SLOTS + HARRY_SLOTS:
             self.levels[slot.key] = 0
 
+        # testing 
+        self.levels["ability"] = 1
+
         # player dash state
         self.dash_state = DashState.READY 
         self.game_time = 0.0                        # advances by dt in update, so pause freezes it
@@ -106,9 +115,45 @@ class Player(CircleShape):
         self.dash_cooldown = 0.0                    # seconds left before READY
         self.dash_charge = 0.0                      # refund earned this dash
         self.dash_hit = set()                       # rocks already counted this dash
+        self.dash_preview = None                    # signal for grav dash end point
+        self.dash_direction = pygame.Vector2(0, 1)
+        self.dash_lands_inside = False
+
+        self.last_position = self.position.copy()
         
     def press_shift(self):
         self.shift_time = self.game_time
+
+    def dash_graze(self, asteroids):
+        if self.dash_state is not DashState.DASHING or not self.dash_gravitron:
+            return
+        for rock in asteroids:
+            if rock in self.dash_hit:
+                continue
+            d = point_segment_distance(rock.position, self.last_position, self.position)
+            if d <= rock.radius + GRAV_GRAZE_RANGE:
+                self.dash_hit.add(rock)
+                self.dash_charge += GRAV_CHARGE[rock.tier]
+
+    def plan_dash(self, direction, asteroids):
+        start = self.position
+        base = self.dash_distance
+        base_end = start + direction * base
+
+        # one pass over the base segment only, so rocks can't chain forever
+        bonus = 0.0
+        for rock in asteroids:
+            if point_segment_distance(rock.position, start, base_end) <= rock.radius:
+                bonus += GRAV_DASH_BONUS[rock.tier]
+
+        dist = min(base + bonus, GRAV_DASH_MAX)
+        end = start + direction * dist
+        end.x = max(0, min(world.width, end.x))
+        end.y = max(0, min(world.height, end.y))
+
+        inside = any(end.distance_to(r.position) <= r.radius + GRAV_DASH_LAND_BUFFER
+                    for r in asteroids)
+        return end, inside
 
     def try_dash(self):
         if self.levels["ability"] < 1 or self.dash_state != DashState.READY:
@@ -124,21 +169,23 @@ class Player(CircleShape):
             if direction.length_squared() == 0:
                 direction = pygame.Vector2(0, 1).rotate(self.rotation)
             direction = direction.normalize()
-
             self.rotation = pygame.Vector2(0, 1).angle_to(direction)
-
             current_velocity = self.velocity.length()
             self.velocity = direction * current_velocity
+
         else:
             direction = pygame.Vector2(0, 1).rotate(self.rotation)
 
         self.dash_start = self.position.copy()
-        self.dash_end = self.position + direction * self.dash_distance
+        if self.dash_preview is not None:
+            self.dash_end = self.dash_preview.copy()
+        else:
+            self.dash_end = self.position + direction * self.dash_distance
         self.dash_end.x = max(0, min(world.width, self.dash_end.x))
         self.dash_end.y = max(0, min(world.height, self.dash_end.y))
         self.dash_timer = 0.0
         self.dash_state = DashState.DASHING
-        self.invulnerability_timer = max(self.invulnerability_timer, DASH_TIME + 0.2)
+        self.invulnerability_timer = max(self.invulnerability_timer, DASH_TIME)
         
 
     
@@ -215,7 +262,6 @@ class Player(CircleShape):
 
         pts = [camera.world_to_screen(p) for p in self.triangle()]
         
-
         # testing sprite 
 
         pos = camera.world_to_screen(self.position)
@@ -228,8 +274,13 @@ class Player(CircleShape):
         # trail sprites 
         if self.thruster_state is not Thruster.OFF:
             self.draw_thruster(screen)
-            
-    
+
+        if self.dash_preview is not None:
+            ghost = rotated.copy()
+            ghost.set_alpha(110)
+            dash_rect = ghost.get_rect(center = camera.world_to_screen(self.dash_preview))
+            screen.blit(ghost, dash_rect)
+
         screen.blit(rotated, rect)
         self.draw_turret(screen)
 
@@ -263,10 +314,24 @@ class Player(CircleShape):
         self.aim = self.aim.rotate(step)
         return 
 
+    def update_dash_preview(self, asteroids):
+        armed = (self.game_time - self.shift_time) <= DASH_SHIFT_WINDOW
+        if not armed or self.dash_state is not DashState.READY or self.levels["ability"] < 1:
+            self.dash_preview = None
+            return
+        target = camera.screen_to_world(viewport.mouse_pos())
+        direction = target - self.position
+        if direction.length_squared() == 0:
+            direction = pygame.Vector2(0, 1).rotate(self.rotation)
+        direction = direction.normalize()
+        self.dash_dir = direction
+        self.dash_preview, self.dash_lands_inside = self.plan_dash(direction, asteroids)
+
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
         # tick every cd here so main.py() doesn't need player.cdt -= dt
         self.cdt -= dt
+        self.last_position = self.position.copy()
 
         # invulnerability timer
         self.invulnerability_timer = max(0.0, self.invulnerability_timer - dt)
@@ -277,6 +342,7 @@ class Player(CircleShape):
             self.dash_timer += dt
             t = min(1.0, self.dash_timer / DASH_TIME)
             self.position = self.dash_start.lerp(self.dash_end, t) # lerp to find distance between two points and t is how far along
+
             if t >= 1.0:
                 self.dash_state = DashState.COOLDOWN
                 self.dash_cooldown = max(0.0, DASH_COOLDOWN - self.dash_charge)
@@ -476,8 +542,6 @@ class Player(CircleShape):
     # stopping the ghosting
     def separate(self, rock, shield = 1.0):
         if self.contains_point(rock.position):
-            normal = rock.radius + self.radius
-            push = rock.radius + self.radius
             offset = rock.position - self.position
             if offset.length_squared() == 0:
                 normal = pygame.Vector2(1, 0)
@@ -494,8 +558,8 @@ class Player(CircleShape):
             return False
         if dist == 0:
             normal = pygame.Vector2(1, 0)       # this is a fallback to never divide by zero
-
-        normal = offset / dist
+        else:
+            normal = offset / dist
         push = rock.radius - dist 
         rock.position += normal * push
         approach = (rock.velocity - self.velocity).dot(normal)

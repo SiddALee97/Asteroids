@@ -172,8 +172,11 @@ DASH_TIME = 0.12
 DASH_COOLDOWN = 2.0
 DASH_SHIFT_WINDOW = 0.25
 GRAV_GRAZE_RANGE = 20
-GRAV_CHARGE = (0.4, 0.7, 1.0)  # seconds of refund per tier 
-
+GRAV_CHARGE = (0.5, 1.0, 2.0)  # seconds of refund per tier 
+GRAV_DASH_BONUS = [50, 100, 150]
+GRAV_DASH_MAX = 350
+GRAV_DASH_LAND_BUFFER = 24
+DASH_FLASH_TIME = 0.6
 
 
 

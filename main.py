@@ -432,8 +432,10 @@ def main():
                 # ---- updates ----
                 if debug.no_spawns:
                     field.spawn_timer = 0
- 
+                
                 updatable.update(dt)
+                player.dash_graze(asteroids)
+                player.update_dash_preview(asteroids)
                 update_hud(dt, player)                      # spring sway and shake targets
                 hud_comms.update(dt)
                 hud_comms.update_lights(dt, player, harry_panel, barry_panel)
@@ -465,7 +467,7 @@ def main():
                 # ---- asteroids vs player ----
                 # seperate() runs first so the ship never overlaps a rock, even in god mode
                 for obj in asteroids:
-                    if player.dash_state is DashState.DASHING and player.dash_gravitron:
+                    if player.dash_state is DashState.DASHING and player.dash_gravitron: # grav dash goes thru asteroids
                         continue
                     touched = player.separate(obj)
                     if touched and not debug.god_mode:             
