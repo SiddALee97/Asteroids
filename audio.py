@@ -2,7 +2,8 @@ import pygame
 from constants import SFX_VOLUME, MUSIC_VOLUME
 
 sounds = {}
-_current_music = None
+_current_playlist = None
+_current_track = 0
 sfx_volume = SFX_VOLUME
 music_volume = MUSIC_VOLUME
 SOUNDS = {
@@ -26,6 +27,16 @@ SOUNDS = {
     "scrap_10": ("assets/audio/sfx/scrap_10.wav", 1.0),
     "scrap_11": ("assets/audio/sfx/scrap_11.wav", 1.0),
 }
+
+menu_playlist = [
+    "assets/audio/music/cb_green_bird.mp3",
+]
+
+game_playlist = [
+    "assets/audio/music/cb_too_good_too_bad.mp3",
+    "assets/audio/music/cb_piano_black.mp3",
+    "assets/audio/music/cb_ganymade.mp3",
+]
 
 
 
@@ -58,18 +69,37 @@ def play(name):
     if s:
         s.play()
 
-def play_music(path, loop=True):
-    global _current_music
-    if path == _current_music:
+def play_music(playlist, loop=False):
+    global _current_playlist, _current_track
+
+    if playlist == _current_playlist:
         return
+
+    _current_playlist = playlist
+    _current_track = 0
+    start_track(loop)
+
+def start_track(loop = False):
+    track_path = _current_playlist[_current_track]
     try:
-        pygame.mixer.music.load(path)
+        pygame.mixer.music.load(track_path)
         pygame.mixer.music.set_volume(music_volume)
         pygame.mixer.music.play(-1 if loop else 0)
-        _current_music = path
     except (FileNotFoundError, pygame.error):
-        print(f"missing music: {path}")
+        print(f"missing music: {track_path}")
+
+def next_track():
+    global _current_track
+    if not _current_playlist:
+        return
+
+    _current_track = (_current_track + 1) % len(_current_playlist)
+    start_track(loop = False)
+
+
 
 def stop_music():
+    global _current_playlist
+    _current_playlist = None
     pygame.mixer.music.stop()
     

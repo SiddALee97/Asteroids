@@ -8,6 +8,7 @@ import pygame
 
 #-------- game systems ---------
 import audio
+from audio import menu_playlist, game_playlist
 import viewport
 from constants import *
 from camera import camera
@@ -142,8 +143,10 @@ def main():
 
     #===================== LOAD AUDIO ==================================
     #                  (after mixer init)
+    SONG_END = pygame.USEREVENT + 1
+    pygame.mixer.music.set_endevent(SONG_END)
     audio.load_sounds()
-    audio.play_music("assets/audio/music/cb_egg_and_i.mp3") # opening menu track
+    audio.play_music(menu_playlist) # opening menu track
 
     #===================== LOAD SPRITES ================================
     #                 (must be after set mode)
@@ -265,6 +268,11 @@ def main():
 
             for event in pygame.event.get():
 
+                # audio loop for playlists
+                if event.type == SONG_END:
+                    audio.next_track()
+                    
+
                 if game_state == "PLAYING" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                     player.try_dash()
                 if game_state == "PLAYING" and event.type == pygame.KEYDOWN and event.key == pygame.K_LSHIFT:
@@ -286,7 +294,7 @@ def main():
                 if game_state == "MENU":
                     if play_button.is_clicked(event):
                         # audio
-                        audio.play_music("assets/audio/music/cb_too_good_too_bad.mp3")
+                        audio.play_music(game_playlist)
                         # use helper to create new game
                         field, player, score_keeper = new_game()
                         # reset timer and change game state
