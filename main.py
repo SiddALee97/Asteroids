@@ -1,8 +1,9 @@
 #========================== IMPORTS =========================
 
 import os
-os.environ["SDL_AUDIODRIVER"] = "pulseaudio"
 import sys
+if sys.platform != "win32":                         # only run pulse audio when on linux
+    os.environ["SDL_AUDIODRIVER"] = "pulseaudio"   
 import random
 import pygame
 
