@@ -352,6 +352,9 @@ def main():
 
                 #-------- keyboard -----------
                 if event.type == pygame.KEYDOWN:
+
+                    debug.handle_key(event, player, game_state)  # debug injection F1 - F10 hotkeys
+
                     if debug.visible:
                         if event.key == pygame.K_t:
                             hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character. Still not sure if I will fix the issue of the text going of the screen or just make sure i dont render any long texts but that kind of sounds annoying. So i will probably just fix it.")
@@ -366,7 +369,7 @@ def main():
                             fullscreen = False
                         continue
 
-                    debug.handle_key(event, player, game_state)  # debug injection F1 - F10 hotkeys
+                  
 
                     if game_state == GameState.PLAYING:
                         if event.key == pygame.K_1:

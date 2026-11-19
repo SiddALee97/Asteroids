@@ -41,7 +41,7 @@ class Debug:
             self.visible = not self.visible
             return
         # hotkeys only work when overlay is on (besides f1 obviously)
-        if not self.visible or game_state is GameState.PLAYING or player is None:
+        if not self.visible or game_state is not GameState.PLAYING or player is None:
             return
 
         k = event.key
@@ -91,6 +91,10 @@ class Debug:
         # F10 toggles visible hitboxes
         elif k == pygame.K_F10:
             self.show_hitboxes = not self.show_hitboxes
+
+        elif k == pygame.K_F12:
+            pass
+
 
 
         # ------------- DEBUG HUD -------------
