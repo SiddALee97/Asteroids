@@ -359,7 +359,7 @@ class Panel:
             if slot.key == "repair":
                 lines.append(f"STATUS: {player.hull} / {player.max_hull}")
             if slot.key == "maintenance":
-                lines.append(f"TEMP (K): {int(player.heat * 3695)}")
+                lines.append(f"TEMP (K): {int(player.heat * 3695 + 116)}")   # player.heat is between 0 and 1, 3695 is melting point of tungsten, 116K estimate temp outside ship
         else:
             level = player.levels[slot.key]
             if level >= len(slot.costs):

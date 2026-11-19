@@ -19,6 +19,7 @@ from logger import log_event, log_state
 from debug import debug
 from ships import BARRY_SLOTS, HARRY_SLOTS         # ToDo: unused?
 from upgrades_shop import buy                      # ToDo: unused?
+from states import GameState
 
 #-------- game objects --------
 from player import Player, DashState
@@ -224,10 +225,10 @@ def main():
     #========================== GAME STATE =====================
 
 
-    # Game State (possible: "PLAYING", "GAME_OVER", "PAUSED", "MENU", "SETTINGS")
-    # ToDo: turn into an Enum so typos fail loudly
-    game_state = "MENU"
-    settings_return = "MENU"
+    # Game State (possible: GameState.PLAYING, GameState.GAME_OVER, GameState.PAUSED, GameState.MENU, GameState.SETTINGS)
+
+    game_state = GameState.MENU
+    settings_return = GameState.MENU
     # drone initial timer
     drone_spawn_timer = 5.0
 
@@ -274,9 +275,9 @@ def main():
                     audio.next_track()
                     
 
-                if game_state == "PLAYING" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                if game_state == GameState.PLAYING and event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                     player.try_dash()
-                if game_state == "PLAYING" and event.type == pygame.KEYDOWN and event.key == pygame.K_LSHIFT:
+                if game_state == GameState.PLAYING and event.type == pygame.KEYDOWN and event.key == pygame.K_LSHIFT:
                     player.press_shift()
 
 
@@ -287,12 +288,12 @@ def main():
                         return
 
                 #----- in-game panel clicks (shop buttons, slots, AUTO toggle) -------
-                if game_state == "PLAYING" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if game_state == GameState.PLAYING and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     harry_panel.handle_click(event.pos, player)
                     barry_panel.handle_click(event.pos, player)
 
                 #----- per-state button clicks -------
-                if game_state == "MENU":
+                if game_state == GameState.MENU:
                     if play_button.is_clicked(event):
                         # audio
                         audio.play_music(game_playlist)
@@ -300,47 +301,47 @@ def main():
                         field, player, score_keeper = new_game()
                         # reset timer and change game state
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        game_state = "PLAYING"
+                        game_state = GameState.PLAYING
                         break
                     elif quit_button.is_clicked(event):
                         pygame.quit()
                         sys.exit()
                     elif menu_settings_button.is_clicked(event):
-                        settings_return = "MENU"
-                        game_state = "SETTINGS"
+                        settings_return = GameState.MENU
+                        game_state = GameState.SETTINGS
                         break
 
-                elif game_state == "GAME_OVER":
+                elif game_state == GameState.GAME_OVER:
                     if game_over_r.is_clicked(event):
                         # use helper to start new game
                         field, player, score_keeper = new_game()
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        game_state = "PLAYING"
+                        game_state = GameState.PLAYING
                         break
                     elif game_over_m.is_clicked(event):
                         # use helper to clear map
                         clear_map()
                         field = AsteroidField()
-                        game_state = "MENU"
+                        game_state = GameState.MENU
                         break
                     elif game_over_settings_button.is_clicked(event):
-                        settings_return = "GAME_OVER"
-                        game_state = "SETTINGS"
+                        settings_return = GameState.GAME_OVER
+                        game_state = GameState.SETTINGS
                         break
 
-                elif game_state == "PAUSED":
+                elif game_state == GameState.PAUSED:
                     if pause_m.is_clicked(event):
                         # helper to clear map
                         clear_map()
                         field = AsteroidField()
-                        game_state = "MENU"
+                        game_state = GameState.MENU
                         break
                     elif pause_settings_button.is_clicked(event):
-                        settings_return = "PAUSED"
-                        game_state = "SETTINGS"
+                        settings_return = GameState.PAUSED
+                        game_state = GameState.SETTINGS
                         break
 
-                elif game_state == "SETTINGS":
+                elif game_state == GameState.SETTINGS:
                     if music_slider.handle_event(event):
                         audio.set_music_volume(music_slider.value)
                     if sfx_slider.handle_event(event):
@@ -367,25 +368,25 @@ def main():
 
                     debug.handle_key(event, player, game_state)  # debug injection F1 - F10 hotkeys
 
-                    if game_state == "PLAYING":
+                    if game_state == GameState.PLAYING:
                         if event.key == pygame.K_1:
                             harry_panel.toggle()
                         elif event.key == pygame.K_2:
                             barry_panel.toggle()
 
                     if event.key == pygame.K_ESCAPE:    # pause / resume / back out of settings
-                        if game_state == "PLAYING":
-                            game_state = "PAUSED"
-                        elif game_state == "PAUSED":
-                            game_state = "PLAYING"
-                        elif game_state == "SETTINGS":
+                        if game_state == GameState.PLAYING:
+                            game_state = GameState.PAUSED
+                        elif game_state == GameState.PAUSED:
+                            game_state = GameState.PLAYING
+                        elif game_state == GameState.SETTINGS:
                             game_state = settings_return
 
-                    elif game_state == "GAME_OVER" and event.key == pygame.K_r:     # quick restart on death
+                    elif game_state == GameState.GAME_OVER and event.key == pygame.K_r:     # quick restart on death
                         # use helper to start new game
                         field, player, score_keeper = new_game()
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
-                        game_state = "PLAYING"
+                        game_state = GameState.PLAYING
 
 
             #======================= FRAME SETUP ===================================
@@ -397,7 +398,7 @@ def main():
             bg_near.draw(screen)
 
             mx, my = viewport.mouse_pos()
-            pygame.mouse.set_visible(game_state != "PLAYING" or my >= PLAY_HEIGHT)  # hidden in game but bugged on WSL check on native windows
+            pygame.mouse.set_visible(game_state != GameState.PLAYING or my >= PLAY_HEIGHT)  # hidden in game but bugged on WSL check on native windows
 
 
 
@@ -421,7 +422,7 @@ def main():
             #============================ PER-STATE UPDATE and DRAW =======================
 
             #------------------------------ MENU -------------------------------
-            if game_state == "MENU":
+            if game_state == GameState.MENU:
                 updatable.update(dt)      # asteroid field keeps moving
                 bg_far.update(dt)
                 bg_near.update(dt)
@@ -435,7 +436,7 @@ def main():
                     button.draw(screen)
 
             #----------------------------- PLAYING -------------------------------
-            if game_state == "PLAYING":
+            if game_state == GameState.PLAYING:
 
                 
                 # ---- updates ----
@@ -495,7 +496,7 @@ def main():
                             audio.play("player_death")
                             kick_hud(player.position - obj.position)
                             player.kill()
-                            game_state = "GAME_OVER"
+                            game_state = GameState.GAME_OVER
                             break
 
                 # ---- pickups (old upgrades, then scrap/salvage) ----
@@ -540,7 +541,7 @@ def main():
                             score_keeper.add_points(result.points)
 
             #--------------------------------- GAME OVER ---------------------------------------
-            elif game_state == "GAME_OVER":
+            elif game_state == GameState.GAME_OVER:
                 updatable.update(dt)    # explosion particles keep moving
 
                 # draw game over overlay text
@@ -555,7 +556,7 @@ def main():
                     button.draw(screen)
 
             #--------------------------------- PAUSED ------------------------------------
-            elif game_state == "PAUSED":
+            elif game_state == GameState.PAUSED:
                 # nothing updates here, which freezes the world, panels and HUD
                 pause_text = font.render("PAUSED - Press ESC to Resume", True, "yellow")
                 text_rect = pause_text.get_rect(center=(SCREEN_WIDTH // 2, center_y - 200))
@@ -565,10 +566,10 @@ def main():
                     button.draw(screen)
 
             #------------------------------- SETTINGS -------------------------------------
-            elif game_state == "SETTINGS":
-                if settings_return == "MENU":
+            elif game_state == GameState.SETTINGS:
+                if settings_return == GameState.MENU:
                     updatable.update(dt)
-                title = font.render("SETTINGS", True, "white")
+                title = font.render(GameState.SETTINGS, True, "white")
                 screen.blit(title, title.get_rect(center = (SCREEN_WIDTH // 2, 180)))
                 music_slider.draw(screen)
                 sfx_slider.draw(screen)
@@ -582,7 +583,7 @@ def main():
                         "shots": shots, "upgrades": upgrades},
                         clock)
 
-            if game_state == "PLAYING":
+            if game_state == GameState.PLAYING:
                 reticle_rect = reticle_image.get_rect(center = (mx, my))
                 screen.blit(reticle_image, reticle_rect)
                             

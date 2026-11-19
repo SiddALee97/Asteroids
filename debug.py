@@ -6,6 +6,7 @@ from upgrades import Upgrade
 from constants import SCREEN_WIDTH, MAX_WEAPON_LEVEL
 import random
 from pickups import Pickup
+from states import GameState
 
 # Master switch: change to False to disable debug feature
 DEBUG = True
@@ -40,7 +41,7 @@ class Debug:
             self.visible = not self.visible
             return
         # hotkeys only work when overlay is on (besides f1 obviously)
-        if not self.visible or game_state != "PLAYING" or player is None:
+        if not self.visible or game_state is GameState.PLAYING or player is None:
             return
 
         k = event.key
