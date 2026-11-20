@@ -334,6 +334,7 @@ class Panel:
 
         #-------- auto toggle button -------------------
         box = pygame.Rect(self.auto_rect).move(r.topleft)
+        box = box.move(0, -30)
         color = (255, 220, 120) if self.auto_enabled else (190, 170, 110)
         surf = self.label_font.render("AUTO", True, color)
         screen.blit(surf, surf.get_rect(center = box.center))
@@ -437,6 +438,16 @@ class Panel:
 
 
     def draw_lights(self, screen, r, player):
+        box = pygame.Rect(self.auto_rect).move(r.topleft)
+        dark = LIGHT_COLORS[SlotState.UNAFFORDABLE]
+        bright = LIGHT_COLORS[SlotState.MAXED]
+        if self.auto_enabled:
+            color = bright
+        else:
+            color = dark
+        pygame.draw.circle(screen, (0, 0, 0), box.center, 16)
+        pygame.draw.circle(screen, color, box.center, 16)
+        
         for index, slot in enumerate(self.slots):
             rect = pygame.Rect(self.light_rects[index]).move(r.topleft)
             state = slot_state(player, slot)
@@ -449,8 +460,8 @@ class Panel:
             else:
                 color = bright
 
-            pygame.draw.circle(screen, (0, 0, 0), rect.center, 10)
-            pygame.draw.circle(screen, color, rect.center, 8)
+            pygame.draw.circle(screen, (0, 0, 0), rect.center, 12)
+            pygame.draw.circle(screen, color, rect.center, 10)
 
 
     def set_image(self, image):

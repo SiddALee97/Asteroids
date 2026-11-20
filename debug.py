@@ -92,8 +92,6 @@ class Debug:
         elif k == pygame.K_F10:
             self.show_hitboxes = not self.show_hitboxes
 
-        elif k == pygame.K_F12:
-            pass
 
 
 

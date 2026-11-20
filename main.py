@@ -141,7 +141,8 @@ def main():
     fullscreen = False
     window_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
     player = None
-
+    dim = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+    dim_alpha = 0.0
 
     #===================== LOAD AUDIO ==================================
     #                  (after mixer init)
@@ -359,18 +360,22 @@ def main():
                         if event.key == pygame.K_t:
                             hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character. Still not sure if I will fix the issue of the text going of the screen or just make sure i dont render any long texts but that kind of sounds annoying. So i will probably just fix it.")
 
-                    if event.key == pygame.K_F11:   # fullscreen toggle (restore scale is buggy in WSL but works in native windows)
-                        if not fullscreen:
-                            window_size = pygame.display.get_surface().get_size()
-                            pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-                            fullscreen = True
-                        else:
-                            pygame.display.set_mode(window_size, pygame.RESIZABLE)
-                            fullscreen = False
-                        continue
+                        if event.key == pygame.K_F11:   # fullscreen toggle (restore scale is buggy in WSL but works in native windows)
+                            if not fullscreen:
+                                window_size = pygame.display.get_surface().get_size()
+                                pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                                fullscreen = True
+                            else:
+                                pygame.display.set_mode(window_size, pygame.RESIZABLE)
+                                fullscreen = False
+                            continue
 
-                  
-
+                        if event.key == pygame.K_F12:
+                            if game_state is GameState.PLAYING:
+                                game_state = GameState.TUTORIAL
+                            elif game_state is GameState.TUTORIAL:
+                                game_state = GameState.PLAYING
+                        
                     if game_state == GameState.PLAYING:
                         if event.key == pygame.K_1:
                             harry_panel.toggle()
@@ -425,7 +430,7 @@ def main():
             #============================ PER-STATE UPDATE and DRAW =======================
 
             #------------------------------ MENU -------------------------------
-            if game_state == GameState.MENU:
+            if game_state is GameState.MENU:
                 updatable.update(dt)      # asteroid field keeps moving
                 bg_far.update(dt)
                 bg_near.update(dt)
@@ -437,9 +442,15 @@ def main():
 
                 for button in menu_buttons:
                     button.draw(screen)
+            #----------------------------- TUTORIAL -----------------------------
+            if game_state is GameState.TUTORIAL:
+                update_hud(dt, player)
+                bg_far.update(dt)
+                bg_near.update(dt)
+
 
             #----------------------------- PLAYING -------------------------------
-            if game_state == GameState.PLAYING:
+            if game_state is GameState.PLAYING:
 
                 
                 # ---- updates ----
@@ -572,7 +583,7 @@ def main():
             elif game_state == GameState.SETTINGS:
                 if settings_return == GameState.MENU:
                     updatable.update(dt)
-                title = font.render(GameState.SETTINGS, True, "white")
+                title = font.render("Settings", True, "white")
                 screen.blit(title, title.get_rect(center = (SCREEN_WIDTH // 2, 180)))
                 music_slider.draw(screen)
                 sfx_slider.draw(screen)
@@ -581,6 +592,14 @@ def main():
 
             #================================= OVERLAYS ==================================
             #                (debug text, reticle, HUD (drawn last, on top))
+
+            #--- tutorial dimmer ---
+            target = 150 if game_state is GameState.TUTORIAL else 0
+            dim_alpha += (target - dim_alpha) * min(1.0, dt * 8)
+            if dim_alpha > 1:
+                dim.fill((0, 0, 0, int(dim_alpha)))
+                screen.blit(dim, (0, 0))
+
             debug.draw(screen, player,
                        {"asteroids": asteroids, "drones": cargo_drones,
                         "shots": shots, "upgrades": upgrades},
