@@ -231,6 +231,9 @@ class Panel:
         elif self.state in (PanelState.OPEN, PanelState.BOOTING): 
             self.set_state(PanelState.CLOSING)
 
+    def close_panel(self):
+        if self.state in (PanelState.OPEN, PanelState.BOOTING):
+            self.set_state(PanelState.CLOSING)
 
     def update(self, dt, player):
 

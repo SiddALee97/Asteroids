@@ -8,14 +8,19 @@ from logger import log_event
 import random
 from upgrades import Upgrade
 from pickups import Pickup
+from enum import Enum, auto
 
+
+class Attribute(Enum):
+    METAL = auto()
+    GLASS = auto()
 
 class Asteroid(CircleShape):
 
     # class level container populated in main()
     sprites = {}
 
-    def __init__(self, x: float, y: float, tier: int) -> None:
+    def __init__(self, x: float, y: float, tier: int, attribute = None) -> None:
         super().__init__(x, y, ASTEROID_SIZES[tier])
         self.tier = tier
         self.health = ASTEROID_HEALTHS[tier]
@@ -25,6 +30,7 @@ class Asteroid(CircleShape):
         sprite_pool = Asteroid.sprites.get(self.tier)
 
         self.already_hit = set()
+        self.attribute = attribute
 
 
 

@@ -170,12 +170,19 @@ def main():
     barry_panel.set_image(load_sprite("assets/sprites/barry_panel.png"))
 
     #---------- pickups ----------
-    Pickup.scrap_sprites = [
+    Pickup.scrap_sprites_rare = [
+        load_sprite("assets/sprites/scrap_3.png"),
+    ]
+    Pickup.scrap_sprites_common = [
         load_sprite("assets/sprites/scrap_1.png"),
         load_sprite("assets/sprites/scrap_2.png"),
     ]
 
-    Pickup.salvage_sprites = [
+
+    Pickup.salvage_sprites_rare = [
+        load_sprite("assets/sprites/salvage_3.png"),
+    ]
+    Pickup.salvage_sprites_common = [
         load_sprite("assets/sprites/salvage_1.png"),
         load_sprite("assets/sprites/salvage_2.png"),
     ]
@@ -381,6 +388,9 @@ def main():
                             harry_panel.toggle()
                         elif event.key == pygame.K_2:
                             barry_panel.toggle()
+                        elif event.key == pygame.K_TAB:
+                            harry_panel.close_panel()
+                            barry_panel.close_panel()
 
                     if event.key == pygame.K_ESCAPE:    # pause / resume / back out of settings
                         if game_state == GameState.PLAYING:

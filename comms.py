@@ -19,6 +19,7 @@ class Comms:
         self.hold_timer = 0.0   # float: how long the current message stays up
         self.seen = set()       # set: keys for say_once
         self.font = None  # Default font and size
+
         self.light_phase = [0.0, 0.0, 0.0]
         self.light_lit = [False, False, False]
         self.depth = HUD_DEPTH_COMMS
@@ -39,9 +40,9 @@ class Comms:
         current_line = ""
 
         for word in words:
-            test_line = current_line + word + " "
-            if font.size(test_line)[0] <= width:
-                current_line = test_line
+            text_line = current_line + word + " "
+            if font.size(text_line)[0] <= width:
+                current_line = text_line
             else:
                 lines.append(current_line.strip())
                 current_line = word + " "
