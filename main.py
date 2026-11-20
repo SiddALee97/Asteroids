@@ -170,21 +170,20 @@ def main():
     barry_panel.set_image(load_sprite("assets/sprites/barry_panel.png"))
 
     #---------- pickups ----------
+    Pickup.scrap_sprite_lucky = load_sprite("assets/sprites/scrap_1.png")
     Pickup.scrap_sprites_rare = [
         load_sprite("assets/sprites/scrap_3.png"),
     ]
     Pickup.scrap_sprites_common = [
-        load_sprite("assets/sprites/scrap_1.png"),
         load_sprite("assets/sprites/scrap_2.png"),
     ]
 
-
+    Pickup.salvage_sprite_lucky = load_sprite("assets/sprites/salvage_3.png")
     Pickup.salvage_sprites_rare = [
-        load_sprite("assets/sprites/salvage_3.png"),
+        load_sprite("assets/sprites/salvage_2.png"),
     ]
     Pickup.salvage_sprites_common = [
         load_sprite("assets/sprites/salvage_1.png"),
-        load_sprite("assets/sprites/salvage_2.png"),
     ]
 
     #---------- cargo drone (one sprite per health value 3=healthy) -------------------
@@ -233,9 +232,9 @@ def main():
     #========================== GAME STATE =====================
 
 
-    # Game State (possible: GameState.PLAYING, GameState.GAME_OVER, GameState.PAUSED, GameState.MENU, GameState.SETTINGS)
+    # Game State (possible: TITLE, MENU, TUTORIAL, PLAYING, PAUSED, GAME_OVER, SETTINGS)
 
-    game_state = GameState.MENU
+    game_state = GameState.TITLE
     settings_return = GameState.MENU
     # drone initial timer
     drone_spawn_timer = 5.0
@@ -361,6 +360,10 @@ def main():
                 #-------- keyboard -----------
                 if event.type == pygame.KEYDOWN:
 
+                    # continue to next state if in title
+                    if game_state is GameState.TITLE:
+                        game_state = GameState.MENU
+
                     debug.handle_key(event, player, game_state)  # debug injection F1 - F10 hotkeys
 
                     if debug.visible:
@@ -439,16 +442,24 @@ def main():
 
             #============================ PER-STATE UPDATE and DRAW =======================
 
-            #------------------------------ MENU -------------------------------
-            if game_state is GameState.MENU:
+            #---------------------------- TITLE ------------------------------
+            if game_state is GameState.TITLE:
                 updatable.update(dt)      # asteroid field keeps moving
                 bg_far.update(dt)
                 bg_near.update(dt)
 
                 title_font = pygame.font.Font("assets/fonts/future_earth.ttf", 80)         # ToDo: create once, not every frame
                 title_text = title_font.render("ASS*ROIDS", True, "white")
-                title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, center_y - 200))
+                title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
                 screen.blit(title_text, title_rect)
+
+
+
+            #------------------------------ MENU -------------------------------
+            if game_state is GameState.MENU:
+                updatable.update(dt)      # asteroid field keeps moving
+                bg_far.update(dt)
+                bg_near.update(dt)
 
                 for button in menu_buttons:
                     button.draw(screen)
@@ -618,8 +629,8 @@ def main():
             if game_state == GameState.PLAYING:
                 reticle_rect = reticle_image.get_rect(center = (mx, my))
                 screen.blit(reticle_image, reticle_rect)
-                            
-            hud_comms.draw(screen, comms_rect, comms_image, player, harry_panel, barry_panel)
+            if game_state is not GameState.TITLE:
+                hud_comms.draw(screen, comms_rect, comms_image, player, harry_panel, barry_panel)
             harry_panel.draw(screen, player)
             barry_panel.draw(screen, player)
 

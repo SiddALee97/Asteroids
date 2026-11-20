@@ -21,18 +21,24 @@ class Pickup(CircleShape):
         self.amount = random.choice(amount_pool)
         self.velocity = pygame.Vector2(0, 1).rotate(random.uniform(0, 360)) * 40
 
+        scrap_sprite_lucky = Pickup.scrap_sprite_lucky
         scrap_sprite_pool_rare = Pickup.scrap_sprites_rare
         scrap_sprite_pool_common = Pickup.scrap_sprites_common  
+        self.salvage_sprite_lucky = Pickup.salvage_sprite_lucky
         salvage_sprite_pool_rare = Pickup.salvage_sprites_rare
         salvage_sprite_pool_common = Pickup.salvage_sprites_common
 
         if self.kind == "SCRAP":
-            if self.amount >= 2:
+            if self.amount >= 5:
+                self.image = scrap_sprite_lucky
+            elif self.amount >= 2:
                 self.image = random.choice(scrap_sprite_pool_rare)
             else:
                 self.image = random.choice(scrap_sprite_pool_common)
         elif self.kind == "SALVAGE":
-            if self.amount >= 2:
+            if self.amount >= 5:
+                self.image = self.salvage_sprite_lucky
+            elif self.amount >= 2:
                 self.image = random.choice(salvage_sprite_pool_rare)
             else:
                 self.image = random.choice(salvage_sprite_pool_common)
