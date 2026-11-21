@@ -39,7 +39,7 @@ from button import Button
 from slider import Slider
 from background import BackgroundLayer
 from comms import hud_comms
-from hud import comms_rect, harry_panel, barry_panel, update_hud, kick_hud, PanelState
+from hud import comms_rect, harry_panel, barry_panel, update_hud, kick_hud, PanelState, mouse_over_panel
 
 
 
@@ -166,6 +166,8 @@ def main():
 
     #---------- UI art -----------
     reticle_image = load_sprite("assets/sprites/reticle.png")
+    reticle_image_armed = load_sprite("assets/sprites/reticle_2.png")
+    reticle_cursor = load_sprite("assets/sprites/reticle_3.png")
     
     comms_image = load_sprite("assets/sprites/comms_panel.png")
     harry_panel.set_image(load_sprite("assets/sprites/harry_panel.png"))
@@ -386,10 +388,12 @@ def main():
                             bubble = Bubble("I am supposed to test the comms. Am I coming through the speaker", +1)
                             if game_state is GameState.PLAYING:
                                 game_state = GameState.TUTORIAL
+                                camera.focus(player.position, 1.3)
                                 if harry_panel.state is PanelState.CLOSED:
                                     harry_panel.set_state(PanelState.OPENING)
                             elif game_state is GameState.TUTORIAL:
                                 game_state = GameState.PLAYING
+                                camera.fit_world()
                         
                     if game_state == GameState.PLAYING:
                         if event.key == pygame.K_1:
@@ -424,7 +428,7 @@ def main():
             bg_near.draw(screen)
 
             mx, my = viewport.mouse_pos()
-            pygame.mouse.set_visible(game_state != GameState.PLAYING or my >= PLAY_HEIGHT)  # hidden in game but bugged on WSL check on native windows
+            
 
 
 
@@ -639,12 +643,20 @@ def main():
                 hud_comms.draw(screen, comms_rect, comms_image, player, harry_panel, barry_panel)
             harry_panel.draw(screen, player)
             barry_panel.draw(screen, player)
-            if harry_panel.drawn_rect is not None:
-                bubble.draw(screen, anchor = (harry_panel.drawn_rect.x + H_SPEAKER_POS[0], harry_panel.drawn_rect.y + H_SPEAKER_POS[1]))
+            if game_state is GameState.TUTORIAL:
+                if harry_panel.drawn_rect is not None:
+                    bubble.draw(screen, (harry_panel.drawn_rect.x + H_SPEAKER_POS[0], harry_panel.drawn_rect.y + H_SPEAKER_POS[1]), harry_panel.rect)
 
-            if game_state == GameState.PLAYING:
-                reticle_rect = reticle_image.get_rect(center = (mx, my))
-                screen.blit(reticle_image, reticle_rect)
+            over_panel = mouse_over_panel((mx, my))
+            if game_state is GameState.PLAYING and over_panel:
+                cursor, hot = reticle_cursor, HAND_HOTSPOT      # fingertip pixel, in screen pixels
+            elif game_state is GameState.TUTORIAL:
+                cursor, hot = reticle_cursor, HAND_HOTSPOT     
+            else:
+                cursor, hot = reticle_image, (reticle_image.get_width() // 2, reticle_image.get_height() // 2)
+            if cursor:
+                screen.blit(cursor, (mx - hot[0], my - hot[1]))
+            pygame.mouse.set_visible(cursor is None)
 
             #================================ PRESENT ===================================
             #                        (scale to window and show)

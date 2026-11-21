@@ -1,6 +1,6 @@
 import math
 import pygame
-from constants import PLAY_WIDTH, PLAY_HEIGHT
+from constants import PLAY_WIDTH, PLAY_HEIGHT, WORLD_BASE_SCALE
 from world import world
 
 
@@ -41,6 +41,7 @@ class Camera:
         gives zoom 1.0 and center = screen middle (the identity view).
         """
 
+        self.base_zoom = WORLD_BASE_SCALE
         self.target_zoom = min(PLAY_WIDTH / world.width, PLAY_HEIGHT / world.height)
         self.target_center = pygame.Vector2(world.width / 2, world.height / 2)
         if speed:
@@ -81,6 +82,13 @@ class Camera:
 
         return max(1, round(width * self.zoom))
 
+    def focus(self, pos, mult):
+        self.target_zoom = self.base_zoom * mult
+        half = pygame.Vector2(PLAY_WIDTH, PLAY_HEIGHT) / (2 * self.target_zoom)
+        self.target_center = pygame.Vector2(
+            max(half.x, min(world.width - half.x, pos.x)),
+            max(half.y, min(world.height - half.y, pos.y)),
+        )
 
 # Shared instance
 camera = Camera()

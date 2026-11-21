@@ -33,7 +33,7 @@ class Bubble:
         if self.age >= BUBBLE_POP_TIME and self.chars < len(self.text):
             self.chars += TUTORIAL_TEXT_SPEED * dt
 
-    def draw(self, screen, anchor):
+    def draw(self, screen, anchor, panel_rect):
         if self.font is None:
             self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 18)
 
@@ -49,6 +49,11 @@ class Bubble:
 
         base = pygame.Rect(0, 0, w, h)
         base.midbottom = (anchor[0] + self.side * 70, anchor[1] - 30 + bob)
+        gap = 12
+        if self.side == 1:      # Harrys side
+            base.midleft = (panel_rect.right + gap, anchor[1] + bob - 150)
+        else:
+            base.midright = (panel_rect.left - gap, anchor[1] + bob)
         base.clamp_ip(screen.get_rect())
 
         rect = pygame.Rect(0, 0, int(w * pop), int(h * pop))
