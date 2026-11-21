@@ -165,6 +165,7 @@ def main():
 
     #---------- UI art -----------
     reticle_image = load_sprite("assets/sprites/reticle.png")
+    
     comms_image = load_sprite("assets/sprites/comms_panel.png")
     harry_panel.set_image(load_sprite("assets/sprites/harry_panel.png"))
     barry_panel.set_image(load_sprite("assets/sprites/barry_panel.png"))
@@ -626,13 +627,14 @@ def main():
                         "shots": shots, "upgrades": upgrades},
                         clock)
 
-            if game_state == GameState.PLAYING:
-                reticle_rect = reticle_image.get_rect(center = (mx, my))
-                screen.blit(reticle_image, reticle_rect)
             if game_state is not GameState.TITLE:
                 hud_comms.draw(screen, comms_rect, comms_image, player, harry_panel, barry_panel)
             harry_panel.draw(screen, player)
             barry_panel.draw(screen, player)
+
+            if game_state == GameState.PLAYING:
+                reticle_rect = reticle_image.get_rect(center = (mx, my))
+                screen.blit(reticle_image, reticle_rect)
 
             #================================ PRESENT ===================================
             #                        (scale to window and show)
