@@ -1,47 +1,76 @@
 import pygame
 import math
-from constants import TUTORIAL_TEXT_SPEED, H_SPEAKER_POS, B_SPEAKER_POS
+from constants import TUTORIAL_TEXT_SPEED
 
-class Bubble():
-    def __init__(self, text):
+BUBBLE_MAX_WIDTH = 220
+BUBBLE_PAD = 10
+BUBBLE_POP_TIME = 0.25
+
+
+def wrap_text(text, font, width):
+    lines, current = [], ""
+    for word in text.split(" "):
+        test = current + word + " "
+        if font.size(test)[0] <= width:
+            current = test
+        else:
+            lines.append(current.strip())
+            current = word + " "
+    lines.append(current.strip())
+    return lines
+
+
+class Bubble:
+    def __init__(self, text, side):
         self.text = text
-        self.chars: 0.0
+        self.side = side          # +1 for Harry (left panel), -1 for Barry (right panel)
+        self.chars = 0.0
         self.age = 0.0
         self.font = None
-        self.seen = set()
 
     def update(self, dt):
         self.age += dt
-        # type and hold once finished    
-        if self.chars < len(self.text):
-            self.chars += TUTORIAL_TEXT_SPEED * dt  # Adjust the speed of character display here
-
-    def wrap_text(self, text, font, width):
-        # Wrap text to fit within a given width
-        lines = []
-        words = text.split(' ')
-        current_line = ""
-
-        for word in words:
-            text_line = current_line + word + " "
-            if font.size(text_line)[0] <= width:
-                current_line = text_line
-            else:
-                lines.append(current_line.strip())
-                current_line = word + " "
-        lines.append(current_line.strip())
-        return lines
+        if self.age >= BUBBLE_POP_TIME and self.chars < len(self.text):
+            self.chars += TUTORIAL_TEXT_SPEED * dt
 
     def draw(self, screen, anchor):
-        self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 18)
-        y += math.sin(self.age * 1.5) * 4
-        bubble_rect = pygame.Rect(anchor[0] + 50, anchor[1] + 50 + y, 236, 178)
-        lines = self.wrap_text(self.text, self.font, bubble_rect.width - 10)
+        if self.font is None:
+            self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 18)
+
+        # size from the FULL text so the box doesn't grow while typing
+        lines = wrap_text(self.text, self.font, BUBBLE_MAX_WIDTH - 2 * BUBBLE_PAD)
+        line_h = self.font.get_linesize()
+        w = BUBBLE_MAX_WIDTH
+        h = len(lines) * line_h + 2 * BUBBLE_PAD
+
+        # pop-in: scale 0 -> 1, hold text until fully popped
+        pop = min(1.0, self.age / BUBBLE_POP_TIME)
+        bob = math.sin(self.age * 1.5) * 4
+
+        base = pygame.Rect(0, 0, w, h)
+        base.midbottom = (anchor[0] + self.side * 70, anchor[1] - 30 + bob)
+        base.clamp_ip(screen.get_rect())
+
+        rect = pygame.Rect(0, 0, int(w * pop), int(h * pop))
+        rect.center = base.center
+        if rect.width < 2 or rect.height < 2:
+            return
+
+        # tail from the box toward the speaker
+        tail = [(rect.centerx - 8, rect.bottom), (rect.centerx + 8, rect.bottom), anchor]
+        pygame.draw.polygon(screen, (230, 215, 170), tail)
+        pygame.draw.rect(screen, (230, 215, 170), rect, border_radius=6)
+        pygame.draw.rect(screen, (60, 45, 30), rect, 2, border_radius=6)
+
+        if pop < 1.0:
+            return
+
         remaining = int(self.chars)
+        y = rect.y + BUBBLE_PAD
         for line in lines:
             if remaining <= 0:
                 break
-            surf = self.font.render(line[:remaining], True, (115, 90, 70))
-            screen.blit(surf, (bubble_rect.x + 8, y))
+            surf = self.font.render(line[:remaining], True, (60, 45, 30))
+            screen.blit(surf, (rect.x + BUBBLE_PAD, y))
             remaining -= len(line)
-            y += self.font.get_linesize()
+            y += line_h

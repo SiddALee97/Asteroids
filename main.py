@@ -20,6 +20,7 @@ from debug import debug
 from ships import BARRY_SLOTS, HARRY_SLOTS         # ToDo: unused?
 from upgrades_shop import buy                      # ToDo: unused?
 from states import GameState
+from speech import Bubble
 
 #-------- game objects --------
 from player import Player, DashState
@@ -38,7 +39,7 @@ from button import Button
 from slider import Slider
 from background import BackgroundLayer
 from comms import hud_comms
-from hud import comms_rect, harry_panel, barry_panel, update_hud, kick_hud
+from hud import comms_rect, harry_panel, barry_panel, update_hud, kick_hud, PanelState
 
 
 
@@ -382,8 +383,11 @@ def main():
                             continue
 
                         if event.key == pygame.K_F12:
+                            bubble = Bubble("I am supposed to test the comms. Am I coming through the speaker", +1)
                             if game_state is GameState.PLAYING:
                                 game_state = GameState.TUTORIAL
+                                if harry_panel.state is PanelState.CLOSED:
+                                    harry_panel.set_state(PanelState.OPENING)
                             elif game_state is GameState.TUTORIAL:
                                 game_state = GameState.PLAYING
                         
@@ -467,8 +471,12 @@ def main():
             #----------------------------- TUTORIAL -----------------------------
             if game_state is GameState.TUTORIAL:
                 update_hud(dt, player)
+                harry_panel.update(dt, player)
+                barry_panel.update(dt, player)
                 bg_far.update(dt)
                 bg_near.update(dt)
+                bubble.update(dt)
+
 
 
             #----------------------------- PLAYING -------------------------------
@@ -631,6 +639,8 @@ def main():
                 hud_comms.draw(screen, comms_rect, comms_image, player, harry_panel, barry_panel)
             harry_panel.draw(screen, player)
             barry_panel.draw(screen, player)
+            if harry_panel.drawn_rect is not None:
+                bubble.draw(screen, anchor = (harry_panel.drawn_rect.x + H_SPEAKER_POS[0], harry_panel.drawn_rect.y + H_SPEAKER_POS[1]))
 
             if game_state == GameState.PLAYING:
                 reticle_rect = reticle_image.get_rect(center = (mx, my))

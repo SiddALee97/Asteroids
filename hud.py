@@ -235,13 +235,19 @@ class Panel:
         if self.state in (PanelState.OPEN, PanelState.BOOTING):
             self.set_state(PanelState.CLOSING)
 
+    def update_animation(self, dt):
+        self.anim_time += dt          # keeps the light pulse going too
+        if self.state in PANEL_DURATION:
+            self.timer += dt
+            if self.timer >= PANEL_DURATION[self.state]:
+                self.set_state(PANEL_NEXT[self.state])
+
     def update(self, dt, player):
 
         if player is None:
             return
         
-        # pulseing lights
-        self.anim_time += dt
+        self.update_animation(dt)
 
         # repair: standing order that outranks cheapest-first
         if self.repairing:
@@ -262,11 +268,7 @@ class Panel:
                 and self.auto_enabled):
             self.start_repair(player)
 
-        # animation state machine always runs
-        if self.state in PANEL_DURATION:
-            self.timer += dt
-            if self.timer >= PANEL_DURATION[self.state]:
-                self.set_state(PANEL_NEXT[self.state])
+
 
 
         # auto buy machine always runs
