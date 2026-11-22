@@ -21,6 +21,7 @@ from ships import BARRY_SLOTS, HARRY_SLOTS         # ToDo: unused?
 from upgrades_shop import buy                      # ToDo: unused?
 from states import GameState
 from speech import Bubble
+from sequence import Sequence, Beat
 
 #-------- game objects --------
 from player import Player, DashState
@@ -39,8 +40,10 @@ from button import Button
 from slider import Slider
 from background import BackgroundLayer
 from comms import hud_comms
-from hud import comms_rect, harry_panel, barry_panel, update_hud, kick_hud, PanelState, mouse_over_panel
-
+from hud import (
+    comms_rect, harry_panel, barry_panel, update_hud, kick_hud, PanelState,
+    mouse_over_panel, open_panel_for,
+)
 
 
 
@@ -76,7 +79,7 @@ def main():
     pygame.init()
     
     font = pygame.font.Font("assets/fonts/future_earth.ttf", 36)
-
+    sequence = Sequence()
     #---------- creating sprite groups ----------
     
     pickups = pygame.sprite.Group()
@@ -108,6 +111,7 @@ def main():
 
     def load_sprite(path: str):
         return pygame.image.load(path).convert_alpha()
+
 
     def slice_sheet(path, count = 5, size = 16):
         # cuts a horizontal sprite strip into "count" frames with "size" amount of pixels each frame
@@ -374,28 +378,32 @@ def main():
                         if event.key == pygame.K_t:
                             hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character. Still not sure if I will fix the issue of the text going of the screen or just make sure i dont render any long texts but that kind of sounds annoying. So i will probably just fix it.")
 
-                        if event.key == pygame.K_F11:   # fullscreen toggle (restore scale is buggy in WSL but works in native windows)
-                            if not fullscreen:
-                                window_size = pygame.display.get_surface().get_size()
-                                pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-                                fullscreen = True
-                            else:
-                                pygame.display.set_mode(window_size, pygame.RESIZABLE)
-                                fullscreen = False
-                            continue
 
-                        if event.key == pygame.K_F12:
-                            bubble = Bubble("I am supposed to test the comms. Am I coming through the speaker", +1)
-                            if game_state is GameState.PLAYING:
+                        if event.key == pygame.K_F12 and game_state is GameState.PLAYING:
+                            sequence.start([Beat("harry", "I am supposed to test the comms. Am I coming through the speaker", open_panel=True)])
+                            if sequence.active:
                                 game_state = GameState.TUTORIAL
-                                camera.focus(player.position, 1.3)
-                                if harry_panel.state is PanelState.CLOSED:
-                                    harry_panel.set_state(PanelState.OPENING)
-                            elif game_state is GameState.TUTORIAL:
-                                game_state = GameState.PLAYING
-                                camera.fit_world()
-                                harry_panel.close_panel()
-                                barry_panel.close_panel()
+                                open_panel_for(sequence.current.speaker)
+                                            
+
+                    if event.key == pygame.K_F11:   # fullscreen toggle (restore scale is buggy in WSL but works in native windows)
+                        if not fullscreen:
+                            window_size = pygame.display.get_surface().get_size()
+                            pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                            fullscreen = True
+                        else:
+                            pygame.display.set_mode(window_size, pygame.RESIZABLE)
+                            fullscreen = False
+                        continue
+
+
+
+                    if game_state == GameState.TUTORIAL:
+                        if event.key == pygame.K_RETURN:
+                            sequence.advance()
+                        if event.key == pygame.K_ESCAPE:
+                            sequence.skip()
+
                         
                     if game_state == GameState.PLAYING:
                         if event.key == pygame.K_1:
@@ -476,12 +484,14 @@ def main():
                     button.draw(screen)
             #----------------------------- TUTORIAL -----------------------------
             if game_state is GameState.TUTORIAL:
+                sequence.update(dt)
                 update_hud(dt, player)
                 harry_panel.update(dt, player)
                 barry_panel.update(dt, player)
                 bg_far.update(dt)
                 bg_near.update(dt)
-                bubble.update(dt)
+                if not sequence.active and sequence.dim_alpha <= 0:
+                    game_state = GameState.PLAYING
 
 
 
@@ -630,11 +640,8 @@ def main():
             #                (debug text, reticle, HUD (drawn last, on top))
 
             #--- tutorial dimmer ---
-            target = 150 if game_state is GameState.TUTORIAL else 0
-            dim_alpha += (target - dim_alpha) * min(1.0, dt * 8)
-            if dim_alpha > 1:
-                dim.fill((0, 0, 0, int(dim_alpha)))
-                screen.blit(dim, (0, 0))
+            sequence.draw_dim(screen, dim)
+
 
             debug.draw(screen, player,
                        {"asteroids": asteroids, "drones": cargo_drones,
@@ -645,10 +652,15 @@ def main():
                 hud_comms.draw(screen, comms_rect, comms_image, player, harry_panel, barry_panel)
             harry_panel.draw(screen, player)
             barry_panel.draw(screen, player)
-            if game_state is GameState.TUTORIAL:
-                if harry_panel.drawn_rect is not None:
-                    bubble.draw(screen, (harry_panel.drawn_rect.x + H_SPEAKER_POS[0], harry_panel.drawn_rect.y + H_SPEAKER_POS[1]), harry_panel.rect)
 
+        
+            if game_state is GameState.TUTORIAL and sequence.bubble:
+                panel, pos = (harry_panel, H_SPEAKER_POS) if sequence.current.speaker == "harry" else (barry_panel, B_SPEAKER_POS)
+                if panel.drawn_rect is not None:
+                    anchor = (panel.drawn_rect.x + pos[0], panel.drawn_rect.y + pos[1])
+                    sequence.bubble.draw(screen, anchor, panel.rect)
+
+                    
             over_panel = mouse_over_panel((mx, my))
             if game_state is GameState.PLAYING and over_panel:
                 cursor, hot = reticle_cursor, HAND_HOTSPOT      # fingertip pixel, in screen pixels

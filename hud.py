@@ -71,6 +71,15 @@ def bias_outward(target, side):
         t.x *= HUD_INWARD_SCALE
     return t
 
+def open_panel_for(key : str):
+    if key == "harry":
+        panel = harry_panel 
+    else:
+        panel = barry_panel
+    if panel.state not in (PanelState.OPEN, PanelState.OPENING):
+        panel.set_state(PanelState.OPENING)
+    
+
 def update_hud(dt, player):
 
     global _last_rotation, _last_velocity, _hud_time, _kick, _shake
