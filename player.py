@@ -14,7 +14,8 @@ from constants import (
     ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT, SPEED_BONUS, HULL_BONUS,
     CANNON_COOL_RATE, CANNON_HEAT_PER_SHOT, CANNON_RESUME_HEAT, CANNON_COOL_DELAY, CANNON_OVERHEAT_COOL_RATE,
     DASH_DISTANCE, DASH_TIME, DASH_COOLDOWN, DASH_SHIFT_WINDOW, GRAV_GRAZE_RANGE, GRAV_CHARGE,
-    DASH_DISTANCE_PER_LEVEL, GRAV_DASH_BONUS, DASH_FLASH_TIME, GRAV_DASH_MAX, GRAV_DASH_LAND_BUFFER
+    DASH_DISTANCE_PER_LEVEL, GRAV_DASH_BONUS, DASH_FLASH_TIME, GRAV_DASH_MAX, GRAV_DASH_LAND_BUFFER,
+    PLAYER_START_ROTATION,
 )
 
 from shot import Shot
@@ -56,7 +57,7 @@ def point_segment_distance(p, a, b):
 class Player(CircleShape):
     def __init__(self, x: float, y: float, radius: float):
         super().__init__(x, y, radius)
-        self.rotation = 0
+        self.rotation = PLAYER_START_ROTATION
         self.cdt = 0
 
         # added mutables for upgrades

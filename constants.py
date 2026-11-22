@@ -77,6 +77,7 @@ REPAIR_RUSH_COST = 8
 
 #----------------------- PLAYER CONSTANTS -----------------------#
 PLAYER_RADIUS = 20
+PLAYER_START_ROTATION = 180
 PLAYER_TURN_SPEED = 300
 PLAYER_SPEED = 200
 PLAYER_REVERSE_MULT = 0.5 # mult speed going backwards
