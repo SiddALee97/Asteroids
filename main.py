@@ -394,6 +394,8 @@ def main():
                             elif game_state is GameState.TUTORIAL:
                                 game_state = GameState.PLAYING
                                 camera.fit_world()
+                                harry_panel.close_panel()
+                                barry_panel.close_panel()
                         
                     if game_state == GameState.PLAYING:
                         if event.key == pygame.K_1:

@@ -269,7 +269,7 @@ class Player(CircleShape):
         size_w = int(max(self.image.get_width() * SHIP_SPRITE_SCALE * camera.zoom, 1))
         size_h = int(max(self.image.get_height() * SHIP_SPRITE_SCALE * camera.zoom, 1))
         scaled = pygame.transform.scale(self.image, (size_w, size_h))
-        rotated = pygame.transform.rotate(scaled, -self.rotation + 180)
+        rotated = pygame.transform.rotate(scaled, - self.rotation + 180)
         rect = rotated.get_rect(center=pos)
 
         # trail sprites 
