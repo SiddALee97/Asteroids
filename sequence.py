@@ -57,10 +57,12 @@ class Sequence:
 
     def skip(self):
         for beat in self.queue + ([self.current] if self.current else []):
-            self.seen.add(beat.key)
+            if beat.key is not None:
+                self.seen.add(beat.key)
         self.queue.clear()
         self.bubble = None
         self.dim_target = 0.0
+        self.current = None
 
     def update(self, dt):
         self.dim_alpha += (self.dim_target - self.dim_alpha) * min(1.0, dt * 8)

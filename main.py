@@ -380,7 +380,11 @@ def main():
 
 
                         if event.key == pygame.K_F12 and game_state is GameState.PLAYING:
-                            sequence.start([Beat("harry", "I am supposed to test the comms. Am I coming through the speaker", open_panel=True)])
+                            beats = [
+                                Beat("harry", "I am supposed to test the comms. Am I coming through the speaker", open_panel=True),
+                                Beat("harry", "this one should only play once", open_panel=True, key = "once"),
+                            ]
+                            sequence.start(beats)
                             if sequence.active:
                                 game_state = GameState.TUTORIAL
                                 open_panel_for(sequence.current.speaker)
@@ -399,7 +403,7 @@ def main():
 
 
                     if game_state == GameState.TUTORIAL:
-                        if event.key == pygame.K_RETURN:
+                        if event.key in (pygame.K_RETURN, pygame.K_SPACE):
                             sequence.advance()
                         if event.key == pygame.K_ESCAPE:
                             sequence.skip()
@@ -490,7 +494,7 @@ def main():
                 barry_panel.update(dt, player)
                 bg_far.update(dt)
                 bg_near.update(dt)
-                if not sequence.active and sequence.dim_alpha <= 0:
+                if not sequence.active and sequence.dim_alpha < 1:
                     game_state = GameState.PLAYING
 
 
