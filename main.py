@@ -22,6 +22,7 @@ from upgrades_shop import buy                      # ToDo: unused?
 from states import GameState
 from speech import Bubble
 from sequence import Sequence, Beat
+from tutorial import BASICS, trigger
 
 #-------- game objects --------
 from player import Player, DashState
@@ -133,6 +134,13 @@ def main():
     def new_game():
         clear_map()
         return AsteroidField(), Player(world.width / 2, world.height / 2, PLAYER_RADIUS), ScoreKeeper()
+
+    def fire(key):
+        nonlocal game_state
+        print("fire", key, game_state)
+        if game_state is GameState.PLAYING and trigger(sequence, key, player):
+            game_state = GameState.TUTORIAL
+            open_panel_for(sequence.current.speaker)
 
     # asteroid field runs on the menu for background
     field = AsteroidField()
@@ -494,8 +502,12 @@ def main():
                 barry_panel.update(dt, player)
                 bg_far.update(dt)
                 bg_near.update(dt)
+                
                 if not sequence.active and sequence.dim_alpha < 1:
+                    harry_panel.close_panel()
+                    barry_panel.close_panel()
                     game_state = GameState.PLAYING
+                    
 
 
 
@@ -544,15 +556,17 @@ def main():
                     if player.dash_state is DashState.DASHING and player.dash_gravitron: # grav dash goes thru asteroids
                         continue
                     touched = player.separate(obj)
-                    if touched and not debug.god_mode:             
+                    if touched and not debug.god_mode:   
+                        fire("first_hit")           
                         result = resolve_hit(obj, player)
                         if result.outcome is HitOutcome.NOTHING:        # still invulnerable
                             continue        
 
-                        if result.outcome is HitOutcome.CHIPPED:        # panels rattle away from the rock
+                        if result.outcome is HitOutcome.CHIPPED:       
                             log_event("player_hit")
                             audio.play("player_hit")
-                            kick_hud(player.position - obj.position)
+                            kick_hud(player.position - obj.position)    # panels rattle away from the rock
+
 
                         if result.outcome is HitOutcome.DESTROYED:      # hull reached 0
                             log_event("player_destroyed")
@@ -578,6 +592,9 @@ def main():
                         log_event(f"{pickup.kind}_collected")
                         audio.play(f"scrap_{random.randint(1, 11)}")
                         pickup.apply_to_player(player)
+                        print("picked up", pickup.kind)
+                        if pickup.kind == "SCRAP":
+                            fire("first_scrap")
                         pickup.kill()
                         break
 

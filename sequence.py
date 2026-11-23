@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import pygame
 from speech import Bubble
-
+from hud import open_panel_for
 
 
 @dataclass(frozen=True)
@@ -46,6 +46,9 @@ class Sequence:
         self.dim_target = self.current.dim
         side = 1 if self.current.speaker == "harry" else -1
         self.bubble = Bubble(self.current.text, side)
+        open_panel_for(self.current.speaker)
+        
+
 
     def advance(self):
         if self.current is None:
@@ -63,6 +66,7 @@ class Sequence:
         self.bubble = None
         self.dim_target = 0.0
         self.current = None
+
 
     def update(self, dt):
         self.dim_alpha += (self.dim_target - self.dim_alpha) * min(1.0, dt * 8)
