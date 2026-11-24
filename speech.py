@@ -51,9 +51,9 @@ class Bubble:
         base.midbottom = (anchor[0] + self.side * 70, anchor[1] - 30 + bob)
         gap = 12
         if self.side == 1:      # Harrys side
-            base.midleft = (panel_rect.right + gap, anchor[1] + bob - 150)
-        else:
-            base.midright = (panel_rect.left - gap, anchor[1] + bob)
+            base.midleft = (panel_rect.right + gap, anchor[1] + bob - 100)
+        else:                   # Barrys side
+            base.midright = (panel_rect.left - gap, anchor[1] + bob - 150)
         base.clamp_ip(screen.get_rect())
 
         rect = pygame.Rect(0, 0, int(w * pop), int(h * pop))

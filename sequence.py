@@ -4,6 +4,7 @@ from speech import Bubble
 from hud import open_panel_for
 
 
+
 @dataclass(frozen=True)
 class Beat:
     speaker : str                   # harry barry or a cutscene etc.
@@ -15,19 +16,23 @@ class Beat:
     key : str | None = None         # for the seen set (None is always plays)
 
 class Sequence:
-    def __init__(self):
+    def __init__(self, camera):
         self.queue = []         # beats waiting
         self.current = None     # the beat on screen
         self.seen = set()
         self.bubble = None
         self.dim_alpha = 0.0
         self.dim_target = 0.0
+        self.camera = camera
+        self.player = None
 
     @property
     def active(self):
         return self.current is not None
 
-    def start(self, beats):
+    def start(self, beats, player = None):
+        if player is not None:
+            self.player = player
         for beat in beats:
             if beat.key is None or beat.key not in self.seen:
                 self.queue.append(beat)
@@ -38,17 +43,21 @@ class Sequence:
         if self.current is not None and self.current.key is not None:
             self.seen.add(self.current.key)
         if not self.queue:
-            self.current = None
-            self.bubble = None
-            self.dim_target = 0.0
+            self.end()
             return
         self.current = self.queue.pop(0)
         self.dim_target = self.current.dim
+        if self.current.zoom is not None and self.player is not None:
+            self.camera.focus(self.player.position, self.current.zoom)
         side = 1 if self.current.speaker == "harry" else -1
         self.bubble = Bubble(self.current.text, side)
         open_panel_for(self.current.speaker)
-        
 
+    def end(self):
+        self.current = None
+        self.bubble = None
+        self.dim_target = 0.0
+        self.camera.fit_world()
 
     def advance(self):
         if self.current is None:
@@ -63,9 +72,7 @@ class Sequence:
             if beat.key is not None:
                 self.seen.add(beat.key)
         self.queue.clear()
-        self.bubble = None
-        self.dim_target = 0.0
-        self.current = None
+        self.end()
 
 
     def update(self, dt):

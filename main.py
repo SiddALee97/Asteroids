@@ -22,7 +22,7 @@ from upgrades_shop import buy                      # ToDo: unused?
 from states import GameState
 from speech import Bubble
 from sequence import Sequence, Beat
-from tutorial import BASICS, trigger
+from tutorial import STEPS, trigger
 
 #-------- game objects --------
 from player import Player, DashState
@@ -80,7 +80,8 @@ def main():
     pygame.init()
     
     font = pygame.font.Font("assets/fonts/future_earth.ttf", 36)
-    sequence = Sequence()
+    sequence = Sequence(camera)
+    
     #---------- creating sprite groups ----------
     
     pickups = pygame.sprite.Group()
@@ -325,6 +326,7 @@ def main():
                         # reset timer and change game state
                         drone_spawn_timer = DRONE_SPAWN_COOLDOWN
                         game_state = GameState.PLAYING
+                        fire("game_start")
                         break
                     elif quit_button.is_clicked(event):
                         pygame.quit()
@@ -390,9 +392,9 @@ def main():
                         if event.key == pygame.K_F12 and game_state is GameState.PLAYING:
                             beats = [
                                 Beat("harry", "I am supposed to test the comms. Am I coming through the speaker", open_panel=True),
-                                Beat("harry", "this one should only play once", open_panel=True, key = "once"),
+                                Beat("harry", "this one should only play once", open_panel=True, zoom = 3, key = "once"),
                             ]
-                            sequence.start(beats)
+                            sequence.start(beats, player)
                             if sequence.active:
                                 game_state = GameState.TUTORIAL
                                 open_panel_for(sequence.current.speaker)
@@ -415,13 +417,14 @@ def main():
                             sequence.advance()
                         if event.key == pygame.K_ESCAPE:
                             sequence.skip()
-
-                        
+   
                     if game_state == GameState.PLAYING:
                         if event.key == pygame.K_1:
                             harry_panel.toggle()
+                            fire("harry_panel")
                         elif event.key == pygame.K_2:
                             barry_panel.toggle()
+                            fire("barry_panel")
                         elif event.key == pygame.K_TAB:
                             harry_panel.close_panel()
                             barry_panel.close_panel()

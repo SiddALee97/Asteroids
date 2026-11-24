@@ -31,6 +31,8 @@ class Camera:
         # zoom speed
         self.speed = 2.0
 
+        self.base_zoom = 1.0
+
 
     def fit_world(self, speed=None, instant=False):
 
@@ -43,6 +45,7 @@ class Camera:
 
         self.base_zoom = WORLD_BASE_SCALE
         self.target_zoom = min(PLAY_WIDTH / world.width, PLAY_HEIGHT / world.height)
+        self.base_zoom = self.target_zoom
         self.target_center = pygame.Vector2(world.width / 2, world.height / 2)
         if speed:
             self.speed = speed # remembered but gets reset if passed a new one
@@ -50,6 +53,13 @@ class Camera:
             self.zoom = self.target_zoom
             self.center = self.target_center.copy()
 
+    def focus(self, pos, mult):
+        self.target_zoom = self.base_zoom * mult
+        half = pygame.Vector2(PLAY_WIDTH, PLAY_HEIGHT) / (2 * self.target_zoom)
+        self.target_center = pygame.Vector2(
+            max(half.x, min(world.width - half.x, pos.x)),
+            max(half.y, min(world.height - half.y, pos.y)),
+        )
 
     def update(self, dt):
 
