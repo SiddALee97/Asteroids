@@ -14,6 +14,15 @@ STEPS = {
         Beat("barry", "BARRY: They seem to be used to tune and tweak the ships performance. We need to collect materials first though.", open_panel = True, zoom = 2.0, key = "open_panel"),
         Beat("harry", "HARRY: Oh word?!", open_panel = True, zoom = 2.0, key = "open_panel"),
     ],
+    "first_dash": [
+        Beat("harry", "HARRY: DAMN B! Yo give me some warning before you move like that.", open_panel = True, key = "first_dash"),
+        Beat("barry", "BARRY: Sorry. I think theres more to this ship than I initially though", open_panel = True, key = "first_dash"),
+    ],
+    "first_grav_preview": [
+        Beat("barry", "BARRY: Harry do you see that.", open_panel = True, zoom = 1.5, key = "first_grav_preveiew"),
+        Beat("harry", "HARRY: Yea I thought I was tripping but I think it happens everytime I hit the SHIFT on my control panel.", open_panel = True, zoom = 1.5, key = "first_grav_preveiew"),
+        Beat("barry", "BARRY: Interesting. It lights up the control for dash on my end. I wonder if we time it together...", open_panel = True, zoom = 1.5, key = "first_grav_preveiew"),
+    ],
     "first_scrap": [
         Beat("barry", "BARRY: Scrap ore.I believe we could use those materials to upgrade the ship.", open_panel = True, zoom = 1.5, key = "first_scrap"),
         Beat("harry", "HARRY: I think you can use the panel to spend the scrap on upgrades.", open_panel = True, zoom = 1.5, key = "first_scrap"),
