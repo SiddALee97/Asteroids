@@ -421,10 +421,10 @@ def main():
                     if game_state == GameState.PLAYING:
                         if event.key == pygame.K_1:
                             harry_panel.toggle()
-                            fire("harry_panel")
+                            fire("open_panel")
                         elif event.key == pygame.K_2:
                             barry_panel.toggle()
-                            fire("barry_panel")
+                            fire("open_panel")
                         elif event.key == pygame.K_TAB:
                             harry_panel.close_panel()
                             barry_panel.close_panel()
@@ -598,6 +598,8 @@ def main():
                         print("picked up", pickup.kind)
                         if pickup.kind == "SCRAP":
                             fire("first_scrap")
+                        if pickup.kind == "SALVAGE":
+                            fire("first_salvage")
                         pickup.kill()
                         break
 

@@ -7,23 +7,26 @@ STEPS = {
         Beat("harry", "HARRY: I like it! It feels vintage and probably full of crazy stories. Lets see what we can do with it B!", open_panel = True, zoom = 3.0, key = "first_flight"),
         Beat("barry", "BARRY: Alright the flight controls seem simple enough.", open_panel = True, zoom = 3.0, key = "first_flight")
     ],
-    "barry_panel": [
-        Beat("barry", "BARRY: Looks simple enough. Each button has a description of what it is and the lights indicate if we have the required materials. Auto probably means that the ship will do the work for us. I wonder if I turn it off...", open_panel = True, zoom = 2.0, key = "barry_panel")
-    ],
-    "harry_panel": [
-        Beat("harry", "HARRY: Woah this is totally retro!", open_panel = True, zoom = 2.0, key = "harry_panel"),
-        Beat("harry", "HARRY: Yo Barry whats good with these panels man.", open_panel = True, zoom = 2.0, key = "harry_panel"),
-        Beat("barry", "BARRY: They seem to be used to tune and tweak the ships performance. We need to collect materials first though.", open_panel = True, zoom = 2.0, key = "harry_panel"),
-        Beat("harry", "HARRY: Oh word?!", open_panel = True, zoom = 2.0, key = "harry_panel"),
+    "open_panel": [
+        Beat("barry", "BARRY: Looks simple enough. Each button has a description of what it is and the lights indicate if we have the required materials. Auto probably means that the ship will do the work for us. I wonder if I turn it off...", open_panel = True, zoom = 2.0, key = "open_panel"),
+        Beat("harry", "HARRY: Woah this is totally retro!", open_panel = True, zoom = 2.0, key = "open_panel"),
+        Beat("harry", "HARRY: Yo Barry whats good with these panels man.", open_panel = True, zoom = 2.0, key = "open_panel"),
+        Beat("barry", "BARRY: They seem to be used to tune and tweak the ships performance. We need to collect materials first though.", open_panel = True, zoom = 2.0, key = "open_panel"),
+        Beat("harry", "HARRY: Oh word?!", open_panel = True, zoom = 2.0, key = "open_panel"),
     ],
     "first_scrap": [
         Beat("barry", "BARRY: Scrap ore.I believe we could use those materials to upgrade the ship.", open_panel = True, zoom = 1.5, key = "first_scrap"),
         Beat("harry", "HARRY: I think you can use the panel to spend the scrap on upgrades.", open_panel = True, zoom = 1.5, key = "first_scrap"),
-        Beat("barry", "BARRY: It looks like we don't have enough yet. I think these lights might signal if we have enough.", zoom = 1.5, open_panel = True, key = "first_scrap")        
+        Beat("barry", "BARRY: It looks like we don't have enough yet. I think these lights might signal if we have enough.", zoom = 1.5, open_panel = True, key = "first_scrap"),        
+    ],
+    "first_salvage": [
+        Beat("harry", "HARRY: Yo the ship is absorbing the metal", open_panel = True, zoom = 2.0, key = "first_salvage"),
+        Beat("barry", "BARRY: I think you can use it to upgrade the weapons system", open_panel = True, zoom = 2.0, key = "first_salvage"),
+        Beat("harry", "HARRY: Word!", open_panel = True, zoom = 2.0, key = "first_salvage"),
     ],
     "first_hit": [
         Beat("harry", "HARRY: Barry, watch where you are flying man.", key = "first_hit"),
-        Beat("barry", "BARRY: This ship is not as responsive as you would think.", key = "first_hit")
+        Beat("barry", "BARRY: This ship is not as responsive as you would think.", key = "first_hit"),
     ],
 }
 
