@@ -441,10 +441,10 @@ def main():
                         hints.key_pressed(event.key)
                         if event.key == pygame.K_1:
                             harry_panel.toggle()
-                            fire("open_panel")
+                            fire("harry_panel")
                         elif event.key == pygame.K_2:
                             barry_panel.toggle()
-                            fire("open_panel")
+                            fire("barry_panel")
                         elif event.key == pygame.K_TAB:
                             harry_panel.close_panel()
                             barry_panel.close_panel()
