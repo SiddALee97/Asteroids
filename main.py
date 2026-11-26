@@ -380,10 +380,12 @@ def main():
                         game_state = settings_return
                         break
 
-                elif game_state is GameState.TUTORIAL:
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if event.button == 1:
-                            sequence.advance()
+                elif game_state is GameState.TUTORIAL and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    bought = harry_panel.handle_click(event.pos, player) or barry_panel.handle_click(event.pos, player)
+                    if bought:
+                        sequence.notify(bought)
+                    else:
+                        sequence.advance()
 
                 elif game_state is GameState.TITLE:
                     if event.type == pygame.MOUSEBUTTONDOWN:
@@ -528,6 +530,8 @@ def main():
                 if not sequence.active and sequence.dim_alpha < 1:
                     harry_panel.close_panel()
                     barry_panel.close_panel()
+                    harry_panel.auto_timer = 0
+                    barry_panel.auto_timer = 0
                     game_state = GameState.PLAYING
                     
 

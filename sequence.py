@@ -14,7 +14,7 @@ class Beat:
     zoom : float | None = None      # camera zoom mult on ship         
     dim : float = BEAT_DIM          # overlay dim strength
     key : str | None = None         # for the seen set (None is always plays)
-    wait_for : str | None = None    # a key for when to advance for interactive beats
+    wait_for : str | None = None    # a slot key for when to advance for interactive beats
 
 
 class Sequence:
@@ -66,13 +66,13 @@ class Sequence:
             return
         if self.bubble.chars < len(self.current.text):
             self.bubble.chars = len(self.current.text)      # first call finishes the text
-        else:
+        elif self.current.wait_for is None:                 # only non interactive beats advance
             self.next()
 
-    def notify(self, wait_for):
-        if self.current.wait_for == wait_for:
-            self.advance()
-        return
+    def notify(self, slot_key):
+        # called in main.py when player buys something
+        if self.current and self.current.wait_for in (slot_key, "any"):
+            self.next()
 
     def skip(self):
         for beat in self.queue + ([self.current] if self.current else []):

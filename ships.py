@@ -10,8 +10,8 @@ class Slot:
     requires: str | None = None   # key of a weapon that must be unlocked first
 
 HARRY_SLOTS = (
-    Slot("MULTISHOT", "CANNON", currency="salvage", costs=(1, 10, 16, 24)),
-    Slot("LASER", "LASER", currency="salvage", costs=(5, 10, 16, 24, 36)),
+    Slot("MULTISHOT", "CANNON", currency="salvage", costs=(5, 10, 16, 24)),
+    Slot("LASER", "LASER", currency="salvage", costs=(1, 10, 16, 24, 36)),
     Slot("SHOCKWAVE", "WAVE", currency="salvage", costs=(5, 10, 16, 24, 36)),
     Slot("maintenance", "MAINT", kind="mode", currency="salvage"),
 )

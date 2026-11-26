@@ -509,7 +509,7 @@ class Panel:
             rect = pygame.Rect(self.light_rects[index]).move(self.drawn_rect.topleft)
             if rect.collidepoint(pos):
                 slot = self.slots[index]
-
+                self.selected = index
                 if slot.key == "repair":
                     if self.repairing:
                         extra = REPAIR_RUSH_COST - REPAIR_COST
@@ -518,10 +518,16 @@ class Panel:
                             player.hull = min(player.hull + 1, player.max_hull)
                             self.repairing = False
                             self.repair_progress = 0.0
+                            return None
                     else:
                         self.start_repair(player)
+                        return None
                 else:
-                    buy(player, slot)            
+                    buy(player, slot)
+                    if slot.key == "max_hull":
+                        player.hull += 1
+                    return slot.key
+                            
 
     def start_repair(self, player):
         if self.repairing or player.hull == player.max_hull or player.scrap < REPAIR_COST:
