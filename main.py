@@ -381,9 +381,10 @@ def main():
                         break
 
                 elif game_state is GameState.TUTORIAL and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    bought = harry_panel.handle_click(event.pos, player) or barry_panel.handle_click(event.pos, player)
-                    if bought:
-                        sequence.notify(bought)
+                    if sequence.waiting:
+                        bought = harry_panel.handle_click(event.pos, player) or barry_panel.handle_click(event.pos, player)
+                        if bought:
+                            sequence.notify(bought)
                     else:
                         sequence.advance()
 
@@ -728,7 +729,7 @@ def main():
             over_panel = mouse_over_panel((mx, my))
             if game_state is GameState.PLAYING and over_panel:
                 cursor, hot = reticle_cursor, HAND_HOTSPOT      # fingertip pixel, in screen pixels
-            elif game_state is GameState.TUTORIAL:
+            elif game_state is GameState.TUTORIAL and sequence.waiting:
                 cursor, hot = reticle_cursor, HAND_HOTSPOT     
             else:
                 cursor, hot = reticle_image, (reticle_image.get_width() // 2, reticle_image.get_height() // 2)
