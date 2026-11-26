@@ -15,6 +15,7 @@ class Beat:
     dim : float = BEAT_DIM          # overlay dim strength
     key : str | None = None         # for the seen set (None is always plays)
     wait_for : str | None = None    # a slot key for when to advance for interactive beats
+    hint : str | None = None        # key for the hint to be called when the beat is finished by next()
 
 
 class Sequence:
@@ -27,6 +28,7 @@ class Sequence:
         self.dim_target = 0.0
         self.camera = camera
         self.player = None
+        self.released_hints = []
 
     @property
     def waiting(self):
@@ -52,6 +54,8 @@ class Sequence:
     def next(self):
         if self.current is not None and self.current.key is not None:
             self.seen.add(self.current.key)
+            if self.current.hint is not None:
+                self.released_hints.append(self.current.hint)
         if not self.queue:
             self.end()
             return

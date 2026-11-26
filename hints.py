@@ -13,15 +13,19 @@ class HintState(Enum):
 @dataclass(frozen=True)
 class Hint:
     text : str                           # the hint that will be displayed
-    keys : frozenset                     # set of keys that will trigger the end of a hint
-
+    keys : frozenset | None = None       # set of keys that will trigger the end of a hint
+    buttons : frozenset | None = None    # set of mouse clicks that will trigger end
 
 
 HINTS = {
     "move": Hint("USE (W A S D) keys TO MOVE",
-                frozenset({pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d})),
+                keys = frozenset({pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d})),
     "panels": Hint("PRESS 1 FOR HARRYS PANEL  2 FOR BARRYS  AND TAB TO CLOSE",
-                frozenset({pygame.K_1, pygame.K_2, pygame.K_TAB})),
+                keys = frozenset({pygame.K_1, pygame.K_2, pygame.K_TAB})),
+    "dash": Hint("PRESS SHIFT TO DASH",
+                keys = frozenset({pygame.K_LSHIFT})),
+    "laser": Hint("USE MOUSE TO AIM AND LEFT CLICK TO FIRE LASER",
+                buttons = frozenset({1}))
 }
 
 class HintManager:
@@ -52,8 +56,12 @@ class HintManager:
         self.pressed = False
         self.timer = 0.0
 
+    def mouse_clicked(self, button):
+        if self.current and not self.pressed and self.current.buttons and button in self.current.buttons:
+            self.pressed = True
+
     def key_pressed(self, key):
-        if self.current and not self.pressed and key in self.current.keys:
+        if self.current and not self.pressed and self.current.keys and key in self.current.keys:
             self.pressed = True
 
     def update(self, dt):

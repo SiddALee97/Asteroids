@@ -13,7 +13,7 @@ from constants import (
     PLAYER_HITBOX_SCALE, PLAYER_HITBOX_WIDTH, THRUSTER_FRAME_TIME, THRUSTER_OFFSET, 
     ASTEROID_MAX_SPEED, SHIELD_BOUNCE, PLAYER_REVERSE_MULT, SPEED_BONUS, HULL_BONUS,
     CANNON_COOL_RATE, CANNON_HEAT_PER_SHOT, CANNON_RESUME_HEAT, CANNON_COOL_DELAY, CANNON_OVERHEAT_COOL_RATE,
-    DASH_DISTANCE, DASH_TIME, DASH_COOLDOWN, DASH_SHIFT_WINDOW, GRAV_GRAZE_RANGE, GRAV_CHARGE,
+    DASH_DISTANCE, DASH_TIME, DASH_COOLDOWN, DASH_MOD_WINDOW, GRAV_GRAZE_RANGE, GRAV_CHARGE,
     DASH_DISTANCE_PER_LEVEL, GRAV_DASH_BONUS, DASH_FLASH_TIME, GRAV_DASH_MAX, GRAV_DASH_LAND_BUFFER,
     PLAYER_START_ROTATION,
 )
@@ -108,23 +108,23 @@ class Player(CircleShape):
         # player dash state
         self.dash_state = DashState.READY 
         self.game_time = 0.0                        # advances by dt in update, so pause freezes it
-        self.shift_time = -999.0                    # when shift was last tapped
+        self.mod_time = -999.0                      # when modifier was last tapped
         self.dash_timer = 0.0                       # how far through the current dash
         self.dash_start = pygame.Vector2(0, 0)
         self.dash_end = pygame.Vector2(0, 0)
-        self.dash_gravitron = False                 # was this dash the shift-timed kind?
+        self.dash_gravitron = False                 # was this dash the modifier-timed kind?
         self.dash_cooldown = 0.0                    # seconds left before READY
         self.dash_charge = 0.0                      # refund earned this dash
         self.dash_hit = set()                       # rocks already counted this dash
         self.dash_preview = None                    # signal for grav dash end point
-        self.dash_preview_cooldown = 0.0            # cool down for shift dash preview 
+        self.dash_preview_cooldown = 0.0            # cool down for mod dash preview 
         self.dash_direction = pygame.Vector2(0, 1)
         self.dash_lands_inside = False
 
         self.last_position = self.position.copy()
         
-    def press_shift(self):
-        self.shift_time = self.game_time
+    def press_mod(self):
+        self.mod_time = self.game_time
 
     def dash_graze(self, asteroids):
         if self.dash_state is not DashState.DASHING or not self.dash_gravitron:
@@ -160,8 +160,8 @@ class Player(CircleShape):
     def try_dash(self):
         if self.levels["ability"] < 1 or self.dash_state != DashState.READY:
             return
-        self.dash_gravitron = (self.game_time - self.shift_time) <= DASH_SHIFT_WINDOW
-        self.shift_time = -999.0
+        self.dash_gravitron = (self.game_time - self.mod_time) <= DASH_MOD_WINDOW
+        self.mod_time = -999.0
         self.dash_hit.clear()
         self.dash_charge = 0.0
 
@@ -313,7 +313,7 @@ class Player(CircleShape):
         return 
 
     def update_dash_preview(self, asteroids):
-        armed = (self.game_time - self.shift_time) <= DASH_SHIFT_WINDOW
+        armed = (self.game_time - self.mod_time) <= DASH_MOD_WINDOW
         if not armed or self.dash_state is not DashState.READY or self.levels["ability"] < 1:
             self.dash_preview = None
             return

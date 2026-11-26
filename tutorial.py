@@ -2,7 +2,7 @@ from sequence import Beat
 
 STEPS = { 
     "game_start": [
-        Beat("harry", "HARRY: Alright Barry we made it to the open space. I guess that old man wasn't crazy after all!", zoom = 3.0, key = "first_flight"),
+        Beat("harry", "HARRY: Alright Barry we made it to the open space. I guess that old man wasn't crazy after all!", zoom = 3.0, hint = "move", key = "first_flight"),
         Beat("barry", "BARRY: Perhaps. But we'll see how long this thing holds up. He said it was more capable then modern ships if operated properly, but it seems underwhelming.", zoom = 3.0, key = "first_flight"),
         Beat("harry", "HARRY: I like it! It feels vintage and probably full of crazy stories. Lets see what we can do with it B!", zoom = 3.0, key = "first_flight"),
         Beat("barry", "BARRY: Alright the flight controls seem simple enough.", zoom = 3.0, key = "first_flight")
@@ -13,7 +13,7 @@ STEPS = {
         Beat("harry", "HARRY: Yo Barry whats good with these panels again man.", zoom = 2.0, key = "open_panel"),
         Beat("barry", "BARRY: ...", zoom = 2.0, key = "open_panel"),
         Beat("barry", "BARRY: If you click blinky light ship get better.", zoom = 2.0, key = "open_panel"),
-        Beat("harry", "HARRY: Oh word?!", zoom = 2.0, key = "open_panel"),
+        Beat("harry", "HARRY: Oh word?!", zoom = 2.0, hint = "panels", key = "open_panel"),
     ],
     "harry_panel": [
         Beat("harry", "HARRY: Woah this is totally retro!", zoom = 2.0, key = "harry_panel"),
@@ -21,11 +21,11 @@ STEPS = {
         Beat("harry", "HARRY: Yo Barry whats good with these panels again man.", zoom = 2.0, key = "open_panel"),
         Beat("barry", "BARRY: ...", zoom = 2.0, key = "open_panel"),
         Beat("barry", "BARRY: If you click blinky light ship get better.", zoom = 2.0, key = "open_panel"),
-        Beat("harry", "HARRY: Oh word?!", zoom = 2.0, key = "open_panel"),
+        Beat("harry", "HARRY: Oh word?!", zoom = 2.0, hint = "panels", key = "open_panel"),
     ],
     "first_dash": [
         Beat("harry", "HARRY: DAMN B! Yo give me some warning before you move like that.", key = "first_dash"),
-        Beat("barry", "BARRY: Sorry. I think I figured out what 'ABILITY' this ship has...", key = "first_dash"),
+        Beat("barry", "BARRY: Sorry. I think I figured out what 'ABILITY' this ship has though...", key = "first_dash"),
     ],
     "first_grav_preview": [
         Beat("barry", "BARRY: Harry do you see that.", zoom = 1.5, key = "first_grav_preveiew"),
@@ -35,13 +35,13 @@ STEPS = {
     "first_scrap": [
         Beat("barry", "BARRY: Scrap ore. I believe we could use those materials to upgrade the ship.", zoom = 1.5, key = "first_scrap"),
         Beat("harry", "HARRY: Oh Hell Yea! Give it a try B!", zoom = 1.5, key = "first_scrap"),
-        Beat("barry", "BARRY: I guess I'll start with whatever 'ABILITY' is.", zoom = 1.5, wait_for = "ability", key = "first_scrap"),       
+        Beat("barry", "BARRY: I guess I'll start with whatever 'ABILITY' is.", zoom = 1.5, wait_for = "ability", hint = "dash", key = "first_scrap"),       
     ],
     "first_salvage": [
         Beat("barry", "BARRY: Looks like some of the salvage from that cargo drone was collected by the ship.", zoom = 1.5, key = "first_salvage"),
         Beat("harry", "HARRY: Sweet! What do I do?", zoom = 1.5, key = "first_salvage"),
         Beat("barry", "BARRY: Just click the flashing light.", zoom = 1.5, wait_for = "LASER", key = "first_salvage"),
-        Beat("harry", "HARRY: Wooorrrd.", zoom = 1.5, key = "first_salvage"),
+        Beat("harry", "HARRY: Wooorrrd.", zoom = 1.5, hint = "laser", key = "first_salvage"),
     ],
     "first_hit": [
         Beat("harry", "HARRY: Barry, watch where you are flying man.", key = "first_hit"),

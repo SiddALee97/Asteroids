@@ -304,10 +304,14 @@ def main():
                     audio.next_track()
                     
 
-                if game_state == GameState.PLAYING and event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-                    player.try_dash()
                 if game_state == GameState.PLAYING and event.type == pygame.KEYDOWN and event.key == pygame.K_LSHIFT:
-                    player.press_shift()
+                    player.try_dash()
+                if game_state == GameState.PLAYING and event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                    player.press_mod()
+
+                if game_state is GameState.PLAYING and event.type == pygame.MOUSEBUTTONDOWN:
+                    hints.mouse_clicked(event.button)
+
 
 
                 #------ convert window mouse positions to game-surface positions ------
@@ -567,6 +571,10 @@ def main():
 
                 if player.dash_state is DashState.COOLDOWN:
                     fire("first_dash")
+
+                #---- checks for hints ----
+                for hint in sequence.released_hints:
+                    hints.show(hint)
                 
                 # ---- cargo drone spawning (max one at a time) ----
                 drone_spawn_timer -= dt
