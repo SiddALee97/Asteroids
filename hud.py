@@ -206,6 +206,7 @@ class Panel:
 
         self.auto_enabled = True
         self.auto_timer = 0.0
+        self.auto_bought = False
         self.auto_rect = auto_rect
         self.anim_time = 0.0
 
@@ -252,7 +253,7 @@ class Panel:
                 self.set_state(PANEL_NEXT[self.state])
 
     def update(self, dt, player):
-
+        self.auto_bought = False
         if player is None:
             return
         
@@ -287,6 +288,7 @@ class Panel:
             if self.auto_timer >= PANEL_IDLE_TIME:
                 if not (self.can_auto_repair(player) and self.start_repair(player)):
                     auto_buy(player, self.slots)
+                    self.auto_bought = True
                 self.auto_timer = 0.0
         else:
             self.auto_timer = 0.0

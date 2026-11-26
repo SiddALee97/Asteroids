@@ -45,7 +45,7 @@ from hud import (
     comms_rect, harry_panel, barry_panel, update_hud, kick_hud, PanelState,
     mouse_over_panel, open_panel_for,
 )
-
+from upgrades_shop import affordable_slots
 
 
 
@@ -401,7 +401,7 @@ def main():
                         if event.key == pygame.K_F12 and game_state is GameState.PLAYING:
                             beats = [
                                 Beat("harry", "I am supposed to test the comms. Am I coming through the speaker", open_panel=True),
-                                Beat("harry", "this one should only play once", open_panel=True, zoom = 3, key = "once"),
+                                Beat("barry", "this one should only play once", open_panel=False, zoom = 3, key = "once"),
                             ]
                             sequence.start(beats, player)
                             if sequence.active:
@@ -510,8 +510,8 @@ def main():
             if game_state is GameState.TUTORIAL:
                 sequence.update(dt)
                 update_hud(dt, player)
-                harry_panel.update(dt, player)
-                barry_panel.update(dt, player)
+                harry_panel.update_animation(dt)
+                barry_panel.update_animation(dt)
                 bg_far.update(dt)
                 bg_near.update(dt)
                 
@@ -542,6 +542,12 @@ def main():
                 bg_far.update(dt)
                 bg_near.update(dt)
 
+                # updates check for fire on tutorials
+                if harry_panel.auto_bought or barry_panel.auto_bought:
+                    fire("auto_buy")
+
+                if player.overheated and player.heat <= 0.9:
+                    fire("cannon_heat")
                 
                 # ---- cargo drone spawning (max one at a time) ----
                 drone_spawn_timer -= dt
