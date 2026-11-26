@@ -34,8 +34,8 @@ STEPS = {
     ],
     "first_scrap": [
         Beat("barry", "BARRY: Scrap ore. I believe we could use those materials to upgrade the ship.", zoom = 1.5, key = "first_scrap"),
-        Beat("harry", "HARRY: Oh Hell Yea! Give it a try B!", zoom = 1.5, wait_for = "ability", key = "first_scrap"),
-        Beat("barry", "BARRY: I guess I'll start with whatever 'ABILITY' is.", zoom = 1.5, key = "first_scrap"),       
+        Beat("harry", "HARRY: Oh Hell Yea! Give it a try B!", zoom = 1.5, key = "first_scrap"),
+        Beat("barry", "BARRY: I guess I'll start with whatever 'ABILITY' is.", zoom = 1.5, wait_for = "ability", key = "first_scrap"),       
     ],
     "first_salvage": [
         Beat("barry", "BARRY: Looks like some of the salvage from that cargo drone was collected by the ship.", zoom = 1.5, key = "first_salvage"),

@@ -29,6 +29,14 @@ class Sequence:
         self.player = None
 
     @property
+    def waiting(self):
+        # True only while a beat is waiting for input
+        return (self.current is not None
+                and self.current.wait_for is not None
+                and self.bubble is not None
+                and self.bubble.chars >= len(self.current.text))
+
+    @property
     def active(self):
         return self.current is not None
 
