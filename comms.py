@@ -2,7 +2,7 @@ import pygame
 from constants import (
     COMMS_CHARS_PER_SECOND, COMMS_HOLD_TIME, COMMS_SPRITE_SCALE,
     COMMS_LIGHTS, LIGHT_BLINK_INVUL, LIGHT_BLINK_SLOW, LIGHT_BLINK_FAST,
-    PANEL_IDLE_TIME, COMMS_SCREEN_RECT, HUD_DEPTH_COMMS
+    PANEL_IDLE_TIME, COMMS_SCREEN_RECT, HUD_DEPTH_COMMS, ALERT_MAX, ALERT_TIME,
 )
 from upgrades_shop import affordable_slots
 from hud import comms_spring, shake_offset
@@ -23,6 +23,14 @@ class Comms:
         self.light_phase = [0.0, 0.0, 0.0]
         self.light_lit = [False, False, False]
         self.depth = HUD_DEPTH_COMMS
+
+        self.alerts = []
+        self.alert_font = None
+
+    def alert(self, text):
+        self.alerts.append([text, 0.0])
+        if len(self.alerts) > ALERT_MAX:
+            self.alerts.pop()
         
     def say(self, message):
         # Add a message to the queue
@@ -50,6 +58,10 @@ class Comms:
         return lines
 
     def update(self, dt):
+        for a in self.alerts:
+            a[1] += dt
+        self.alerts = [a for a in self.alerts if a[1] < ALERT_TIME]
+
         # Update the hold timer and check if we need to move to the next message
         if self.current_message is None:
             if not self.queue:
@@ -136,6 +148,16 @@ class Comms:
 
         screen.blit(scaled_image, image_rect)
 
+        if self.alert_font is None:
+            self.alert_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 18)
+
+        y = screen_area.bottom - 8
+        for text, age in reversed(self.alerts):
+            fade = 1.0 - age / ALERT_TIME
+            color = (int(224 * fade), int(160 * fade), int(48 * fade))
+            surf = self.alert_font.render(text, True, color)
+            y -= surf.get_height()
+            screen.blit(surf, (screen_area.x + 8, y))
 
 
         if self.current_message is None:
@@ -166,6 +188,7 @@ class Comms:
         self.current_message = None
         self.chars = 0.0
         self.hold_timer = 0.0
+        self.alerts.clear()
 
 
 # shared instance of Comms for the game

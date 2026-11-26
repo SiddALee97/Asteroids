@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import pygame
 from speech import Bubble
 from hud import open_panel_for
-
+from constants import BEAT_DIM
 
 
 @dataclass(frozen=True)
@@ -12,8 +12,10 @@ class Beat:
     open_panel : bool = False       # tutorial will change it to slide out
     highlight : tuple | None = None # tutorial: rect to point at
     zoom : float | None = None      # camera zoom mult on ship         
-    dim : float = 150               # overlay dim strength
+    dim : float = BEAT_DIM          # overlay dim strength
     key : str | None = None         # for the seen set (None is always plays)
+    wait_for : str | None = None    # a key for when to advance for interactive beats
+
 
 class Sequence:
     def __init__(self, camera):
@@ -60,12 +62,17 @@ class Sequence:
         self.camera.fit_world()
 
     def advance(self):
-        if self.current is None:
+        if self.current is None or self.current.wait_for is not None:
             return
         if self.bubble.chars < len(self.current.text):
             self.bubble.chars = len(self.current.text)      # first call finishes the text
         else:
             self.next()
+
+    def notify(self, wait_for):
+        if self.current.wait_for == wait_for:
+            self.advance()
+        return
 
     def skip(self):
         for beat in self.queue + ([self.current] if self.current else []):
@@ -84,3 +91,5 @@ class Sequence:
         if self.dim_alpha > 1:
             dim_surface.fill((0, 0, 0, int(self.dim_alpha)))
             screen.blit(dim_surface, (0, 0))
+
+    

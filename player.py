@@ -103,7 +103,7 @@ class Player(CircleShape):
             self.levels[slot.key] = 0
 
         # testing 
-        self.levels["ability"] = 1
+        
 
         # player dash state
         self.dash_state = DashState.READY 

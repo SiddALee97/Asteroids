@@ -138,7 +138,6 @@ def main():
 
     def fire(key):
         nonlocal game_state
-        print("fire", key, game_state)
         if game_state is GameState.PLAYING and trigger(sequence, key, player):
             game_state = GameState.TUTORIAL
             open_panel_for(sequence.current.speaker)
@@ -375,6 +374,16 @@ def main():
                         game_state = settings_return
                         break
 
+                elif game_state is GameState.TUTORIAL:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            sequence.advance()
+
+                elif game_state is GameState.TITLE:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            game_state = GameState.MENU
+
                 #-------- keyboard -----------
                 if event.type == pygame.KEYDOWN:
 
@@ -595,11 +604,11 @@ def main():
                         log_event(f"{pickup.kind}_collected")
                         audio.play(f"scrap_{random.randint(1, 11)}")
                         pickup.apply_to_player(player)
-                        print("picked up", pickup.kind)
                         if pickup.kind == "SCRAP":
                             fire("first_scrap")
                         if pickup.kind == "SALVAGE":
                             fire("first_salvage")
+                        hud_comms.alert(f"+{pickup.amount} {pickup.kind}")
                         pickup.kill()
                         break
 
