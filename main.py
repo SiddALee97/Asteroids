@@ -23,6 +23,7 @@ from states import GameState
 from speech import Bubble
 from sequence import Sequence, Beat
 from tutorial import STEPS, trigger
+from hints import HintManager
 
 #-------- game objects --------
 from player import Player, DashState
@@ -80,6 +81,7 @@ def main():
     pygame.init()
     
     font = pygame.font.Font("assets/fonts/future_earth.ttf", 36)
+    hints = HintManager()
     sequence = Sequence(camera)
     
     #---------- creating sprite groups ----------
@@ -130,6 +132,7 @@ def main():
         hud_comms.reset()
         harry_panel.reset()
         barry_panel.reset()
+        hints.reset()
         
 
     def new_game():
@@ -166,6 +169,9 @@ def main():
 
     #===================== LOAD SPRITES ================================
     #                 (must be after set mode)
+
+    #-------- title -------------
+    title_image = load_sprite("assets/sprites/title.png")
 
     #-------- backgrounds ---------
     background_default = load_sprite("assets/sprites/background_default.png")
@@ -397,6 +403,8 @@ def main():
                         if event.key == pygame.K_t:
                             hud_comms.say("Test message for comms panel display. This message should wrap correctly and be displayed character by character. Still not sure if I will fix the issue of the text going of the screen or just make sure i dont render any long texts but that kind of sounds annoying. So i will probably just fix it.")
 
+                        if event.key == pygame.K_h:
+                            hints.show("move")
 
                         if event.key == pygame.K_F12 and game_state is GameState.PLAYING:
                             beats = [
@@ -428,6 +436,7 @@ def main():
                             sequence.skip()
    
                     if game_state == GameState.PLAYING:
+                        hints.key_pressed(event.key)
                         if event.key == pygame.K_1:
                             harry_panel.toggle()
                             fire("open_panel")
@@ -491,10 +500,11 @@ def main():
                 bg_far.update(dt)
                 bg_near.update(dt)
 
-                title_font = pygame.font.Font("assets/fonts/future_earth.ttf", 80)         # ToDo: create once, not every frame
-                title_text = title_font.render("ASS*ROIDS", True, "white")
-                title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-                screen.blit(title_text, title_rect)
+                title_w, title_h = title_image.get_size()
+                title_img = pygame.transform.scale(title_image, (title_w * 2, title_h * 2))
+
+                title_rect = title_img.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+                screen.blit(title_img, title_rect)
 
 
 
@@ -530,7 +540,7 @@ def main():
                 # ---- updates ----
                 if debug.no_spawns:
                     field.spawn_timer = 0
-                
+
                 updatable.update(dt)
                 player.dash_graze(asteroids)
                 player.update_dash_preview(asteroids)
@@ -541,13 +551,17 @@ def main():
                 barry_panel.update(dt, player)
                 bg_far.update(dt)
                 bg_near.update(dt)
+                hints.update(dt)
 
-                # updates check for fire on tutorials
+                # ---- updates check for fire on tutorials ----
                 if harry_panel.auto_bought or barry_panel.auto_bought:
                     fire("auto_buy")
 
                 if player.overheated and player.heat <= 0.9:
                     fire("cannon_heat")
+
+                if player.dash_state is DashState.COOLDOWN:
+                    fire("first_dash")
                 
                 # ---- cargo drone spawning (max one at a time) ----
                 drone_spawn_timer -= dt
@@ -627,6 +641,8 @@ def main():
                             log_event("asteroid_shot")
                             result = resolve_hit(shot, obj)
                             score_keeper.add_points(result.points)
+                            if shot.kind is HitKind.LASER:
+                                fire("laser")
                             break
 
                     # shockwave vs asteroids and drones (list() because fragments spawn mid-loop)
@@ -682,6 +698,9 @@ def main():
 
             #--- tutorial dimmer ---
             sequence.draw_dim(screen, dim)
+            #--- hint ---
+            if game_state is GameState.PLAYING:
+                hints.draw(screen)
 
 
             debug.draw(screen, player,

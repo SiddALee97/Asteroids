@@ -117,6 +117,7 @@ class Player(CircleShape):
         self.dash_charge = 0.0                      # refund earned this dash
         self.dash_hit = set()                       # rocks already counted this dash
         self.dash_preview = None                    # signal for grav dash end point
+        self.dash_preview_cooldown = 0.0            # cool down for shift dash preview 
         self.dash_direction = pygame.Vector2(0, 1)
         self.dash_lands_inside = False
 
@@ -187,10 +188,6 @@ class Player(CircleShape):
         self.dash_timer = 0.0
         self.dash_state = DashState.DASHING
         self.invulnerability_timer = max(self.invulnerability_timer, DASH_TIME)
-        
-
-    
-
         
 
     # handle upgrades

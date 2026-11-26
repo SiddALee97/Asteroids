@@ -49,8 +49,14 @@ STEPS = {
         Beat("harry", "HARRY: Yo the cannon stopped working B!", key = "cannon_heat"),
         Beat("barry", "BARRY: It's probably overheated. I'm sure one of the tabs on your panel will show the temp.", key = "cannon_heat"),
         Beat("barry", "BARRY: If you keep your panel open you could probably control the temp better. But I guess it would be kind of hard to see.", key = "cannon_heat"),
-        Beat("harry", "HARRY: Panel..tab..heat..", key = "cannon_heat"),
-        Beat("harry", "HARRY: Yeah I'll just figure it out by feel.", key = "cannon_heat"),
+        Beat("harry", "HARRY: Panel...tab..temp.", key = "cannon_heat"),
+        Beat("harry", "HARRY: Man this ship is way more analog then i thought.", key = "cannon_heat"),
+        Beat("harry", "HARRY: Rad.", key = "cannon_heat"),
+    ],
+    "laser": [
+        Beat("harry", "HARRY: This laser is totally stripes yo!", key="laser"),
+        Beat("harry", "HARRY: Now you can focus on dodgin and I can shoot wherever I want!", key="laser"),
+        Beat("barry", "BARRY: Cool.", key="laser"),
     ]
 }
 
